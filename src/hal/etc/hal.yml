@@ -1,1 +1,8 @@
 ---
+actor:
+  name: hal
+  host: 127.0.0.1
+  port: 19980
+  tron_host: 127.0.0.1
+  tron_port: 6093
+  log_dir: /data/logs/actors/hal

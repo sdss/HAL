@@ -3,10 +3,7 @@
 #
 # @Author: José Sánchez-Gallego (gallegoj@uw.edu)
 # @Date: 2021-03-24
-# @Filename: test_hal.py
+# @Filename: __init__.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
-
-def test_placeholder():
-
-    assert True
+from clu.parser import command_parser as hal_command_parser

@@ -25,13 +25,14 @@ packages = [
 include = ["src/hal/etc/*"]
 
 [tool.poetry.scripts]
-hal = "hal.__main__:main"
+hal = "hal.__main__:hal"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-sdss-tree = ">=2.15.2"
-sdss-access = ">=0.2.3"
-sdsstools = ">=0.4.0"
+sdsstools = "^0.4.0"
+sdss-clu = "^0.7.5"
+click-default-group = "^1.2.2"
+daemonocle = "^1.2.2"
 
 [tool.poetry.dev-dependencies]
 ipython = ">=7.11.0"
@@ -63,7 +64,7 @@ sections = ["FUTURE", "STDLIB", "TYPING", "THIRDPARTY", "SDSS", "FIRSTPARTY", "L
 default_section = "THIRDPARTY"
 known_first_party = "hal"
 known_typing = ["typing"]
-known_sdss = ["sdsstools"]
+known_sdss = ["sdsstools", "clu"]
 lines_after_imports = 2
 
 [tool.pytest.ini_options]
@@ -74,6 +75,8 @@ branch = true
 include = ["src/hal/*"]
 omit = [
     "*/__init__.py",
+    "src/hal/__main__.py",
+    "src/hal/exceptions.py"
 ]
 
 [tool.coverage.report]
