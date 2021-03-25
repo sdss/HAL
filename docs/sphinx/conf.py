@@ -147,7 +147,7 @@ rst_epilog = f"""
 
 # -- Options for HTML output ----------------------------------------------
 
-html_css_files = ["pygments.css"]
+html_css_files = []
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
@@ -155,7 +155,7 @@ html_css_files = ["pygments.css"]
 html_theme = "alabaster"
 
 html_theme_options = {
-    "logo": "sdssv_logo.png",
+    "logo": "HAL_logo.png",
     "github_user": "sdss",
     "github_repo": project,
     "github_button": True,
@@ -164,14 +164,14 @@ html_theme_options = {
     "page_width": "80%",
 }
 
-html_sidebars = {
-    "**": [
-        "about.html",
-        "navigation.html",
-        "relations.html",
-        "searchbox.html",
-    ]
-}
+# html_sidebars = {
+#     "**": [
+#         "about.html",
+#         "globaltoc.html",
+#         "relations.html",
+#         "searchbox.html",
+#     ]
+# }
 
 html_css_files += ["custom.css"]
 html_favicon = "./_static/favicon_sdssv.ico"
