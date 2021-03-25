@@ -27,11 +27,8 @@ class HALActor(LegacyActor):
 
     def __init__(self, *args, **kwargs):
 
-        if "schema" not in kwargs:
-            kwargs["schema"] = os.path.join(
-                os.path.dirname(__file__),
-                "etc/schema.json",
-            )
+        schema = kwargs.pop("schema", None)
+        schema = schema or os.path.join(os.path.dirname(__file__), "etc/schema.json")
 
         super().__init__(*args, **kwargs)
 
