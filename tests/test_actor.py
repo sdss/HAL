@@ -6,7 +6,6 @@
 # @Filename: test_hal.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
-
 import pytest
 
 from hal import __version__
