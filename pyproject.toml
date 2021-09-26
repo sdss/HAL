@@ -28,11 +28,10 @@ include = ["src/hal/etc/*"]
 hal = "hal.__main__:hal"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 sdsstools = "^0.4.0"
-sdss-clu = "^0.7.5"
+sdss-clu = "^1.0.0"
 click-default-group = "^1.2.2"
-daemonocle = "^1.2.2"
 
 [tool.poetry.dev-dependencies]
 ipython = ">=7.11.0"
@@ -48,14 +47,19 @@ isort = ">=4.3.21"
 codecov = ">=2.0.15"
 coverage = {version = ">=5.0", extras = ["toml"]}
 ipdb = ">=0.12.3"
-rstcheck = "^3.3.1"
+rstcheck = ">=3.3.1"
 black = ">=20.8b1"
 jedi = ">=0.17.2"
-Sphinx = "^3.0.0"
+Sphinx = ">=4.0.0"
+furo = ">=2021.9.22"
+sphinx-copybutton = ">=0.4.0"
+sphinx-click = ">=3.0.1"
+sphinx-jsonschema = ">=1.16.11"
+myst-parser = ">=0.15.2"
 
 [tool.black]
 line-length = 88
-target-version = ['py38']
+target-version = ['py39']
 fast = true
 
 [tool.isort]
