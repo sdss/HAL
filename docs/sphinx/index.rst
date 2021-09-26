@@ -8,6 +8,8 @@ This is the documentation for the SDSS Python product HAL. The current version i
 
   $ pip install sdss-hal
 
+.. warning ::
+  HAL is the codename of the software product. When connected to Tron, the actor commands are associated with the ``sop`` actor (e.g., ``sop gotoStow``).
 
 Contents
 --------
@@ -15,7 +17,8 @@ Contents
 .. toctree::
   :maxdepth: 2
 
-  What's new in HAL? <CHANGELOG>
+  development
+  What's new in HAL? <changelog>
 
 
 Reference
