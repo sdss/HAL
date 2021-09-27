@@ -125,4 +125,3 @@ class Scripts:
 
         task = self.running[name]
         task.cancel()
-        await task

@@ -100,6 +100,7 @@ async def cancel(command: Command[HALActor], script: str):
     try:
         await command.actor.helpers.scripts.cancel(script)
     except Exception as err:
+        command.warning(text=f"Error found while trying to cancel {script}.")
         return command.fail(error=err)
 
-    return command.finish()
+    return command.finish(f"Script {script} has been scheduled for cancellation.")
