@@ -17,7 +17,7 @@ from sdsstools.daemonizer import DaemonGroup
 from hal.actor import HALActor
 
 
-@click.group(cls=DefaultGroup, default="hal_actor", default_if_no_args=True)
+@click.group(cls=DefaultGroup, default="actor", default_if_no_args=True)
 @click.option(
     "-c",
     "--config",
