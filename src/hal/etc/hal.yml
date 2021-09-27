@@ -5,4 +5,26 @@ actor:
   port: 19980
   tron_host: 127.0.0.1
   tron_port: 6093
+  models:
+    - tcc
+    - mcp
   log_dir: /data/logs/actors/hal
+
+goto:
+  stow:
+    alt: 30
+    az: 121
+    rot: 0
+  all_60:
+    alt: 60
+    az: 60
+    rot: 60
+  stow_60:
+    alt: 60
+    az: 120
+    rot: 0
+  instrument_change:
+    alt: 90
+    az: 121
+    rot: 0
+  alt_limit: 18
