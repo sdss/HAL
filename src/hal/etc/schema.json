@@ -1,5 +1,15 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "properties": {}
+  "properties": {
+    "available_scripts": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "running_scripts": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "additionalProperties": false
+  }
 }

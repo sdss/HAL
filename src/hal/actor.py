@@ -15,6 +15,7 @@ from typing import TypeVar
 from clu.legacy import LegacyActor
 
 from hal import __version__
+from hal.tools.scripts import Scripts
 from hal.tools.tcc import TCC
 
 from .commands import hal_command_parser
@@ -36,7 +37,7 @@ class HALActor(LegacyActor):
         schema = kwargs.pop("schema", None)
         schema = schema or os.path.join(os.path.dirname(__file__), "etc/schema.json")
 
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, schema=schema, **kwargs)
 
         self.observatory = os.environ.get("OBSERVATORY", "APO")
         self.version = __version__
@@ -53,3 +54,4 @@ class ActorHelpers:
     def __init__(self, actor: HALActor):
 
         self.tcc = TCC(actor)
+        self.scripts = Scripts(actor, actor.config["scripts"])

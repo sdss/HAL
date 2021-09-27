@@ -1,0 +1,5 @@
+# simple example script for testing purposes.
+# Check the versions of a few things, and output the time.
+10.0 sop version
+10.0 guider version
+10.0 tcc show time

@@ -1,0 +1,9 @@
+# cal: takes some darks while the cartridge is being changed. 
+# Generally there is time for two darks, and sometimes three or four.
+10.0 apogeecal allOff
+10.0 apogee shutter close
+10.0 apogeecal shutterOpen
+110.0 apogee expose nreads=10 ; object=Dark
+110.0 apogee expose nreads=10 ; object=Dark
+10.0 apogeecal shutterClose
+10.0 apogeecal allOff
