@@ -16,7 +16,6 @@ from . import hal_command_parser
 
 
 if TYPE_CHECKING:
-
     from clu import Command
 
     from hal.actor import HALActor
