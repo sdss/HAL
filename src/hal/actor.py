@@ -36,7 +36,7 @@ class HALActor(LegacyActor):
         schema = kwargs.pop("schema", None)
         schema = schema or os.path.join(os.path.dirname(__file__), "etc/schema.json")
 
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, schema=schema, **kwargs)
 
         self.observatory = os.environ.get("OBSERVATORY", "APO")
         self.version = __version__
