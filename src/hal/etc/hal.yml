@@ -28,3 +28,5 @@ goto:
     az: 121
     rot: 0
   alt_limit: 18
+
+scripts: etc/scripts/
