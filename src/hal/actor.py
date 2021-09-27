@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import os
 
+from typing import TypeVar
+
 from clu.legacy import LegacyActor
 
 from hal import __version__
@@ -19,6 +21,9 @@ from .commands import hal_command_parser
 
 
 __all__ = ["HALActor"]
+
+
+T = TypeVar("T", bound="HALActor")
 
 
 class HALActor(LegacyActor):
@@ -37,6 +42,9 @@ class HALActor(LegacyActor):
         self.version = __version__
 
         self.helpers = ActorHelpers(self)
+
+    async def start(self: T) -> T:
+        return await super().start(get_keys=False)
 
 
 class ActorHelpers:
