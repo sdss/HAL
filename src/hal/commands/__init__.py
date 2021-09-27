@@ -9,3 +9,4 @@
 from clu.parsers.click import command_parser as hal_command_parser
 
 from .goto import *
+from .status import *
