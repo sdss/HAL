@@ -163,7 +163,7 @@ class TCC:
     async def mcp_semaphore_ok(self, command: Command[HALActor]):
         """Returns the semaphore if the semaphore is owned by the TCC or nobody."""
 
-        mcp_model = self.actor.models["tcc"]
+        mcp_model = self.actor.models["mcp"]
 
         sem = mcp_model["semaphoreOwner"]
         if sem is None:
