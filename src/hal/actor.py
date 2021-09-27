@@ -13,6 +13,7 @@ import os
 from clu.legacy import LegacyActor
 
 from hal import __version__
+from hal.tools.tcc import TCC
 
 from .commands import hal_command_parser
 
@@ -34,3 +35,13 @@ class HALActor(LegacyActor):
 
         self.observatory = os.environ.get("OBSERVATORY", "APO")
         self.version = __version__
+
+        self.helpers = ActorHelpers(self)
+
+
+class ActorHelpers:
+    """State helpers."""
+
+    def __init__(self, actor: HALActor):
+
+        self.tcc = TCC(actor)
