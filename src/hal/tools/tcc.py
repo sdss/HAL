@@ -83,7 +83,7 @@ class TCC:
     async def axis_init(self, command: Command[HALActor]) -> bool:
         """Executes TCC axis init or fails."""
 
-        status = await self.actor.send_command("tcc", "status")
+        status = await self.actor.send_command("tcc", "axis status")
         if status.status.did_fail:
             command.error(error="'tcc status' failed. Is the TCC connected?")
             return False
