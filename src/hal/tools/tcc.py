@@ -96,7 +96,7 @@ class TCC:
             return False
 
         sem = await self.mcp_semaphore_ok(command)
-        if not sem:
+        if sem is False:
             command.error(error="Failed getting the semaphore information.")
             return False
 
