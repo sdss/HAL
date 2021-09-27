@@ -29,7 +29,7 @@ from hal.actor import HALActor
     "-v",
     "--verbose",
     count=True,
-    help="Debug mode. Use additional v for more details.",
+    help="Debug mode.",
 )
 @click.pass_context
 def hal(ctx, config_file, verbose):
@@ -38,7 +38,7 @@ def hal(ctx, config_file, verbose):
     ctx.obj = {"verbose": verbose, "config_file": config_file}
 
 
-@hal.group(cls=DaemonGroup, prog="actor", workdir=os.getcwd())
+@hal.group(cls=DaemonGroup, prog="hal-actor", workdir=os.getcwd())
 @click.pass_context
 @cli_coro
 async def actor(ctx):
@@ -47,7 +47,7 @@ async def actor(ctx):
     default_config_file = os.path.join(os.path.dirname(__file__), "etc/hal.yml")
     config_file: str = ctx.obj["config_file"] or default_config_file
 
-    hal_obj = HALActor.from_config(config_file)  # type: ignore
+    hal_obj = HALActor.from_config(config_file)
 
     if ctx.obj["verbose"]:
         hal_obj.log.sh.setLevel(0)
