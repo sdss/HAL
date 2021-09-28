@@ -44,9 +44,6 @@ class HALActor(LegacyActor):
 
         self.helpers = ActorHelpers(self)
 
-    async def start(self: T) -> T:
-        return await super().start(get_keys=False)
-
 
 class ActorHelpers:
     """State helpers."""
