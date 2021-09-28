@@ -238,7 +238,7 @@ python-versions = ">=3.5"
 
 [[package]]
 name = "doc8"
-version = "0.9.0"
+version = "0.9.1"
 description = "Style checker for Sphinx (or other) RST documentation"
 category = "dev"
 optional = false
@@ -898,7 +898,7 @@ docutils = ">=0.7"
 
 [[package]]
 name = "sdss-clu"
-version = "1.3.0"
+version = "1.4.0"
 description = "A new protocol for SDSS actors."
 category = "main"
 optional = false
@@ -910,7 +910,7 @@ aiormq = ">=3.2.0,<4.0.0"
 click = ">=8.0,<9.0"
 jsonschema = ">=3.0.1,<4.0.0"
 prompt_toolkit = ">=3.0.6,<4.0.0"
-sdsstools = ">=0.2.0"
+sdsstools = ">=0.4.13,<0.5.0"
 
 [[package]]
 name = "sdsstools"
@@ -1196,7 +1196,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "0dd3ced7dd47be95b991eea56605b5e4d4a60ce4e7b38364c5226a94b19f7576"
+content-hash = "a01db64aae01cdb2f47ebd1d8e5ce61aa25a7ff12263046fe6ed336c120d234c"
 
 [metadata.files]
 aio-pika = [
@@ -1329,8 +1329,8 @@ decorator = [
     {file = "decorator-5.1.0.tar.gz", hash = "sha256:e59913af105b9860aa2c8d3272d9de5a56a4e608db9a2f167a8480b323d529a7"},
 ]
 doc8 = [
-    {file = "doc8-0.9.0-py3-none-any.whl", hash = "sha256:91f6459a4b15c3aee2152e0cf59b7537ce199fe66b4df547dae63cfa92499e86"},
-    {file = "doc8-0.9.0.tar.gz", hash = "sha256:380b660474be40ce88b5f04fa93470449124dbc850a0318f2ef186162bc1360b"},
+    {file = "doc8-0.9.1-py3-none-any.whl", hash = "sha256:0aa46f489dc8cdc908c0125c7b5c1c01eafe2f8c09b4bf3946cabeec90489d68"},
+    {file = "doc8-0.9.1.tar.gz", hash = "sha256:0e967db31ea10699667dd07790f98cf9d612ee6864df162c64e4954a8e30f90d"},
 ]
 docutils = [
     {file = "docutils-0.16-py2.py3-none-any.whl", hash = "sha256:0c5b78adfbf7762415433f5515cd5c9e762339e23369dbe8000d84a4bf4ab3af"},
@@ -1890,8 +1890,8 @@ rstcheck = [
     {file = "rstcheck-3.3.1.tar.gz", hash = "sha256:92c4f79256a54270e0402ba16a2f92d0b3c15c8f4410cb9c57127067c215741f"},
 ]
 sdss-clu = [
-    {file = "sdss-clu-1.3.0.tar.gz", hash = "sha256:a2c2a953900ec7028bac5c7fccad5ab3befc6b8f9e13c28167c504f543c12958"},
-    {file = "sdss_clu-1.3.0-py3-none-any.whl", hash = "sha256:ff3beb4ec5c94e8e333d1c6239738ef4b4f8b2b5eae1afa12f33df4fbfe98735"},
+    {file = "sdss-clu-1.4.0.tar.gz", hash = "sha256:03232b17884c2274fac16e004889ae266cacdf8b13d2f65c38d0c8e666e7f96d"},
+    {file = "sdss_clu-1.4.0-py3-none-any.whl", hash = "sha256:c85520c0a56f3ef4a202f8ce46b4d6cb97cc3353126f8d685df53c5e8627b97c"},
 ]
 sdsstools = [
     {file = "sdsstools-0.4.13-py3-none-any.whl", hash = "sha256:758ce248bf5794cfd62eacf053f2cda2e05d3aeb561919b9db5811d76d2aed59"},
