@@ -88,7 +88,7 @@ class TCC:
             command.error(error="'tcc status' failed. Is the TCC connected?")
             return False
 
-        if self.check_stop_in() is False:
+        if self.check_stop_in() is True:
             command.error(
                 error="Cannot tcc axis init because of bad axis status: "
                 "Check stop buttons on Interlocks panel."
