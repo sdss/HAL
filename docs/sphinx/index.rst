@@ -17,6 +17,8 @@ Contents
 .. toctree::
   :maxdepth: 2
 
+  actor-commands
+  actor-schema
   development
   What's new in HAL? <changelog>
 

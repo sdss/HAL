@@ -56,6 +56,8 @@ sphinx-copybutton = ">=0.4.0"
 sphinx-click = ">=3.0.1"
 sphinx-jsonschema = ">=1.16.11"
 myst-parser = ">=0.15.2"
+nox = ">=2021.6.12"
+sphinx-autobuild = ">=2021.3.14"
 
 [tool.black]
 line-length = 88
