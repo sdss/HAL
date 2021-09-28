@@ -144,6 +144,10 @@ class TCC:
         if mask is None:
             mask = self.actor.models["tcc"]["axisBadStatusMask"][0]
 
+        if mask is None:
+            self.actor.write("e", text="Cannot retrieve TCC axisBadStatusMask.")
+            return [1, 1, 1]
+
         return [(self.actor.models["tcc"][f"{axis}Stat"][3] & mask) for axis in axes]
 
     def check_stop_in(self, axes=("az", "alt", "rot")) -> bool:
@@ -285,8 +289,11 @@ class TCC:
         # However, if an axis becomes bad during the slew, the TCC will try to
         # finish it anyway, so we need to explicitly check for bad bits.
 
-        self.is_slewing = True
-        await slew_cmd
+        try:
+            self.is_slewing = True
+            await slew_cmd
+        finally:
+            self.is_slewing = False
 
         if slew_cmd.status.did_fail:
             str_axis_state = ",".join(tcc_model["axisCmdState"].value)
@@ -311,5 +318,4 @@ class TCC:
             )
             return False
 
-        self.is_slewing = False
         return True
