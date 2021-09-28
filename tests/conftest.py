@@ -7,21 +7,26 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 import pytest
+from black import os
 
 from clu.testing import setup_test_actor
+from sdsstools import read_yaml_file
 
+import hal
 from hal.actor import HALActor
+
+
+config_path = os.path.join(os.path.dirname(hal.__file__), "etc/hal.yml")
 
 
 @pytest.fixture
 async def actor():
 
-    hal_actor = HALActor(
-        name="test_actor",
-        host="localhost",
-        port=19980,
-        log_dir=False,
-    )
+    config = read_yaml_file(config_path)
+    config["actor"].pop("tron_host")
+    config["actor"].pop("tron_port")
+
+    hal_actor = HALActor.from_config(config)
     hal_actor = await setup_test_actor(hal_actor)  # type: ignore
 
     yield hal_actor
