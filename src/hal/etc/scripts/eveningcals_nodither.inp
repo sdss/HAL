@@ -1,15 +1,15 @@
 # eveningcals: takes evening calibration sequence:
 # No Dither version with timeouts for STUI.
-#   1 long darks 
+#   1 long darks
 #   1 QTH
 #   2 ThAr
 #   2 UNe
-#   1 long darks 
+#   1 long darks
 #  12/01/2020
 10.0 apogeecal allOff
-10.0 apogee shutter close
+15.0 apogee shutter close
 650.0 apogee expose nreads=60 ; object=Dark
-10.0 apogee shutter open
+15.0 apogee shutter open
 10.0 apogeecal shutterOpen
 apogeecal SourceOn source=Quartz
 110.0 apogee expose nreads=10 ; object=QuartzFlat
@@ -24,5 +24,5 @@ apogeecal SourceOn source=UNe
 apogeecal SourceOff source=UNe
 10.0 apogeecal shutterClose
 10.0 apogeecal allOff
-10.0 apogee shutter close
+15.0 apogee shutter close
 650.0 apogee expose nreads=60 ; object=Dark

@@ -1,17 +1,17 @@
 # morningcals: takes morning calibration sequence:
 # No Dither version with timeouts for STUI.
-#   3 long darks 
+#   3 long darks
 #   3 QTH
 #   2 ThAr
 #   2 UNe
 #   internal flat field
 #  12/01/2020
 10.0 apogeecal allOff
-10.0 apogee shutter close
+15.0 apogee shutter close
 650.0 apogee expose nreads=60 ; object=Dark
 650.0 apogee expose nreads=60 ; object=Dark
 650.0 apogee expose nreads=60 ; object=Dark
-10.0 apogee shutter open
+15.0 apogee shutter open
 10.0 apogeecal shutterOpen
 apogeecal SourceOn source=Quartz
 110.0 apogee expose nreads=10 ; object=QuartzFlat
@@ -35,4 +35,4 @@ apogee shutter ledControl=15
 330.0 apogee expose nreads=30 ; object=InternalFlat
 apogee shutter ledControl=0
 330.0 apogee expose nreads=30 ; object=Dark
-10.0 apogee shutter close
+15.0 apogee shutter close
