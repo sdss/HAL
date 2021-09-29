@@ -31,8 +31,8 @@ def script():
     pass
 
 
-@script.command()
-async def list(command: Command[HALActor]):
+@script.command(name="list")
+async def list_(command: Command[HALActor]):
     """Returns a list of available scripts."""
 
     assert command.actor
