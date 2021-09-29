@@ -87,7 +87,7 @@ async def run(command: Command[HALActor], script: str):
     if result is True:
         return command.finish(text=f"Script {script} has been successfully executed.")
     else:
-        return command.fail(error=f"Script {script} was cancelled.")
+        return command.fail(error=f"Script {script} failed or was cancelled.")
 
 
 @script.command()

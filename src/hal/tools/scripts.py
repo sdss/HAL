@@ -110,6 +110,10 @@ class Scripts:
             await task
         except asyncio.CancelledError:
             return False
+        except asyncio.TimeoutError:
+            if command:
+                command.error(error=f"Script {name}: one of the steps timedout out.")
+            return False
         except Exception:
             raise
         finally:
