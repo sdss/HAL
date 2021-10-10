@@ -10,11 +10,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from clu import Command
+
 from . import hal_command_parser
 
 
 if TYPE_CHECKING:
-    from clu import Command
 
     from hal.actor import HALActor
 
@@ -25,5 +26,7 @@ __all__ = ["status"]
 @hal_command_parser.command()
 async def status(command: Command[HALActor]):
     """Outputs the status of the system."""
+
+    await Command("script list", parent=command).parse()
 
     return command.finish(text="Alles ist gut.")
