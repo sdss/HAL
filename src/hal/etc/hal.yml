@@ -1,6 +1,6 @@
 ---
 actor:
-  name: sop
+  name: hal
   host: 0.0.0.0
   port: 19980
   tron_host: ${TRON_HOST}
