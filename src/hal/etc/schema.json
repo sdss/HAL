@@ -10,6 +10,17 @@
       "type": "array",
       "items": { "type": "string" }
     },
+    "script_step": {
+      "type": "array",
+      "items": [
+        { "type": "string" },
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "number" }
+      ],
+      "minItems": 4,
+      "maxItems": 4
+    },
     "additionalProperties": false
   }
 }
