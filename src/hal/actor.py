@@ -19,6 +19,7 @@ from hal.tools.scripts import Scripts
 from hal.tools.tcc import TCC
 
 from .commands import hal_command_parser
+from .macros import all_macros
 
 
 __all__ = ["HALActor"]
@@ -52,3 +53,4 @@ class ActorHelpers:
 
         self.tcc = TCC(actor)
         self.scripts = Scripts(actor, actor.config["scripts"])
+        self.macros = {macro.name: macro for macro in all_macros}
