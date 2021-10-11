@@ -12,6 +12,8 @@ import asyncio
 
 from typing import TYPE_CHECKING
 
+import click
+
 from . import hal_command_parser
 
 
@@ -24,7 +26,8 @@ __all__ = ["goto_field"]
 
 
 @hal_command_parser.command()
-async def goto_field(command: Command[HALActor]):
+@click.option("--with-fail", is_flag=True, help="Simulate a failure")
+async def goto_field(command: Command[HALActor], with_fail=False):
     """Execute the go to field macro."""
 
     actor = command.actor
@@ -34,8 +37,10 @@ async def goto_field(command: Command[HALActor]):
     goto_macro.reset(command=command)
 
     task = asyncio.create_task(goto_macro.run())
-    await asyncio.sleep(6)
-    goto_macro.cancel()
+    if with_fail:
+        await asyncio.sleep(6)
+        goto_macro.cancel()
+
     result = await task
 
     if result:
