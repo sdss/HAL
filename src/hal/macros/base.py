@@ -14,7 +14,7 @@ import warnings
 from contextlib import suppress
 from functools import partial
 
-from typing import TYPE_CHECKING, Callable, Coroutine, Optional, Union
+from typing import TYPE_CHECKING, Callable, ClassVar, Coroutine, Optional, Union
 
 from hal.exceptions import HALError, HALUserWarning
 
@@ -55,6 +55,8 @@ def flatten_stages(stages: list[StageType]) -> list[str]:
 class Macro:
     """A base macro class that offers concurrency and cancellation."""
 
+    __RUNNING__: ClassVar[list[str]] = []
+
     name: str
     __STAGES__: list[StageType]
 
@@ -80,12 +82,11 @@ class Macro:
         self._stage_params = stage_params
         self._external_stages = external_stages
 
-        self.running = False
+        self.command: Command[HALActor]  # Will be set in reset()
+        self._running = False
 
         self._preconditions_task: asyncio.Task | None = None
         self._running_task: asyncio.Task | None = None
-
-        self.command: Command[HALActor]  # Will be set in reset()
 
         self.reset(self.stages)
 
@@ -123,6 +124,28 @@ class Macro:
         if command:
             self.command = command
             self.list_stages()
+
+    @property
+    def running(self):
+        """Is the macro running?"""
+        return self._running
+
+    @running.setter
+    def running(self, is_running: bool):
+        """Sets the macro status as running/not-running and informs the actor."""
+
+        if self._running == is_running:
+            return
+
+        self._running = is_running
+
+        if is_running is True and self.name not in Macro.__RUNNING__:
+            Macro.__RUNNING__.append(self.name)
+        elif is_running is False and self.name in Macro.__RUNNING__:
+            Macro.__RUNNING__.remove(self.name)
+
+        if self.command:
+            self.command.debug(running_macros=Macro.__RUNNING__)
 
     def set_stage_status(
         self,
