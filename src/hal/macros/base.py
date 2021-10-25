@@ -8,13 +8,14 @@
 
 from __future__ import annotations
 
+import abc
 import asyncio
 import enum
 import warnings
 from contextlib import suppress
-from functools import partial
+from dataclasses import dataclass, field
 
-from typing import TYPE_CHECKING, Callable, ClassVar, Coroutine, Optional, Union
+from typing import TYPE_CHECKING, ClassVar, Coroutine, Optional, Union
 
 from hal.exceptions import HALError, HALUserWarning
 
@@ -25,7 +26,7 @@ if TYPE_CHECKING:
     from hal import HALActor
 
 
-__all__ = ["Macro"]
+__all__ = ["Macro", "Stage"]
 
 
 StageType = Union[str, tuple[str, ...], list[str]]
@@ -52,6 +53,26 @@ def flatten_stages(stages: list[StageType]) -> list[str]:
     return flat
 
 
+@dataclass
+class Stage(abc.ABCMeta):
+    """A stage."""
+
+    name: str = field(default="", init=False)
+    description: str = ""
+
+    def __post_init__(self):
+        if self.name == "" or self.name is None:
+            raise ValueError("Stage name cannot be empty.")
+
+    @abc.abstractmethod
+    async def run(self):
+        """Stage task."""
+        pass
+
+    def __call__(self, *args, **kwargs):
+        return self.run(*args, **kwargs)
+
+
 class Macro:
     """A base macro class that offers concurrency and cancellation."""
 
@@ -65,7 +86,7 @@ class Macro:
         name: Optional[str] = None,
         stages: Optional[list[StageType]] = None,
         stage_params: dict = {},
-        external_stages: dict[str, Callable[..., Coroutine]] = {},
+        external_stages: dict[str, Stage] = {},
     ):
 
         if name is None and not hasattr(self, "name"):
@@ -275,7 +296,7 @@ class Macro:
         if isinstance(stage, str):
             stage_method = getattr(self, stage, None)
             if stage_method is None or stage in self._external_stages:
-                stage_method = partial(self._external_stages[stage], self)
+                stage_method = self._external_stages[stage].run
 
             stage_kwargs = self._stage_params.get(stage, {})
 
