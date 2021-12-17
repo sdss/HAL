@@ -44,8 +44,6 @@ class TCCHelper:
 
         """
 
-        assert command.actor
-
         config = command.actor.config
 
         if isinstance(where, str):

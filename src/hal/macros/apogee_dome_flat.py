@@ -25,8 +25,8 @@ class APOGEEDomeFlatMacro(Macro):
 
     name = "apogee_dome_flat"
 
-    __STAGES__ = ["gang_at_cart", ("ffs", "open_shutter"), "expose"]
-    __CLEANUP__ = ["cleanup"]
+    __STAGES__ = ["gang_at_cart"]
+    __CLEANUP__ = []
 
     async def gang_at_cart(self):
         """Checks that the gang connected is at the cart."""
@@ -40,8 +40,6 @@ class APOGEEDomeFlatMacro(Macro):
 
     async def ffs(self):
         """Check the FFS status and closes it."""
-
-        assert self.command.actor
 
         result = await self.command.actor.helpers.ffs.close(self.command)
         if result is False:

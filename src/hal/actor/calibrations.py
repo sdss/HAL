@@ -23,7 +23,6 @@ async def apogee_dome_flat(command: HALCommandType):
     """Runs the APOGEE dome flat sequence."""
 
     actor = command.actor
-    assert actor
 
     apogee_dome_flat = actor.helpers.macros["apogee_dome_flat"]
     apogee_dome_flat.reset(command=command)

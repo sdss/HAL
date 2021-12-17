@@ -24,7 +24,6 @@ async def goto_field(command: HALCommandType, with_fail=False):
     """Execute the go to field macro."""
 
     actor = command.actor
-    assert actor
 
     goto_macro = actor.helpers.macros["goto_field"]
     goto_macro.reset(command=command)

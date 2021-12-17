@@ -17,7 +17,6 @@ __all__ = ["gotoStow"]
 async def goto_position(command: HALCommandType, name: str):
     """Go to position."""
 
-    assert command.actor
     return await command.actor.helpers.tcc.goto_position(command, name)
 
 

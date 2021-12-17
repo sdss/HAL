@@ -24,7 +24,6 @@ async def status(command: HALCommandType, full: bool = False):
     """Outputs the status of the system."""
 
     actor = command.actor
-    assert actor
 
     await Command("script list", parent=command).parse()
 

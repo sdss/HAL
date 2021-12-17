@@ -27,8 +27,6 @@ def script():
 async def list_(command: HALCommandType):
     """Returns a list of available scripts."""
 
-    assert command.actor
-
     available_scripts = command.actor.helpers.scripts.list_scripts()
     return command.finish(available_scripts=available_scripts)
 
@@ -36,8 +34,6 @@ async def list_(command: HALCommandType):
 @script.command()
 async def running(command: HALCommandType):
     """Returns a list of running scripts."""
-
-    assert command.actor
 
     running_scripts = list(command.actor.helpers.scripts.running.keys())
     return command.finish(running_scripts=running_scripts)
@@ -47,8 +43,6 @@ async def running(command: HALCommandType):
 @click.argument("SCRIPT", type=str)
 async def get_steps(command: HALCommandType, script: str):
     """Lists the steps in the script."""
-
-    assert command.actor
 
     try:
         steps = command.actor.helpers.scripts.get_steps(script)
@@ -69,8 +63,6 @@ async def get_steps(command: HALCommandType, script: str):
 async def run(command: HALCommandType, script: str):
     """Runs a script."""
 
-    assert command.actor
-
     try:
         result = await command.actor.helpers.scripts.run(script, command)
     except Exception as err:
@@ -86,8 +78,6 @@ async def run(command: HALCommandType, script: str):
 @click.argument("SCRIPT", type=str)
 async def cancel(command: HALCommandType, script: str):
     """Cancels the execution of a script."""
-
-    assert command.actor
 
     try:
         await command.actor.helpers.scripts.cancel(script)
