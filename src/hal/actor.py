@@ -15,8 +15,7 @@ from typing import TypeVar
 from clu.legacy import LegacyActor
 
 from hal import __version__
-from hal.tools.scripts import Scripts
-from hal.tools.tcc import TCC
+from hal.tools import APOGEEHelper, FFSHelper, Scripts, TCCHelper
 
 from .commands import hal_command_parser
 from .macros import all_macros
@@ -51,6 +50,9 @@ class ActorHelpers:
 
     def __init__(self, actor: HALActor):
 
-        self.tcc = TCC(actor)
+        self.ffs = FFSHelper(actor)
+        self.tcc = TCCHelper(actor)
+        self.apogee = APOGEEHelper(actor)
+
         self.scripts = Scripts(actor, actor.config["scripts"])
         self.macros = {macro.name: macro for macro in all_macros}

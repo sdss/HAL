@@ -20,11 +20,11 @@ if TYPE_CHECKING:
     from hal.actor import HALActor
 
 
-__all__ = ["TCC"]
+__all__ = ["TCCHelper"]
 
 
 @dataclass
-class TCC:
+class TCCHelper:
 
     actor: HALActor
     is_slewing: bool = False

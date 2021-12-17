@@ -8,6 +8,7 @@ actor:
   models:
     - tcc
     - mcp
+    - apogee
   log_dir: /data/logs/actors/hal
 
 goto:

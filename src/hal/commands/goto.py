@@ -10,8 +10,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from clu.parsers.click import cancellable
-
 from . import hal_command_parser
 
 
@@ -31,32 +29,28 @@ async def goto_position(command: Command[HALActor], name: str):
     return await command.actor.helpers.tcc.goto_position(command, name)
 
 
-@hal_command_parser.command(name="gotoStow")
-@cancellable()
+@hal_command_parser.command(name="gotoStow", cancellable=True)
 async def gotoStow(command: Command[HALActor]):
     """Send the telescope to (120, 30, 0)."""
 
     return await goto_position(command, "stow")
 
 
-@hal_command_parser.command(name="gotoAll60")
-@cancellable()
+@hal_command_parser.command(name="gotoAll60", cancellable=True)
 async def gotoAll60(command: Command[HALActor]):
     """Send the telescope to (60, 60, 60)."""
 
     return await goto_position(command, "all_60")
 
 
-@hal_command_parser.command(name="gotoStow60")
-@cancellable()
+@hal_command_parser.command(name="gotoStow60", cancellable=True)
 async def gotoStow60(command: Command[HALActor]):
     """Send the telescope to (121, 60, 0)."""
 
     return await goto_position(command, "stow_60")
 
 
-@hal_command_parser.command(name="gotoInstrumentChange")
-@cancellable()
+@hal_command_parser.command(name="gotoInstrumentChange", cancellable=True)
 async def gotoInstrumentChange(command: Command[HALActor]):
     """Send the telescope to (121, 90, 0)."""
 

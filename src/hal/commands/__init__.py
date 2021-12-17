@@ -8,6 +8,7 @@
 
 from clu.parsers.click import command_parser as hal_command_parser
 
+from .calibrations import *
 from .goto import *
 from .goto_field import *
 from .script import *

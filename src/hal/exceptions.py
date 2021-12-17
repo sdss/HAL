@@ -17,6 +17,13 @@ class HALError(Exception):
         super(HALError, self).__init__(message)
 
 
+class MacroError(HALError):
+    """An error during a macro execution."""
+
+    pass
+
+
+
 class HALNotImplemented(HALError):
     """A custom exception for not yet implemented features."""
 

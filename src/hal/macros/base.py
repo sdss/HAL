@@ -70,7 +70,9 @@ class Macro:
     __RUNNING__: ClassVar[list[str]] = []
 
     name: str
+
     __STAGES__: list[StageType]
+    __CLEANUP__: list[StageType] = []
 
     def __init__(
         self,
@@ -219,7 +221,7 @@ class Macro:
             all_stages=[self.name] + [st for st in flatten_stages(self.__STAGES__)],
         )
 
-    def fail_macro(
+    async def fail_macro(
         self,
         error: Exception,
         stage: Optional[StageType] = None,
@@ -246,6 +248,13 @@ class Macro:
                 self.stage_status[ss] = StageStatus.FAILED
 
         self.output_stage_status()
+
+        if len(self.__CLEANUP__) > 0:
+            if self.command:
+                self.command.warning("Running cleanup tasks.")
+            for cleanup_stage in self.__CLEANUP__:
+                await asyncio.gather(*self._get_coros(cleanup_stage))
+
         self.running = False
 
     async def run(self):
@@ -267,7 +276,7 @@ class Macro:
                 self._running_task.cancel()
                 await self._running_task
         except Exception as err:
-            self.fail_macro(err)
+            await self.fail_macro(err)
 
         self.running = False
 
@@ -316,7 +325,7 @@ class Macro:
                     f"Macro {self.name} failed with error {err}",
                     HALUserWarning,
                 )
-                self.fail_macro(err, stage=stage)
+                await self.fail_macro(err, stage=stage)
                 return
 
             self.set_stage_status(stage, StageStatus.FINISHED)
