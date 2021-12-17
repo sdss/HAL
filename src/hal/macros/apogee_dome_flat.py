@@ -25,7 +25,7 @@ class APOGEEDomeFlatMacro(Macro):
 
     name = "apogee_dome_flat"
 
-    __STAGES__ = ["gang_at_cart", ("ffs", "open_shutter"), "expose", "cleanup"]
+    __STAGES__ = ["gang_at_cart", ("ffs", "open_shutter"), "expose"]
     __CLEANUP__ = ["cleanup"]
 
     async def gang_at_cart(self):

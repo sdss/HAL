@@ -245,7 +245,7 @@ class Macro:
 
         self.output_stage_status()
 
-        if len(self.__CLEANUP__) > 0:
+        if len(self.__CLEANUP__) > 0 and stage and stage not in self.__CLEANUP__:
             if self.command:
                 self.command.warning("Running cleanup tasks.")
             for cleanup_stage in self.__CLEANUP__:
@@ -304,7 +304,7 @@ class Macro:
 
         current_task: asyncio.Future | None = None
 
-        for istage, stage in enumerate(self.stages):
+        for istage, stage in enumerate(self.stages + self.__CLEANUP__.copy()):
             stage_coros = self._get_coros(stage)
             current_task = asyncio.gather(*stage_coros)
 
