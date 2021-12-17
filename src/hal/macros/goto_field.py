@@ -20,7 +20,15 @@ class GotoFieldMacro(Macro):
     """Go to field macro."""
 
     name = "goto_field"
-    __STAGES__ = [("slew", "reconfigure"), "calibrations", "acquire", "guide"]
+    __STAGES__ = [
+        ("prepare_lamps", "slew", "reconfigure"),
+        "hartmann",
+        "arcs",
+        "flat",
+        "fvc",
+        "acquire",
+        "guide",
+    ]
 
     async def slew(self):
         self.command.info("starting slew")

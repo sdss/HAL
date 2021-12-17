@@ -13,7 +13,6 @@ import asyncio
 import enum
 import warnings
 from contextlib import suppress
-from dataclasses import dataclass, field
 
 from typing import TYPE_CHECKING, ClassVar, Coroutine, Optional, Union
 
@@ -26,7 +25,7 @@ if TYPE_CHECKING:
     from hal import HALActor
 
 
-__all__ = ["Macro", "Stage"]
+__all__ = ["Macro", "StageHelper"]
 
 
 StageType = Union[str, tuple[str, ...], list[str]]
@@ -53,24 +52,16 @@ def flatten_stages(stages: list[StageType]) -> list[str]:
     return flat
 
 
-@dataclass
-class Stage(abc.ABCMeta):
-    """A stage."""
-
-    name: str = field(default="", init=False)
-    description: str = ""
-
-    def __post_init__(self):
-        if self.name == "" or self.name is None:
-            raise ValueError("Stage name cannot be empty.")
+class StageHelper(abc.ABCMeta):
+    """A stage helper."""
 
     @abc.abstractmethod
-    async def run(self):
+    async def run(self, macro: Macro, *args, **kwargs):
         """Stage task."""
         pass
 
-    def __call__(self, *args, **kwargs):
-        return self.run(*args, **kwargs)
+    def __call__(self, macro: Macro, *args, **kwargs):
+        return self.run(macro, *args, **kwargs)
 
 
 class Macro:
@@ -85,8 +76,6 @@ class Macro:
         self,
         name: Optional[str] = None,
         stages: Optional[list[StageType]] = None,
-        stage_params: dict = {},
-        external_stages: dict[str, Stage] = {},
     ):
 
         if name is None and not hasattr(self, "name"):
@@ -100,13 +89,9 @@ class Macro:
 
         self.stage_status: dict[str, StageStatus] = {}
 
-        self._stage_params = stage_params
-        self._external_stages = external_stages
-
         self.command: Command[HALActor]  # Will be set in reset()
         self._running = False
 
-        self._preconditions_task: asyncio.Task | None = None
         self._running_task: asyncio.Task | None = None
 
         self.reset(self.stages)
@@ -135,11 +120,9 @@ class Macro:
 
         for st in self.stage_status:
             if getattr(self, st, None) is None:
-                if st not in self._external_stages:
-                    raise HALError(f"Cannot find method for stage {st!r}.")
+                raise HALError(f"Cannot find method for stage {st!r}.")
 
         self.running = False
-        self._preconditions_task = None
         self._running_task = None
 
         if command:
@@ -275,7 +258,6 @@ class Macro:
             raise HALError("Cannot start a macro without an active command.")
 
         self.running = True
-        self._preconditions_task = asyncio.create_task(self.preconditions())
         self._running_task = asyncio.create_task(self._do_run())
 
         try:
@@ -294,16 +276,12 @@ class Macro:
     def _get_coros(self, stage: StageType) -> list[Coroutine]:
 
         if isinstance(stage, str):
-            stage_method = getattr(self, stage, None)
-            if stage_method is None or stage in self._external_stages:
-                stage_method = self._external_stages[stage].run
-
-            stage_kwargs = self._stage_params.get(stage, {})
+            stage_method = getattr(self, stage)
 
             if not asyncio.iscoroutinefunction(stage_method):
                 raise HALError(f"Stage function for {stage} is not a coroutine.")
 
-            return [stage_method(**stage_kwargs)]
+            return [stage_method()]
 
         else:
             coros: list[Coroutine] = []
@@ -350,8 +328,3 @@ class Macro:
             raise HALError("The macro is not running.")
 
         self._running_task.cancel()
-
-    async def preconditions(self):
-        """A task that is run concurrently with the stages when the macro starts."""
-
-        pass

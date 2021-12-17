@@ -47,5 +47,7 @@ for f_ in files:
 
 os.chdir(cwd)
 
+from .base import Macro, StageHelper
 
-__all__ = ["all_macros"]
+
+__all__ = ["all_macros", "Macro", "StageHelper"]
