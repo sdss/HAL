@@ -10,17 +10,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from typing import TYPE_CHECKING
+from clu import Command
 
-
-if TYPE_CHECKING:
-
-    from clu import Command
-
-    from hal.actor import HALActor
+from hal.actor import HALActor
 
 
 __all__ = ["TCCHelper"]
+
+
+HALCommandType = Command[HALActor]
 
 
 @dataclass
@@ -31,7 +29,7 @@ class TCCHelper:
 
     async def goto_position(
         self,
-        command: Command[HALActor],
+        command: HALCommandType,
         where: str | dict[str, float],
     ):
         """Executes the goto command.
@@ -80,7 +78,7 @@ class TCCHelper:
 
         return command.finish(text=f"At position {where}.")
 
-    async def axis_init(self, command: Command[HALActor]) -> bool:
+    async def axis_init(self, command: HALCommandType) -> bool:
         """Executes TCC axis init or fails."""
 
         status = await self.actor.send_command("tcc", "axis status")
@@ -124,7 +122,7 @@ class TCCHelper:
 
         return True
 
-    async def axis_stop(self, command: Command[HALActor]) -> bool:
+    async def axis_stop(self, command: HALCommandType) -> bool:
         """Issues an axis stop to the TCC."""
 
         axis_stop_cmd = await self.actor.send_command("tcc", "axis stop")
@@ -164,7 +162,7 @@ class TCCHelper:
             # Some axisStat is unknown (and thus None)
             return False
 
-    async def mcp_semaphore_ok(self, command: Command[HALActor]):
+    async def mcp_semaphore_ok(self, command: HALCommandType):
         """Returns the semaphore if the semaphore is owned by the TCC or nobody."""
 
         mcp_model = self.actor.models["mcp"]

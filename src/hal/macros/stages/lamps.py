@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .. import StageHelper
+from hal.macros import StageHelper
 
 
 if TYPE_CHECKING:

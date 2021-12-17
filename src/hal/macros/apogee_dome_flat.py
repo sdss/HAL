@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import asyncio
 
+from clu.legacy.tron import TronKey
+
 from hal.exceptions import MacroError
 
 from .base import Macro
@@ -71,13 +73,13 @@ class APOGEEDomeFlatMacro(Macro):
 
         return True
 
-    async def _flash_lamps(self, value: list):
+    async def _flash_lamps(self, key: TronKey):
         """Flases the FF lamps."""
 
-        if len(value) == 0:
+        if len(key.value) == 0:
             return
 
-        n_read = int(value[2])
+        n_read = int(key.value[2])
         if n_read == 3:
             time_to_flash = 4.0
 
@@ -99,9 +101,15 @@ class APOGEEDomeFlatMacro(Macro):
 
         apogee = self.command.actor.helpers.apogee
 
-        self.command.actor.models["apogee"]["utrReadState"].remove_callback(
-            self._flash_lamps
-        )
+        try:
+            self.command.actor.models["apogee"]["utrReadState"].remove_callback(
+                self._flash_lamps
+            )
+        except AssertionError:
+            pass
 
         if not await apogee.shutter(False, command=self.command):
             self.command.error("Failed closing APOGEE shutter.")
+
+        self.command.info("Reopening FFS.")
+        await self.command.actor.helpers.ffs.open(self.command)

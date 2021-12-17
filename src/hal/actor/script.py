@@ -8,17 +8,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import click
 
-from . import hal_command_parser
-
-
-if TYPE_CHECKING:
-    from clu import Command
-
-    from hal.actor import HALActor
+from . import HALCommandType, hal_command_parser
 
 
 __all__ = ["script"]
@@ -32,7 +24,7 @@ def script():
 
 
 @script.command(name="list")
-async def list_(command: Command[HALActor]):
+async def list_(command: HALCommandType):
     """Returns a list of available scripts."""
 
     assert command.actor
@@ -42,7 +34,7 @@ async def list_(command: Command[HALActor]):
 
 
 @script.command()
-async def running(command: Command[HALActor]):
+async def running(command: HALCommandType):
     """Returns a list of running scripts."""
 
     assert command.actor
@@ -53,7 +45,7 @@ async def running(command: Command[HALActor]):
 
 @script.command()
 @click.argument("SCRIPT", type=str)
-async def get_steps(command: Command[HALActor], script: str):
+async def get_steps(command: HALCommandType, script: str):
     """Lists the steps in the script."""
 
     assert command.actor
@@ -74,7 +66,7 @@ async def get_steps(command: Command[HALActor], script: str):
 
 @script.command()
 @click.argument("SCRIPT", type=str)
-async def run(command: Command[HALActor], script: str):
+async def run(command: HALCommandType, script: str):
     """Runs a script."""
 
     assert command.actor
@@ -92,7 +84,7 @@ async def run(command: Command[HALActor], script: str):
 
 @script.command()
 @click.argument("SCRIPT", type=str)
-async def cancel(command: Command[HALActor], script: str):
+async def cancel(command: HALCommandType, script: str):
     """Cancels the execution of a script."""
 
     assert command.actor

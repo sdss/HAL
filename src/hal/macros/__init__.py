@@ -12,17 +12,16 @@ import inspect
 import os
 import warnings
 
-from typing import Type
-
 from hal.exceptions import HALUserWarning
 
-from .base import Macro
+from .base import Macro, StageHelper
 
 
 # Dynamically inspect all the files in this directory and import the subclasses
 # of Macro. Also create a list of instances for the macros.
 
 # TODO: maybe Macro subclasses should be a singleton ...
+
 
 exclusions = ["__init__.py", "base.py"]
 
@@ -46,8 +45,5 @@ for f_ in files:
         warnings.warn(f"cannot import file {f_}: {ee}", HALUserWarning)
 
 os.chdir(cwd)
-
-from .base import Macro, StageHelper
-
 
 __all__ = ["all_macros", "Macro", "StageHelper"]

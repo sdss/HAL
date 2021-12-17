@@ -95,7 +95,8 @@ class Scripts:
                     self.actor.send_command(actor, command_string),
                     timeout,
                 )
-                command.debug(script_step=[name, command_string, n + 1, len(steps)])
+                if command:
+                    command.debug(script_step=[name, command_string, n + 1, len(steps)])
 
         if name in self.running:
             raise RuntimeError(f"Script {name} is already running.")

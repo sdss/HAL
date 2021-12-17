@@ -10,16 +10,15 @@ from __future__ import annotations
 
 import enum
 
-from typing import TYPE_CHECKING
+from clu import Command
 
-from hal import HALCommandType
-
-
-if TYPE_CHECKING:
-    from hal.actor import HALActor
+from hal.actor import HALActor
 
 
 __all__ = ["APOGEEHelper"]
+
+
+HALCommandType = Command[HALActor]
 
 
 class APOGEEHelper:
@@ -59,7 +58,7 @@ class APOGEEHelper:
 
         expose_command = await commander.send_command(
             "apogee",
-            f"expose time={exp_time:.1f} object={exp_type} ''",
+            f"expose time={exp_time:.1f} object={exp_type}",
         )
 
         if expose_command.status.did_fail:
@@ -83,6 +82,7 @@ class APOGEEGangHelper:
     async def _update_flag(self, value: list):
         """Callback to update the gang connector flag."""
 
+        value = value or [0]
         self.flag = APOGEEGang(int(value[0]))
 
     def get_position(self):
@@ -100,7 +100,17 @@ class APOGEEGangHelper:
     def at_cartridge(self):
         """Returns True if the gang connector is at the cartridge."""
 
-        return self.get_position() == self.flag.AT_CART
+        ok = self.get_position() == self.flag.AT_CART
+
+        if ok is False and (self.get_position() == self.flag.UNKNWON):
+            self.actor.write(
+                "w",
+                text="Gang connector in UNKNOWN status "
+                "but assumming it is at the cart.",
+            )
+            ok = True
+
+        return ok
 
 
 class APOGEEGang(enum.Enum):

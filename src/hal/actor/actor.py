@@ -15,10 +15,6 @@ from typing import TypeVar
 from clu.legacy import LegacyActor
 
 from hal import __version__
-from hal.tools import APOGEEHelper, FFSHelper, Scripts, TCCHelper
-
-from .commands import hal_command_parser
-from .macros import all_macros
 
 
 __all__ = ["HALActor"]
@@ -30,12 +26,10 @@ T = TypeVar("T", bound="HALActor")
 class HALActor(LegacyActor):
     """HAL actor."""
 
-    parser = hal_command_parser
-
     def __init__(self, *args, **kwargs):
 
         schema = kwargs.pop("schema", None)
-        schema = schema or os.path.join(os.path.dirname(__file__), "etc/schema.json")
+        schema = schema or os.path.join(os.path.dirname(__file__), "../etc/schema.json")
 
         super().__init__(*args, schema=schema, **kwargs)
 
@@ -49,6 +43,9 @@ class ActorHelpers:
     """State helpers."""
 
     def __init__(self, actor: HALActor):
+
+        from hal.macros import all_macros
+        from hal.tools import APOGEEHelper, FFSHelper, Scripts, TCCHelper
 
         self.ffs = FFSHelper(actor)
         self.tcc = TCCHelper(actor)

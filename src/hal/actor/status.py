@@ -8,18 +8,11 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import click
 
 from clu import Command
 
-from . import hal_command_parser
-
-
-if TYPE_CHECKING:
-
-    from hal.actor import HALActor
+from . import HALCommandType, hal_command_parser
 
 
 __all__ = ["status"]
@@ -27,7 +20,7 @@ __all__ = ["status"]
 
 @hal_command_parser.command()
 @click.option("--full", is_flag=True, help="Outputs additional information.")
-async def status(command: Command[HALActor], full: bool = False):
+async def status(command: HALCommandType, full: bool = False):
     """Outputs the status of the system."""
 
     actor = command.actor

@@ -14,21 +14,19 @@ import enum
 import warnings
 from contextlib import suppress
 
-from typing import TYPE_CHECKING, ClassVar, Coroutine, Optional, Union
+from typing import ClassVar, Coroutine, Optional, Union
 
+from clu import Command
+
+from hal.actor import HALActor
 from hal.exceptions import HALError, HALUserWarning
-
-
-if TYPE_CHECKING:
-    from clu import Command
-
-    from hal import HALActor
 
 
 __all__ = ["Macro", "StageHelper"]
 
 
 StageType = Union[str, tuple[str, ...], list[str]]
+HALCommandType = Command[HALActor]
 
 
 class StageStatus(enum.Flag):
@@ -91,7 +89,7 @@ class Macro:
 
         self.stage_status: dict[str, StageStatus] = {}
 
-        self.command: Command[HALActor]  # Will be set in reset()
+        self.command: HALCommandType  # Will be set in reset()
         self._running = False
 
         self._running_task: asyncio.Task | None = None
@@ -105,7 +103,7 @@ class Macro:
     def reset(
         self,
         stages: Optional[list[StageType]] = None,
-        command: Optional[Command[HALActor]] = None,
+        command: Optional[HALCommandType] = None,
     ):
         """Resets stage status."""
 
@@ -178,7 +176,7 @@ class Macro:
 
     def output_stage_status(
         self,
-        command: Optional[Command[HALActor]] = None,
+        command: Optional[HALCommandType] = None,
         level: str = "d",
     ):
         """Outputs the stage status to the actor."""
@@ -199,9 +197,7 @@ class Macro:
 
         command.write(level, stage_status=status_keyw)
 
-    def list_stages(
-        self, command: Optional[Command[HALActor]] = None, level: str = "i"
-    ):
+    def list_stages(self, command: Optional[HALCommandType] = None, level: str = "i"):
         """Outputs stages to the actor."""
 
         command = command or self.command
@@ -253,7 +249,11 @@ class Macro:
             if self.command:
                 self.command.warning("Running cleanup tasks.")
             for cleanup_stage in self.__CLEANUP__:
-                await asyncio.gather(*self._get_coros(cleanup_stage))
+                try:
+                    await asyncio.gather(*self._get_coros(cleanup_stage))
+                except Exception as err:
+                    if self.command:
+                        self.command.error(f"Cleanup failed with error: {err}")
 
         self.running = False
 

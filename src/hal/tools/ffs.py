@@ -10,10 +10,15 @@ from __future__ import annotations
 
 import enum
 
-from .. import HALActor, HALCommandType
+from clu import Command
+
+from hal.actor import HALActor
 
 
 __all__ = ["FFSHelper"]
+
+
+HALCommandType = Command[HALActor]
 
 
 class FFSHelper:

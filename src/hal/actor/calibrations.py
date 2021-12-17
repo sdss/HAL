@@ -8,9 +8,7 @@
 
 from __future__ import annotations
 
-from hal import HALCommandType
-
-from . import hal_command_parser
+from . import HALCommandType, hal_command_parser
 
 
 @hal_command_parser.group()
