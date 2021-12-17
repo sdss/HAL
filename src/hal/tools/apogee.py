@@ -88,7 +88,7 @@ class APOGEEGangHelper:
     def get_position(self):
         """Return the position of the gang connector."""
 
-        return self.flag.name
+        return self.flag
 
     def at_podium(self):
         """Return True if the gang connector is on the podium."""
