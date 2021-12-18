@@ -11,15 +11,15 @@ from __future__ import annotations
 import abc
 import asyncio
 import enum
+import logging
 import warnings
 from contextlib import suppress
 
-from typing import ClassVar, Coroutine, Optional, Union
+from typing import ClassVar, Coroutine, Generic, Optional, TypeVar, Union, cast
 
-from clu import Command, FakeCommand
+from clu import BaseCommand, FakeCommand
+from sdsstools.logger import SDSSLogger
 
-from hal import log
-from hal.actor import HALActor
 from hal.exceptions import HALError, HALUserWarning
 
 
@@ -27,7 +27,7 @@ __all__ = ["Macro", "StageHelper"]
 
 
 StageType = Union[str, tuple[str, ...], list[str]]
-HALCommandType = Command[HALActor]
+Command_co = TypeVar("Command_co", bound=BaseCommand, covariant=True)
 
 
 class StageStatus(enum.Flag):
@@ -63,7 +63,7 @@ class StageHelper(abc.ABCMeta):
         return self.run(macro, *args, **kwargs)
 
 
-class Macro:
+class Macro(Generic[Command_co]):
     """A base macro class that offers concurrency and cancellation."""
 
     __RUNNING__: ClassVar[list[str]] = []
@@ -92,7 +92,11 @@ class Macro:
 
         self.stage_status: dict[str, StageStatus] = {}
 
-        self.command: HALCommandType | FakeCommand = FakeCommand(log)
+        null_log = logging.Logger("hal-null-log")
+        null_log.addHandler(logging.NullHandler())
+
+        self.command: Command_co = cast(Command_co, FakeCommand(null_log))
+
         self._running = False
 
         self._running_task: asyncio.Task | None = None
@@ -106,7 +110,7 @@ class Macro:
     def reset(
         self,
         stages: Optional[list[StageType]] = None,
-        command: Optional[HALCommandType] = None,
+        command: Optional[Command_co] = None,
     ):
         """Resets stage status."""
 
@@ -130,6 +134,7 @@ class Macro:
 
         if command:
             self.command = command
+
         self.list_stages()
 
     @property
@@ -178,7 +183,7 @@ class Macro:
 
     def output_stage_status(
         self,
-        command: Optional[HALCommandType] = None,
+        command: Optional[Command_co] = None,
         level: str = "d",
     ):
         """Outputs the stage status to the actor."""
@@ -193,7 +198,7 @@ class Macro:
 
         out_command.write(level, stage_status=status_keyw)
 
-    def list_stages(self, command: Optional[HALCommandType] = None, level: str = "i"):
+    def list_stages(self, command: Optional[Command_co] = None, level: str = "i"):
         """Outputs stages to the actor."""
 
         list_command = command or self.command
@@ -204,7 +209,8 @@ class Macro:
         )
         list_command.write(
             level,
-            all_stages=[self.name] + [st for st in flatten_stages(self.__STAGES__)],
+            all_stages=[self.name]
+            + [st for st in flatten_stages(self.__STAGES__ + self.__CLEANUP__)],
         )
 
     async def fail_macro(
