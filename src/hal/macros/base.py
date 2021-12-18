@@ -18,7 +18,6 @@ from contextlib import suppress
 from typing import ClassVar, Coroutine, Generic, Optional, TypeVar, Union, cast
 
 from clu import BaseCommand, FakeCommand
-from sdsstools.logger import SDSSLogger
 
 from hal.exceptions import HALError, HALUserWarning
 
