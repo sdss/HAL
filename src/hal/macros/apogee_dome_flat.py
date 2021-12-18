@@ -28,6 +28,12 @@ class APOGEEDomeFlatMacro(Macro):
     __STAGES__ = ["gang_at_cart", ("ffs", "open_shutter"), "expose"]
     __CLEANUP__ = ["cleanup"]
 
+    _flashing: bool = False
+
+    def reset(self, *args, **kwargs):
+        super().reset(*args, **kwargs)
+        self._flashing = False
+
     async def gang_at_cart(self):
         """Checks that the gang connected is at the cart."""
 
@@ -78,7 +84,9 @@ class APOGEEDomeFlatMacro(Macro):
             return
 
         n_read = int(key.value[2])
-        if n_read == 3:
+        if n_read == 3 and not self._flashing:
+            self._flashing = True
+
             time_to_flash = 4.0
 
             self.command.info(text="Calling ff_lamp.on")
@@ -87,6 +95,7 @@ class APOGEEDomeFlatMacro(Macro):
             await asyncio.sleep(time_to_flash)
 
             lamp_off = await self.command.send_command("mcp", "ff.off")
+            self._flashing = False
             if lamp_off.status.did_fail:
                 raise MacroError("Failed flashing lamps.")
 
