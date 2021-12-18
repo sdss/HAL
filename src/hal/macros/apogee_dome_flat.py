@@ -25,8 +25,8 @@ class APOGEEDomeFlatMacro(Macro):
 
     name = "apogee_dome_flat"
 
-    __STAGES__ = ["gang_at_cart"]
-    __CLEANUP__ = []
+    __STAGES__ = ["gang_at_cart", ("ffs", "open_shutter"), "expose"]
+    __CLEANUP__ = ["cleanup"]
 
     async def gang_at_cart(self):
         """Checks that the gang connected is at the cart."""
