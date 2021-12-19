@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import asyncio
 
-from .base import Macro, StageStatus
+from .macro import Macro, StageStatus
 
 
 __all__ = ["GotoFieldMacro"]

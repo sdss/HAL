@@ -14,7 +14,7 @@ import warnings
 
 from hal.exceptions import HALUserWarning
 
-from .base import Macro, StageHelper
+from .macro import Macro, StageHelper
 
 
 # Dynamically inspect all the files in this directory and import the subclasses

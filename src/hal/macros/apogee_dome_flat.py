@@ -14,7 +14,7 @@ from clu.legacy.tron import TronKey
 
 from hal.exceptions import MacroError
 
-from .base import Macro
+from .macro import Macro
 
 
 __all__ = ["APOGEEDomeFlatMacro"]
