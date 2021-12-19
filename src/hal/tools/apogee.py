@@ -85,8 +85,6 @@ class APOGEEGangHelper:
         value = value or [0]
         self.flag = APOGEEGang(int(value[0]))
 
-        print(value, self.flag)
-
     def get_position(self):
         """Return the position of the gang connector."""
 

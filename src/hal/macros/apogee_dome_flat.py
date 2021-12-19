@@ -12,15 +12,20 @@ import asyncio
 
 from clu.legacy.tron import TronKey
 
+from hal import HALCommandType
 from hal.exceptions import MacroError
+<<<<<<< HEAD
 
 from .macro import Macro
+=======
+from hal.macros import Macro
+>>>>>>> parent of bfbeb20 (Revert to a safe (?) place to slip into dev)
 
 
 __all__ = ["APOGEEDomeFlatMacro"]
 
 
-class APOGEEDomeFlatMacro(Macro):
+class APOGEEDomeFlatMacro(Macro[HALCommandType]):
     """Take an APOGEE dome flat after an exposure."""
 
     name = "apogee_dome_flat"

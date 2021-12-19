@@ -11,14 +11,14 @@ from __future__ import annotations
 import abc
 import asyncio
 import enum
+import logging
 import warnings
 from contextlib import suppress
 
-from typing import ClassVar, Coroutine, Optional, Union
+from typing import ClassVar, Coroutine, Generic, Optional, TypeVar, Union, cast
 
-from clu import Command
+from clu import BaseCommand, FakeCommand
 
-from hal.actor import HALActor
 from hal.exceptions import HALError, HALUserWarning
 
 
@@ -26,7 +26,7 @@ __all__ = ["Macro", "StageHelper"]
 
 
 StageType = Union[str, tuple[str, ...], list[str]]
-HALCommandType = Command[HALActor]
+Command_co = TypeVar("Command_co", bound=BaseCommand, covariant=True)
 
 
 class StageStatus(enum.Flag):
@@ -62,7 +62,7 @@ class StageHelper(abc.ABCMeta):
         return self.run(macro, *args, **kwargs)
 
 
-class Macro:
+class Macro(Generic[Command_co]):
     """A base macro class that offers concurrency and cancellation."""
 
     __RUNNING__: ClassVar[list[str]] = []
@@ -85,11 +85,17 @@ class Macro:
         # Stages to actually run (may skip some from __STAGES__)
         if stages is None and not hasattr(self, "__STAGES__"):
             raise HALError("The macro does not have a __STAGES__ attribute.")
-        self.stages = stages or self.__STAGES__
+
+        self.stages = stages or self.__STAGES__.copy()
+        self.stages += self.__CLEANUP__.copy()
 
         self.stage_status: dict[str, StageStatus] = {}
 
-        self.command: HALCommandType  # Will be set in reset()
+        null_log = logging.Logger("hal-null-log")
+        null_log.addHandler(logging.NullHandler())
+
+        self.command: Command_co = cast(Command_co, FakeCommand(null_log))
+
         self._running = False
 
         self._running_task: asyncio.Task | None = None
@@ -103,7 +109,7 @@ class Macro:
     def reset(
         self,
         stages: Optional[list[StageType]] = None,
-        command: Optional[HALCommandType] = None,
+        command: Optional[Command_co] = None,
     ):
         """Resets stage status."""
 
@@ -115,7 +121,7 @@ class Macro:
         if len(stages) == 0:
             raise HALError("No stages found.")
 
-        self.stages = stages
+        self.stages = stages + self.__CLEANUP__.copy()
         self.stage_status = {st: StageStatus.WAITING for st in flatten_stages(stages)}
 
         for st in self.stage_status:
@@ -127,7 +133,8 @@ class Macro:
 
         if command:
             self.command = command
-            self.list_stages()
+
+        self.list_stages()
 
     @property
     def running(self):
@@ -148,8 +155,7 @@ class Macro:
         elif is_running is False and self.name in Macro.__RUNNING__:
             Macro.__RUNNING__.remove(self.name)
 
-        if self.command:
-            self.command.debug(running_macros=Macro.__RUNNING__)
+        self.command.debug(running_macros=Macro.__RUNNING__)
 
     def set_stage_status(
         self,
@@ -164,7 +170,7 @@ class Macro:
         for stage in stages:
             if stage not in self.stage_status:
                 warnings.warn(
-                    "Cannot find stage {stage} in list. "
+                    f"Cannot find stage {stage} in list. "
                     "Maybe the macro was not reset correctly.",
                     HALUserWarning,
                 )
@@ -176,18 +182,12 @@ class Macro:
 
     def output_stage_status(
         self,
-        command: Optional[HALCommandType] = None,
+        command: Optional[Command_co] = None,
         level: str = "d",
     ):
         """Outputs the stage status to the actor."""
 
-        command = command or self.command
-        if not command:
-            warnings.warn(
-                "Cannot write to clients in output_stage_status(). Command not set.",
-                HALUserWarning,
-            )
-            return
+        out_command = command or self.command
 
         status_keyw = [self.name]
         for stage in self.stage_status:
@@ -195,26 +195,21 @@ class Macro:
             assert status_name
             status_keyw += [stage, status_name.lower()]
 
-        command.write(level, stage_status=status_keyw)
+        out_command.write(level, stage_status=status_keyw)
 
-    def list_stages(self, command: Optional[HALCommandType] = None, level: str = "i"):
+    def list_stages(self, command: Optional[Command_co] = None, level: str = "i"):
         """Outputs stages to the actor."""
 
-        command = command or self.command
-        if not command:
-            warnings.warn(
-                "Cannot write to clients in list_stages(). Command not set.",
-                HALUserWarning,
-            )
-            return
+        list_command = command or self.command
 
-        command.write(
+        list_command.write(
             level,
             stages=[self.name] + [st for st in flatten_stages(self.stages)],
         )
-        command.write(
+        list_command.write(
             level,
-            all_stages=[self.name] + [st for st in flatten_stages(self.__STAGES__)],
+            all_stages=[self.name]
+            + [st for st in flatten_stages(self.__STAGES__ + self.__CLEANUP__)],
         )
 
     async def fail_macro(
@@ -224,14 +219,7 @@ class Macro:
     ):
         """Fails the macros and informs the actor."""
 
-        if self.command:
-            self.command.error(error=f"Macro {self.name} failed unexpectedly.")
-            self.command.error(error=error)
-        else:
-            warnings.warn(
-                "Cannot write to clients in fail_macro(). Command not set.",
-                HALUserWarning,
-            )
+        self.command.error(error=error)
 
         if stage is None:
             stage = list(self.stage_status.keys())
@@ -239,21 +227,23 @@ class Macro:
             if not isinstance(stage, (list, tuple)):
                 stage = [stage]
 
+        is_cleanup: bool = False
         for ss in stage:
             if self.stage_status[ss] == StageStatus.ACTIVE:
                 self.stage_status[ss] = StageStatus.FAILED
+            if ss in self.__CLEANUP__:
+                is_cleanup = True
 
         self.output_stage_status()
 
-        if len(self.__CLEANUP__) > 0 and stage and stage not in self.__CLEANUP__:
-            if self.command:
-                self.command.warning("Running cleanup tasks.")
+        if len(self.__CLEANUP__) > 0 and is_cleanup is False:
+            self.command.warning("Running cleanup tasks.")
             for cleanup_stage in self.__CLEANUP__:
                 try:
                     await asyncio.gather(*self._get_coros(cleanup_stage))
                 except Exception as err:
-                    if self.command:
-                        self.command.error(f"Cleanup failed with error: {err}")
+                    self.command.error(f"Cleanup {cleanup_stage} failed: {err}")
+                    break
 
         self.running = False
 
