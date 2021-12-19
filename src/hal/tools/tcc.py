@@ -12,7 +12,9 @@ from dataclasses import dataclass
 
 from clu import Command
 
+from hal import config
 from hal.actor import HALActor
+from hal.exceptions import HALError
 
 
 __all__ = ["TCCHelper"]
@@ -48,53 +50,50 @@ class TCCHelper:
 
         if isinstance(where, str):
             if where not in config["goto"]:
-                return command.fail(error=f"Cannot find goto position '{where}'.")
+                raise HALError(f"Cannot find goto position '{where}'.")
+
             alt = config["goto"][where]["alt"]
             az = config["goto"][where]["az"]
             rot = config["goto"][where]["rot"]
+
             where = {"alt": alt, "az": az, "rot": rot}
 
         if self.is_slewing:
-            return command.fail(error="TCC is already slewing.")
+            raise HALError("TCC is already slewing.")
 
-        result = await self.axis_init(command)
-        if result is False:
-            return command.fail()
+        await self.axis_init(command)
 
         # Even if this is already checked in axis_init(), let's check again that the
         # axes are ok, but if alt < limit, we only check az and alt because we won't
         # move in altitude.
         result = self.axes_are_clear()
         if not result:
-            return command.fail(error="Some axes are not clear. Cannot continue.")
+            raise HALError("Some axes are not clear. Cannot continue.")
 
         # Now do the actual slewing.
         slew_result = await self.do_slew(command, where)
         axis_stop_result = await self.axis_stop(command)
         if slew_result is False or axis_stop_result is False:
-            return command.fail(error=f"Failed going to position {where}.")
+            raise HALError(f"Failed going to position {where}.")
 
-        return command.finish(text=f"At position {where}.")
+        return command.info(text=f"At position {where}.")
 
     async def axis_init(self, command: HALCommandType) -> bool:
         """Executes TCC axis init or fails."""
 
-        status = await self.actor.send_command("tcc", "axis status")
+        status = await command.send_command("tcc", "axis status", time_limit=20.0)
         if status.status.did_fail:
-            command.error(error="'tcc status' failed. Is the TCC connected?")
-            return False
+            raise HALError("'tcc status' failed. Is the TCC connected?")
 
         if self.check_stop_in() is True:
-            command.error(
-                error="Cannot tcc axis init because of bad axis status: "
+            raise HALError(
+                "Cannot tcc axis init because of bad axis status: "
                 "Check stop buttons on Interlocks panel."
             )
-            return False
 
         sem = await self.mcp_semaphore_ok(command)
         if sem is False:
-            command.error(error="Failed getting the semaphore information.")
-            return False
+            raise HALError("Failed getting the semaphore information.")
 
         if sem == "TCC:0:0" and self.axes_are_clear():
             command.info(
@@ -111,25 +110,25 @@ class TCCHelper:
                 "and rotator: cannot move in az."
             )
             axis_init_cmd_str += " rot,alt"
-        axis_init_cmd = await self.actor.send_command("tcc", axis_init_cmd_str)
+        axis_init_cmd = await command.send_command(
+            "tcc",
+            axis_init_cmd_str,
+            time_limit=20.0,
+        )
 
         if axis_init_cmd.status.did_fail:
-            command.error(error="Cannot slew telescope: failed tcc axis init.")
-            command.error(error="Cannot slew telescope: check and clear interlocks?")
-            return False
+            command.error("Cannot slew telescope: failed tcc axis init.")
+            raise HALError("Cannot slew telescope: check and clear interlocks?")
 
         return True
 
     async def axis_stop(self, command: HALCommandType) -> bool:
         """Issues an axis stop to the TCC."""
 
-        axis_stop_cmd = await self.actor.send_command("tcc", "axis stop")
+        axis_stop_cmd = await command.send_command("tcc", "axis stop", time_limit=30.0)
 
         if axis_stop_cmd.status.did_fail:
-            command.error(
-                error="Error: failed to cleanly stop telescope via tcc axis stop."
-            )
-            return False
+            raise HALError("Error: failed to cleanly stop telescope via tcc axis stop.")
 
         self.is_slewing = False
         return True
@@ -167,11 +166,13 @@ class TCCHelper:
 
         sem = mcp_model["semaphoreOwner"]
         if sem is None:
-            sem_show_cmd = await self.actor.send_command("mcp", "sem.show")
+            sem_show_cmd = await command.send_command(
+                "mcp", "sem.show", time_limit=20.0
+            )
 
             if sem_show_cmd.status.did_fail:
-                command.error(error="Cannot get mcp semaphore. Is the MCP alive?")
-                return False
+                raise HALError("Cannot get mcp semaphore. Is the MCP alive?")
+
             sem = mcp_model["semaphoreOwner"]
 
         if (
@@ -180,13 +181,12 @@ class TCCHelper:
             and (sem[0] != "None")
             and (sem[0] is not None)
         ):
-            command.error(
-                error=f"Cannot axis init: Semaphore is owned by  {sem[0]}. "
+            raise HALError(
+                f"Cannot axis init: Semaphore is owned by  {sem[0]}. "
                 "If you are the owner (e.g., via MCP Menu), release it and try again. "
                 "If you are not the owner, confirm that you can steal "
                 "it from them, then issue: mcp sem.steal"
             )
-            return False
 
         return sem
 
@@ -236,10 +236,11 @@ class TCCHelper:
                 if keep_args:
                     command.warning(text="keeping all offsets")
 
-                slew_cmd = self.actor.send_command(
+                slew_cmd = command.send_command(
                     "tcc",
                     f"track {ra}, {dec} icrs /rottype=object/rotang={rot:g}"
                     f"/rotwrap=mid {keep_args}",
+                    time_limit=config["timeouts"]["slew"],
                 )
 
             elif "az" in coords and "alt" in coords and "rot" in coords:
@@ -252,20 +253,20 @@ class TCCHelper:
                     f"({az:.4f}, {alt:.4f}, {rot:.4f})"
                 )
 
-                slew_cmd = self.actor.send_command(
-                    "tcc", f"track {az:f}, {alt:f} mount/rottype=mount/rotangle={rot:f}"
+                slew_cmd = command.send_command(
+                    "tcc",
+                    f"track {az:f}, {alt:f} mount/rottype=mount/rotangle={rot:f}",
+                    time_limit=config["timeouts"]["slew"],
                 )
 
             else:
 
-                command.error(error="Not enough coordinates information provided.")
-                return False
+                raise HALError("Not enough coordinates information provided.")
 
         else:
 
             if "alt" not in coords or "az" not in coords:
-                command.error(error="Not alt/az offsets provided.")
-                return False
+                raise HALError("Not alt/az offsets provided.")
 
             # In arcsec
             alt = coords["alt"] or 0.0
@@ -274,9 +275,10 @@ class TCCHelper:
 
             command.info(text=f"Offseting alt={alt:.3f}, az={az:.3f}")
 
-            slew_cmd = self.actor.send_command(
+            slew_cmd = command.send_command(
                 "tcc",
                 f"offset guide {az/3600.:g},{alt/3600.:g},{rot/3600.:g} /computed",
+                time_limit=config["timeouts"]["slew"],
             )
 
         # "tcc track" in the new TCC is only Done successfully when all requested
@@ -295,23 +297,17 @@ class TCCHelper:
             str_axis_state = ",".join(tcc_model["axisCmdState"].value)
             str_axis_code = ",".join(tcc_model["axisErrCode"].value)
             command.error(
-                error=f"tcc track command failed with axis states: {str_axis_state} "
+                f"tcc track command failed with axis states: {str_axis_state} "
                 f"and error codes: {str_axis_code}"
             )
-            command.error(
-                error="Failed to complete slew: see TCC messages for details."
-            )
-            return False
+            raise HALError("Failed to complete slew: see TCC messages for details.")
 
         if self.axes_are_clear() is False:
             axis_bits = self.get_bad_axis_bits()
             command.error(
-                error="TCC slew command ended with some bad bits set: "
+                "TCC slew command ended with some bad bits set: "
                 "0x{:x},0x{:x},0x{:x}".format(*axis_bits)
             )
-            command.error(
-                error="Failed to complete slew: see TCC messages for details."
-            )
-            return False
+            raise HALError("Failed to complete slew: see TCC messages for details.")
 
         return True

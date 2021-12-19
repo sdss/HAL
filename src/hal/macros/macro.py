@@ -3,7 +3,7 @@
 #
 # @Author: José Sánchez-Gallego (gallegoj@uw.edu)
 # @Date: 2021-10-10
-# @Filename: base.py
+# @Filename: macro.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 from __future__ import annotations
@@ -17,9 +17,9 @@ from contextlib import suppress
 
 from typing import ClassVar, Coroutine, Generic, Optional, TypeVar, Union, cast
 
-from clu import BaseCommand, FakeCommand
+from clu import BaseCommand, Command, CommandStatus, FakeCommand
 
-from hal.exceptions import HALError, HALUserWarning
+from hal.exceptions import HALError, HALUserWarning, MacroError
 
 
 __all__ = ["Macro", "StageHelper"]
@@ -327,3 +327,30 @@ class Macro(Generic[Command_co]):
             raise HALError("The macro is not running.")
 
         self._running_task.cancel()
+
+    async def send_command(self, target: str, command_string: str, **kwargs):
+        """Sends a command to an actor. Raises `.MacroError` if it fails.
+
+        Parameters
+        ----------
+        target
+            Actor to command.
+        command_string
+            Command string to pass to the actor.
+        kwargs
+            Additional parameters to pass to ``send_command()``.
+
+        """
+
+        if not isinstance(self.command, Command):
+            raise MacroError("A command is required to use send_command().")
+
+        command = await self.command.send_command(target, command_string, **kwargs)
+
+        if command.status.did_fail:
+            if command.status == CommandStatus.TIMEDOUT:
+                raise MacroError(f"Command {target} {command_string} timed out.")
+            else:
+                raise MacroError(f"Command {target} {command_string} failed.")
+
+        return command

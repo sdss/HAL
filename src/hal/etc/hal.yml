@@ -11,6 +11,13 @@ actor:
     - apogee
   log_dir: /data/logs/actors/hal
 
+timeouts:
+  ffs: 30.0
+  lamps: 5.0
+  apogee_shutter: 15.0
+  expose: 25.0
+  slew: 160.0
+
 goto:
   stow:
     alt: 30

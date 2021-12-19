@@ -12,14 +12,9 @@ import asyncio
 
 from clu.legacy.tron import TronKey
 
-from hal import HALCommandType
+from hal import HALCommandType, config
 from hal.exceptions import MacroError
-<<<<<<< HEAD
-
-from .macro import Macro
-=======
 from hal.macros import Macro
->>>>>>> parent of bfbeb20 (Revert to a safe (?) place to slip into dev)
 
 
 __all__ = ["APOGEEDomeFlatMacro"]
@@ -36,13 +31,14 @@ class APOGEEDomeFlatMacro(Macro[HALCommandType]):
     _flashing: bool = False
 
     def reset(self, *args, **kwargs):
+        """Resets the macros."""
+
         super().reset(*args, **kwargs)
+
         self._flashing = False
 
     async def gang_at_cart(self):
         """Checks that the gang connected is at the cart."""
-
-        assert self.command.actor
 
         if not self.command.actor.helpers.apogee.gang_helper.at_cartridge():
             raise MacroError("The APOGEE gang connector is not at the cart.")
@@ -59,17 +55,13 @@ class APOGEEDomeFlatMacro(Macro[HALCommandType]):
     async def open_shutter(self):
         """Opens the APOGEE cold shutter."""
 
-        assert self.command.actor
-
         apogee = self.command.actor.helpers.apogee
 
-        if not await apogee.shutter(True, command=self.command):
+        if not await apogee.shutter(self.command, True):
             raise MacroError("Failed opening APOGEE shutter.")
 
     async def expose(self):
         """Takes the dome flat. Turns on the FFS after the fourth read."""
-
-        assert self.command.actor
 
         apogee = self.command.actor.helpers.apogee
 
@@ -78,7 +70,7 @@ class APOGEEDomeFlatMacro(Macro[HALCommandType]):
         )
 
         self.command.info("Taking APOGEE dome flat.")
-        await apogee.expose(50, exp_type="DomeFlat", command=self.command)
+        await apogee.expose(self.command, 50, exp_type="DomeFlat")
 
         return True
 
@@ -96,7 +88,13 @@ class APOGEEDomeFlatMacro(Macro[HALCommandType]):
 
             self.command.info(text="Calling ff_lamp.on")
 
-            self.command.send_command("mcp", "ff.on")  # Do not wait for the command.
+            asyncio.create_task(
+                self.send_command(
+                    "mcp",
+                    "ff.on",
+                    time_limit=config["timeouts"]["lamps"],
+                )
+            )
             await asyncio.sleep(time_to_flash)
 
             lamp_off = await self.command.send_command("mcp", "ff.off")
@@ -109,8 +107,6 @@ class APOGEEDomeFlatMacro(Macro[HALCommandType]):
     async def cleanup(self):
         """Closes the shutter and does cleanup."""
 
-        assert self.command.actor
-
         apogee = self.command.actor.helpers.apogee
 
         try:
@@ -120,7 +116,7 @@ class APOGEEDomeFlatMacro(Macro[HALCommandType]):
         except AssertionError:
             pass
 
-        if not await apogee.shutter(False, command=self.command):
+        if not await apogee.shutter(self.command, False):
             self.command.error("Failed closing APOGEE shutter.")
 
         self.command.info("Reopening FFS.")

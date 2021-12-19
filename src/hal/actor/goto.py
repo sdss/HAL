@@ -8,6 +8,8 @@
 
 from __future__ import annotations
 
+from hal.exceptions import HALError
+
 from . import HALCommandType, hal_command_parser
 
 
@@ -17,7 +19,12 @@ __all__ = ["gotoStow"]
 async def goto_position(command: HALCommandType, name: str):
     """Go to position."""
 
-    return await command.actor.helpers.tcc.goto_position(command, name)
+    try:
+        await command.actor.helpers.tcc.goto_position(command, name)
+    except HALError as err:
+        return command.fail(f"Goto position failed with error: {err}")
+
+    return command.finish()
 
 
 @hal_command_parser.command(name="gotoStow", cancellable=True)

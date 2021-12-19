@@ -10,15 +10,14 @@ from __future__ import annotations
 
 import enum
 
-from clu import Command
+from clu import CommandStatus
 
-from hal.actor import HALActor
+from hal import config
+from hal.actor import HALActor, HALCommandType
+from hal.exceptions import HALError
 
 
 __all__ = ["APOGEEHelper"]
-
-
-HALCommandType = Command[HALActor]
 
 
 class APOGEEHelper:
@@ -29,46 +28,46 @@ class APOGEEHelper:
         self.actor = actor
         self.gang_helper = APOGEEGangHelper(actor)
 
-    async def shutter(self, open=True, command: HALCommandType = None):
+    async def shutter(self, command: HALCommandType, open=True):
         """Opens/closes the shutter."""
 
-        commander = command or self.actor
-
         position = "open" if open is True else "close"
-        shutter_command = await commander.send_command("apogee", f"shutter {position}")
 
-        if shutter_command.status.did_fail:
-            if command is not None:
-                command.error("Failed to open/close APOGEE shutter.")
-            else:
-                self.actor.write("e", text="Failed to open/close APOGEE shutter.")
-            return False
+        shutter_command = await self._send_command(
+            command,
+            f"shutter {position}",
+            time_limit=config["timeouts"]["apogee_shutter"],
+        )
 
-        return True
+        return shutter_command
 
     async def expose(
         self,
+        command: HALCommandType,
         exp_time: float,
         exp_type: str = "dark",
-        command: HALCommandType | None = None,
     ):
         """Exposes APOGEE."""
 
-        commander = command or self.actor
-
-        expose_command = await commander.send_command(
-            "apogee",
+        expose_command = await self._send_command(
+            command,
             f"expose time={exp_time:.1f} object={exp_type}",
+            time_limit=exp_time + config['timeouts']['expose']
         )
 
-        if expose_command.status.did_fail:
-            if command is not None:
-                command.error("Failed to expose APOGEE.")
-            else:
-                self.actor.write("e", text="Failed to expose APOGEE.")
-            return False
+        return expose_command
 
-        return True
+    async def _send_command(self, command: HALCommandType, cmd_str: str, **kwargs):
+        """Sends a command to the MCP."""
+
+        move_cmd = await command.send_command("apogee", cmd_str, **kwargs)
+        if move_cmd.status.did_fail:
+            if move_cmd.status == CommandStatus.TIMEDOUT:
+                raise HALError(f"apogee {cmd_str} timed out.")
+            else:
+                raise HALError(f"apogee {cmd_str} failed.")
+
+        return move_cmd
 
 
 class APOGEEGangHelper:

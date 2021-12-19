@@ -10,19 +10,20 @@ from __future__ import annotations
 
 import enum
 
-from clu import Command
+from clu import CommandStatus
 
-from hal.actor import HALActor
+from hal import config
+from hal.actor import HALActor, HALCommandType
+from hal.exceptions import HALError
 
 
 __all__ = ["FFSHelper"]
 
 
-HALCommandType = Command[HALActor]
-
-
 class FFSHelper:
     """Command and keeps track of the Flat-Field Screens status."""
+
+    TIMEOUT: float = config["timeouts"]["ffs"]
 
     def __init__(self, actor: HALActor):
 
@@ -53,13 +54,7 @@ class FFSHelper:
         if self.all_open():
             return
 
-        # TODO: add timeout.
-        move_cmd = await command.send_command("mcp", "ffs.open")
-        if move_cmd.status.did_fail:
-            command.error("Failed to close FFS.")
-            return False
-
-        return True
+        return await self._send_command(command, "ffs.open")
 
     async def close(self, command: HALCommandType):
         """Close all the petals."""
@@ -67,13 +62,19 @@ class FFSHelper:
         if self.all_closed():
             return
 
-        # TODO: add timeout.
-        move_cmd = await command.send_command("mcp", "ffs.close")
-        if move_cmd.status.did_fail:
-            command.error("Failed to close FFS.")
-            return False
+        return await self._send_command(command, "ffs.close")
 
-        return True
+    async def _send_command(self, command: HALCommandType, cmd_str: str):
+        """Sends a command to the MCP."""
+
+        move_cmd = await command.send_command("mcp", cmd_str, time_limit=self.TIMEOUT)
+        if move_cmd.status.did_fail:
+            if move_cmd.status == CommandStatus.TIMEDOUT:
+                raise HALError(f"mcp {cmd_str} timed out.")
+            else:
+                raise HALError(f"mcp {cmd_str} failed.")
+
+        return move_cmd
 
 
 class FFSStatus(enum.Enum):
