@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeVar
 
 from clu import CommandStatus
 
@@ -31,12 +31,13 @@ class HALHelper:
         command: HALCommandType,
         target: str,
         cmd_str: str,
+        raise_on_fail: bool = True,
         **kwargs,
     ):
         """Sends a command to a target."""
 
         cmd = await command.send_command(target, cmd_str, **kwargs)
-        if cmd.status.did_fail:
+        if raise_on_fail and cmd.status.did_fail:
             if cmd.status == CommandStatus.TIMEDOUT:
                 raise HALError(f"{target} {cmd_str} timed out.")
             else:
@@ -46,6 +47,8 @@ class HALHelper:
 
 
 from .apogee import *
+from .boss import *
 from .ffs import *
+from .lamps import *
 from .scripts import *
 from .tcc import *
