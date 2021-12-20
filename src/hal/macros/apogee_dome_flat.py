@@ -28,11 +28,7 @@ class APOGEEDomeFlatMacro(Macro):
     __STAGES__ = ["gang_at_cart", ("ffs", "open_shutter"), "expose"]
     __CLEANUP__ = ["cleanup"]
 
-    _flashing: bool = False
-
-    def reset(self, *args, **kwargs):
-        super().reset(*args, **kwargs)
-        self._flashing = False
+    __ffs_initial_state: str | None = None
 
     async def gang_at_cart(self):
         """Checks that the gang connected is at the cart."""
@@ -46,6 +42,17 @@ class APOGEEDomeFlatMacro(Macro):
 
     async def ffs(self):
         """Check the FFS status and closes it."""
+
+        if self.command.actor.helpers.ffs.all_closed():
+            self.command.debug("FFS already closed.")
+            self.__ffs_initial_state = "closed"
+            return
+        elif self.command.actor.helpers.ffs.all_open():
+            self.__ffs_initial_state = "open"
+        else:
+            raise MacroError("Cannot determine state of FFS.")
+
+        self.command.info("Closing FFS.")
 
         result = await self.command.actor.helpers.ffs.close(self.command)
         if result is False:
@@ -83,10 +90,9 @@ class APOGEEDomeFlatMacro(Macro):
         if len(key.value) == 0:
             return
 
+        state = key.value[1]
         n_read = int(key.value[2])
-        if n_read == 3 and not self._flashing:
-            self._flashing = True
-
+        if n_read == 3 and state == "Reading":
             time_to_flash = 4.0
 
             self.command.info(text="Calling ff_lamp.on")
@@ -95,7 +101,6 @@ class APOGEEDomeFlatMacro(Macro):
             await asyncio.sleep(time_to_flash)
 
             lamp_off = await self.command.send_command("mcp", "ff.off")
-            self._flashing = False
             if lamp_off.status.did_fail:
                 raise MacroError("Failed flashing lamps.")
 
@@ -118,5 +123,8 @@ class APOGEEDomeFlatMacro(Macro):
         if not await apogee.shutter(False, command=self.command):
             self.command.error("Failed closing APOGEE shutter.")
 
-        self.command.info("Reopening FFS.")
-        await self.command.actor.helpers.ffs.open(self.command)
+        if self.__ffs_initial_state == "open":
+            self.command.info("Reopening FFS.")
+            await self.command.actor.helpers.ffs.open(self.command)
+        else:
+            self.command.info("Keeping FFS closed.")
