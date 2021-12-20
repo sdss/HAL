@@ -8,19 +8,14 @@
 
 from __future__ import annotations
 
-import asyncio
-
-import click
-
 from . import HALCommandType, hal_command_parser
 
 
 __all__ = ["goto_field"]
 
 
-@hal_command_parser.command()
-@click.option("--with-fail", is_flag=True, help="Simulate a failure")
-async def goto_field(command: HALCommandType, with_fail=False):
+@hal_command_parser.command(name="goto-field")
+async def goto_field(command: HALCommandType):
     """Execute the go to field macro."""
 
     actor = command.actor
@@ -28,14 +23,9 @@ async def goto_field(command: HALCommandType, with_fail=False):
     goto_macro = actor.helpers.macros["goto_field"]
     goto_macro.reset(command=command)
 
-    task = asyncio.create_task(goto_macro.run())
-    if with_fail:
-        await asyncio.sleep(6)
-        goto_macro.cancel()
+    result = await goto_macro.run()
 
-    result = await task
-
-    if result:
-        return command.finish()
-    else:
+    if result is False:
         return command.fail()
+
+    return command.finish()

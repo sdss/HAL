@@ -31,4 +31,5 @@ async def apogee_dome_flat(command: HALCommandType):
 
     if result is False:
         return command.fail()
+
     return command.finish()
