@@ -44,12 +44,22 @@ class ActorHelpers:
 
     def __init__(self, actor: HALActor):
 
-        from hal.helpers import APOGEEHelper, FFSHelper, Scripts, TCCHelper
+        from hal.helpers import (
+            APOGEEHelper,
+            BOSSHelper,
+            FFSHelper,
+            LampsHelper,
+            Scripts,
+            TCCHelper,
+        )
         from hal.macros import all_macros
 
-        self.ffs = FFSHelper(actor)
-        self.tcc = TCCHelper(actor)
         self.apogee = APOGEEHelper(actor)
+        self.boss = BOSSHelper(actor)
+        self.ffs = FFSHelper(actor)
+        self.lamps = LampsHelper(actor)
+        self.tcc = TCCHelper(actor)
 
         self.scripts = Scripts(actor, actor.config["scripts"])
+
         self.macros = {macro.name: macro for macro in all_macros}
