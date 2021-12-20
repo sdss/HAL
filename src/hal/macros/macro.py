@@ -17,8 +17,9 @@ from contextlib import suppress
 
 from typing import ClassVar, Coroutine, Generic, Optional, TypeVar, Union, cast
 
-from clu import BaseCommand, Command, CommandStatus, FakeCommand
+from clu import Command, CommandStatus, FakeCommand
 
+from hal import HALCommandType
 from hal.exceptions import HALError, HALUserWarning, MacroError
 
 
@@ -26,7 +27,7 @@ __all__ = ["Macro", "StageHelper"]
 
 
 StageType = Union[str, tuple[str, ...], list[str]]
-Command_co = TypeVar("Command_co", bound=BaseCommand, covariant=True)
+Command_co = TypeVar("Command_co", bound=Union[HALCommandType, FakeCommand])
 
 
 class StageStatus(enum.Flag):
@@ -135,6 +136,21 @@ class Macro(Generic[Command_co]):
             self.command = command
 
         self.list_stages()
+
+    @property
+    def actor(self):
+        """Returns the command actor."""
+
+        if not isinstance(self.command, Command):
+            raise HALError("Command does not have an actor.")
+
+        return self.command.actor
+
+    @property
+    def helpers(self):
+        """Returns the actor helpers."""
+
+        return self.actor.helpers
 
     @property
     def running(self):

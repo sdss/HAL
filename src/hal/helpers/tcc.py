@@ -8,25 +8,19 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
-from clu import Command
-
 from hal import config
-from hal.actor import HALActor
+from hal.actor import HALCommandType
 from hal.exceptions import HALError
+
+from . import HALHelper
 
 
 __all__ = ["TCCHelper"]
 
 
-HALCommandType = Command[HALActor]
+class TCCHelper(HALHelper):
+    """Helper for the TCC."""
 
-
-@dataclass
-class TCCHelper:
-
-    actor: HALActor
     is_slewing: bool = False
 
     async def goto_position(

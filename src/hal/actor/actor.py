@@ -44,8 +44,8 @@ class ActorHelpers:
 
     def __init__(self, actor: HALActor):
 
+        from hal.helpers import APOGEEHelper, FFSHelper, Scripts, TCCHelper
         from hal.macros import all_macros
-        from hal.tools import APOGEEHelper, FFSHelper, Scripts, TCCHelper
 
         self.ffs = FFSHelper(actor)
         self.tcc = TCCHelper(actor)

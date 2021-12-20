@@ -10,22 +10,22 @@ from __future__ import annotations
 
 import enum
 
-from clu import CommandStatus
-
 from hal import config
 from hal.actor import HALActor, HALCommandType
-from hal.exceptions import HALError
+
+from . import HALHelper
 
 
 __all__ = ["APOGEEHelper"]
 
 
-class APOGEEHelper:
+class APOGEEHelper(HALHelper):
     """APOGEE instrument helper."""
 
     def __init__(self, actor: HALActor):
 
-        self.actor = actor
+        super().__init__(actor)
+
         self.gang_helper = APOGEEGangHelper(actor)
 
     async def shutter(self, command: HALCommandType, open=True):
@@ -35,6 +35,7 @@ class APOGEEHelper:
 
         shutter_command = await self._send_command(
             command,
+            "apogee",
             f"shutter {position}",
             time_limit=config["timeouts"]["apogee_shutter"],
         )
@@ -51,26 +52,17 @@ class APOGEEHelper:
 
         expose_command = await self._send_command(
             command,
+            "apogee",
             f"expose time={exp_time:.1f} object={exp_type}",
-            time_limit=exp_time + config['timeouts']['expose']
+            time_limit=exp_time + config["timeouts"]["expose"],
         )
 
         return expose_command
 
-    async def _send_command(self, command: HALCommandType, cmd_str: str, **kwargs):
-        """Sends a command to the MCP."""
-
-        move_cmd = await command.send_command("apogee", cmd_str, **kwargs)
-        if move_cmd.status.did_fail:
-            if move_cmd.status == CommandStatus.TIMEDOUT:
-                raise HALError(f"apogee {cmd_str} timed out.")
-            else:
-                raise HALError(f"apogee {cmd_str} failed.")
-
-        return move_cmd
-
 
 class APOGEEGangHelper:
+    """Helper for the APOGEE gang connector."""
+
     def __init__(self, actor: HALActor):
 
         self.actor = actor
