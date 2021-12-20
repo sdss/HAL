@@ -35,8 +35,8 @@ class TCCHelper(HALHelper):
         command
             The actor command.
         where
-            The name of the goto entry in the configuration file, or a tuple with the
-            ``(alt, az, rot)`` in degrees.
+            The name of the goto entry in the configuration file, or a
+            dictionary with the keys ``(alt, az, rot)`` in degrees.
 
         """
 
@@ -75,7 +75,13 @@ class TCCHelper(HALHelper):
     async def axis_init(self, command: HALCommandType) -> bool:
         """Executes TCC axis init or fails."""
 
-        status = await command.send_command("tcc", "axis status", time_limit=20.0)
+        status = await self._send_command(
+            command,
+            "tcc",
+            "axis status",
+            time_limit=20.0,
+            raise_on_fail=False,
+        )
         if status.status.did_fail:
             raise HALError("'tcc status' failed. Is the TCC connected?")
 
@@ -104,10 +110,12 @@ class TCCHelper(HALHelper):
                 "and rotator: cannot move in az."
             )
             axis_init_cmd_str += " rot,alt"
-        axis_init_cmd = await command.send_command(
+        axis_init_cmd = await self._send_command(
+            command,
             "tcc",
             axis_init_cmd_str,
             time_limit=20.0,
+            raise_on_fail=False,
         )
 
         if axis_init_cmd.status.did_fail:
@@ -119,7 +127,13 @@ class TCCHelper(HALHelper):
     async def axis_stop(self, command: HALCommandType) -> bool:
         """Issues an axis stop to the TCC."""
 
-        axis_stop_cmd = await command.send_command("tcc", "axis stop", time_limit=30.0)
+        axis_stop_cmd = await self._send_command(
+            command,
+            "tcc",
+            "axis stop",
+            time_limit=30.0,
+            raise_on_fail=False,
+        )
 
         if axis_stop_cmd.status.did_fail:
             raise HALError("Error: failed to cleanly stop telescope via tcc axis stop.")
@@ -160,8 +174,12 @@ class TCCHelper(HALHelper):
 
         sem = mcp_model["semaphoreOwner"]
         if sem is None:
-            sem_show_cmd = await command.send_command(
-                "mcp", "sem.show", time_limit=20.0
+            sem_show_cmd = await self._send_command(
+                command,
+                "mcp",
+                "sem.show",
+                time_limit=20.0,
+                raise_on_fail=False,
             )
 
             if sem_show_cmd.status.did_fail:
@@ -230,11 +248,13 @@ class TCCHelper(HALHelper):
                 if keep_args:
                     command.warning(text="keeping all offsets")
 
-                slew_cmd = command.send_command(
+                slew_cmd = self._send_command(
+                    command,
                     "tcc",
                     f"track {ra}, {dec} icrs /rottype=object/rotang={rot:g}"
                     f"/rotwrap=mid {keep_args}",
                     time_limit=config["timeouts"]["slew"],
+                    raise_on_fail=False,
                 )
 
             elif "az" in coords and "alt" in coords and "rot" in coords:
@@ -247,10 +267,12 @@ class TCCHelper(HALHelper):
                     f"({az:.4f}, {alt:.4f}, {rot:.4f})"
                 )
 
-                slew_cmd = command.send_command(
+                slew_cmd = self._send_command(
+                    command,
                     "tcc",
                     f"track {az:f}, {alt:f} mount/rottype=mount/rotangle={rot:f}",
                     time_limit=config["timeouts"]["slew"],
+                    raise_on_fail=False,
                 )
 
             else:
@@ -269,10 +291,12 @@ class TCCHelper(HALHelper):
 
             command.info(text=f"Offseting alt={alt:.3f}, az={az:.3f}")
 
-            slew_cmd = command.send_command(
+            slew_cmd = self._send_command(
+                command,
                 "tcc",
                 f"offset guide {az/3600.:g},{alt/3600.:g},{rot/3600.:g} /computed",
                 time_limit=config["timeouts"]["slew"],
+                raise_on_fail=False,
             )
 
         # "tcc track" in the new TCC is only Done successfully when all requested
@@ -283,7 +307,7 @@ class TCCHelper(HALHelper):
 
         try:
             self.is_slewing = True
-            await slew_cmd
+            slew_cmd = await slew_cmd
         finally:
             self.is_slewing = False
 
