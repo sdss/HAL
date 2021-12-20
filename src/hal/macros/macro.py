@@ -344,7 +344,13 @@ class Macro(Generic[Command_co]):
 
         self._running_task.cancel()
 
-    async def send_command(self, target: str, command_string: str, **kwargs):
+    async def send_command(
+        self,
+        target: str,
+        command_string: str,
+        raise_on_fail: bool = True,
+        **kwargs,
+    ):
         """Sends a command to an actor. Raises `.MacroError` if it fails.
 
         Parameters
@@ -353,6 +359,8 @@ class Macro(Generic[Command_co]):
             Actor to command.
         command_string
             Command string to pass to the actor.
+        raise_on_fail
+            If the command failed, raise an error.
         kwargs
             Additional parameters to pass to ``send_command()``.
 
@@ -363,7 +371,7 @@ class Macro(Generic[Command_co]):
 
         command = await self.command.send_command(target, command_string, **kwargs)
 
-        if command.status.did_fail:
+        if command.status.did_fail and raise_on_fail:
             if command.status == CommandStatus.TIMEDOUT:
                 raise MacroError(f"Command {target} {command_string} timed out.")
             else:
