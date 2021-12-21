@@ -26,8 +26,11 @@ config_path = os.path.join(os.path.dirname(hal.__file__), "etc/hal.yml")
 @pytest.fixture(autouse=True)
 def mock_send_command(mocker):
 
-    HALHelper._send_command = mocker.AsyncMock()
-    Macro.send_command = mocker.AsyncMock()
+    command = Command()
+    command.set_status("done")
+
+    HALHelper._send_command = mocker.AsyncMock(return_value=command)
+    Macro.send_command = mocker.AsyncMock(return_value=command)
 
 
 @pytest.fixture
