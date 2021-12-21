@@ -122,7 +122,9 @@ class Macro(Generic[Command_co]):
         if len(stages) == 0:
             raise HALError("No stages found.")
 
-        self.stages = stages + self.__CLEANUP__.copy()
+        stages += self.__CLEANUP__.copy()
+        self.stages = stages
+
         self.stage_status = {st: StageStatus.WAITING for st in flatten_stages(stages)}
 
         for st in self.stage_status:
@@ -256,9 +258,12 @@ class Macro(Generic[Command_co]):
             self.command.warning("Running cleanup tasks.")
             for cleanup_stage in self.__CLEANUP__:
                 try:
+                    self.set_stage_status(cleanup_stage, StageStatus.ACTIVE)
                     await asyncio.gather(*self._get_coros(cleanup_stage))
+                    self.set_stage_status(cleanup_stage, StageStatus.FINISHED)
                 except Exception as err:
                     self.command.error(f"Cleanup {cleanup_stage} failed: {err}")
+                    self.set_stage_status(cleanup_stage, StageStatus.FAILED)
                     break
 
         self.running = False
