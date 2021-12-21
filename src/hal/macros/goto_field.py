@@ -44,8 +44,8 @@ class GotoFieldMacro(Macro[HALCommandType]):
         if "reconfigure" not in all_stages:
             return
 
-        loaded_configuration = self.actor.models["jaeger"]["loaded_configuration"]
-        if time() - loaded_configuration.last_seen > 3600:  # One hour
+        configuration_loaded = self.actor.models["jaeger"]["configuration_loaded"]
+        if time() - configuration_loaded.last_seen > 3600:  # One hour
             raise MacroError("Configuration is too old. Load a new configuration.")
 
         # Start closing the FFS if they are open but do not block.
@@ -87,8 +87,8 @@ class GotoFieldMacro(Macro[HALCommandType]):
     async def slew(self):
         """Slew to field."""
 
-        loaded_configuration = self.actor.models["jaeger"]["loaded_configuration"]
-        ra, dec, pa = loaded_configuration[3:6]
+        configuration_loaded = self.actor.models["jaeger"]["configuration_loaded"]
+        ra, dec, pa = configuration_loaded[3:6]
 
         await self.helpers.tcc.goto_position(
             self.command,
