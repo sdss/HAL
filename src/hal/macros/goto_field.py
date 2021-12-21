@@ -75,6 +75,7 @@ class GotoFieldMacro(Macro[HALCommandType]):
 
     async def _close_ffs(self, wait: bool = True):
         """Closes the FFS."""
+
         if not self.helpers.ffs.all_closed():
             self.command.info("Closing FFS")
             task = self.helpers.ffs.close(self.command)
