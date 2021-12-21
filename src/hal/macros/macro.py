@@ -19,7 +19,7 @@ from typing import ClassVar, Coroutine, Generic, Optional, TypeVar, Union, cast
 
 from clu import Command, CommandStatus, FakeCommand
 
-from hal import HALCommandType
+from hal import HALCommandType, log
 from hal.exceptions import HALError, HALUserWarning, MacroError
 
 
@@ -241,6 +241,10 @@ class Macro(Generic[Command_co]):
         """Fails the macros and informs the actor."""
 
         self.command.error(error=error)
+
+        if not isinstance(error, HALError):
+            log.exception(error)
+
         self.failed = True
 
         if stage is None:
