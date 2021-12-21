@@ -98,6 +98,7 @@ class Macro(Generic[Command_co]):
         self.command: Command_co = cast(Command_co, FakeCommand(null_log))
 
         self._running = False
+        self.failed = False
 
         self._running_task: asyncio.Task | None = None
 
@@ -124,6 +125,8 @@ class Macro(Generic[Command_co]):
 
         stages += self.__CLEANUP__.copy()
         self.stages = stages
+
+        self.failed = False
 
         self.stage_status = {st: StageStatus.WAITING for st in flatten_stages(stages)}
 
@@ -238,6 +241,7 @@ class Macro(Generic[Command_co]):
         """Fails the macros and informs the actor."""
 
         self.command.error(error=error)
+        self.failed = True
 
         if stage is None:
             stage = list(self.stage_status.keys())
