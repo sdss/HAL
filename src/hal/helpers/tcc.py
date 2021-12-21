@@ -96,13 +96,13 @@ class TCCHelper(HALHelper):
             raise HALError("Failed getting the semaphore information.")
 
         if sem == "TCC:0:0" and self.axes_are_clear():
-            command.info(
+            command.debug(
                 text="Axes clear and TCC has semaphore. "
                 "No axis init needed, so none sent."
             )
             return True
 
-        command.info(text="Sending tcc axis init.")
+        command.debug(text="Sending tcc axis init.")
         axis_init_cmd_str = "axis init"
         if self.below_alt_limit():
             command.warning(
