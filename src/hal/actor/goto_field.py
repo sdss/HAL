@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 __all__ = ["goto_field"]
 
 
-@hal_command_parser.command(name="goto-field")
+@hal_command_parser.command(name="goto-field", cancellable=True)
 @stages("goto_field")
 async def goto_field(command: HALCommandType, macro: Macro):
     """Execute the go to field macro."""
