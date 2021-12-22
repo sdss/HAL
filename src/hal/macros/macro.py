@@ -258,8 +258,12 @@ class Macro:
                 stage = [stage]
 
         for ss in stage:
-            if self.stage_status[ss] == StageStatus.ACTIVE:
+            if ss in self.__CLEANUP__:
+                continue
+            if self.stage_status[ss] in StageStatus.ACTIVE:
                 self.stage_status[ss] = StageStatus.FAILED
+            if self.stage_status[ss] in StageStatus.WAITING:
+                self.stage_status[ss] = StageStatus.CANCELLED
 
         self.output_stage_status()
 
@@ -346,6 +350,7 @@ class Macro:
                 # Cancel this and all future stages.
                 cancel_stages = flatten(self.stages[istage:])
                 self.set_stage_status(cancel_stages, StageStatus.CANCELLED)
+                await self.fail_macro(MacroError('The macro was cancelled'))
                 return
             except Exception as err:
                 warnings.warn(
