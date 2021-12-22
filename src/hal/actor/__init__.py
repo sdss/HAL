@@ -64,16 +64,16 @@ def stages(macro_name: str):
 
             macro = command.actor.helpers.macros[macro_name]
 
+            if list_stages is True:
+                macro.list_stages(command=command, only_all=True)
+                return command.finish()
+
             if stages is not None:
                 for stage in stages:
                     if stage not in flatten(macro.__STAGES__ + macro.__CLEANUP__):
                         raise click.BadArgumentUsage(f"Invalid stage {stage}")
 
             macro.reset(command, stages)
-
-            if list_stages is True:
-                macro.list_stages(command=command)
-                return command.finish()
 
             return await coro_helper(f, command, macro, *args, **kwargs)
 

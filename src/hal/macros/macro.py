@@ -205,15 +205,22 @@ class Macro:
 
         out_command.write(level, stage_status=status_keyw)
 
-    def list_stages(self, command: Optional[HALCommandType] = None, level: str = "i"):
+    def list_stages(
+        self,
+        command: Optional[HALCommandType] = None,
+        level: str = "i",
+        only_all: bool = False,
+    ):
         """Outputs stages to the actor."""
 
         list_command = command or self.command
 
-        list_command.write(
-            level,
-            stages=[self.name] + [st for st in flatten(self.stages)],
-        )
+        if only_all is False:
+            list_command.write(
+                level,
+                stages=[self.name] + [st for st in flatten(self.stages)],
+            )
+
         list_command.write(
             level,
             all_stages=[self.name]
