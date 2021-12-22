@@ -74,6 +74,7 @@ class APOGEEGangHelper:
         """Callback to update the gang connector flag."""
 
         value = value or [0]
+        print(value)
         self.flag = APOGEEGang(int(value[0]))
 
     def get_position(self):
@@ -84,33 +85,28 @@ class APOGEEGangHelper:
     def at_podium(self):
         """Return True if the gang connector is on the podium."""
 
-        pos = self.get_position()
-        ok = pos & APOGEEGang.AT_PODIUM
+        ok = (self.get_position() & APOGEEGang.AT_PODIUM) > 0
         return ok
 
     def at_cartridge(self):
         """Returns True if the gang connector is at the cartridge."""
 
-        ok = self.get_position() == self.flag.AT_CART
-
+        pos = self.get_position()
+        ok = (pos == APOGEEGang.DISCONNECTED_FPI) or (pos == APOGEEGang.AT_FPS_FPI)
         return ok
 
 
 class APOGEEGang(enum.Flag):
     """Flags for the ``mcp.apogeeGang`` keyword."""
 
-    # Temporary, the situation with the gang connector switches is not clear.
-
     UNKNWON = 0
+    DISCONNECTED = 1
+    AT_CART = 2
     AT_PODIUM = 4
-    AT_CART = 17
-    DENSE_NO_FPI = 12
-    DENSE_FPI = 28
-    PODIUM_FPI = 20
-
-    # DISCONNECTED = 1
-    # AT_CART = 2
-    # POIDUM = 4
-    # PODIUM_DENSE = 12
-    # PODIUM_SPARSE = 20
-    # PODIUM_1M = 36
+    PODIUM_DENSE = 12
+    DISCONNECTED_FPI = 17
+    AT_FPS_FPI = 18
+    AT_PODIUM_SPARSE = 20
+    AT_PODIUM_DENSE_FPI = 28
+    AT_PODIUM_ONEM = 36
+    AT_PODIUM_ONEM_FPI = 52
