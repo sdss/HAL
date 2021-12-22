@@ -23,47 +23,52 @@ __all__ = ["LampsHelper"]
 class LampsHelper(HALHelper):
     """Control for lamps."""
 
-    LAMPS = ["ff", "wht", "UV", "HgCd", "Ne"]
+    LAMPS = ["ff", "HgCd", "Ne"]
     WARMUP = config["lamp_warmup"].copy()
 
     def _command_one(self, command: HALCommandType, lamp: str, state: bool):
         """Commands one lamp."""
 
-        state_str = "on" if True else "off"
+        state_str = "on" if state is True else "off"
 
         return self._send_command(
             command,
             "mcp",
-            f"{lamp.lower()}.{state_str}",
+            f"{lamp.lower()}_{state_str}",
             time_limit=config["timeouts"]["lamps"],
         )
 
-    async def all_off(self, command: HALCommandType, wait: bool = True):
+    async def all_off(
+        self,
+        command: HALCommandType,
+        wait: bool = True,
+        force: bool = False,
+    ):
         """Turn off all the lamps."""
 
         tasks = []
         for lamp in self.LAMPS:
-            tasks.append(self._command_one(command, lamp, False))
+            tasks.append(self.turn_lamp(command, lamp, False, wait=wait, force=force))
 
         commands = asyncio.gather(*tasks)
 
         if wait:
             await commands
 
-    def list_status(self) -> dict[str, tuple[bool, float]]:
+    def list_status(self) -> dict[str, tuple[bool, bool, float]]:
         """Returns a dictionary with the state of the lamps.
 
         For each lamp the first value in the returned tuple is whether the
-        lamp is on or off. The second value is how long since it changed
-        states.
+        lamp has been commanded on. The second value is whether the lamps is
+        actually on. The final value is how long since it changed states.
 
         """
 
         state = {}
         for lamp in self.LAMPS:
+            commanded_on = self.actor.models["mcp"][f"{lamp}LampCommandedOn"][0]
             if lamp in ["wht", "UV"]:
-                lamp_state = self.actor.models["mcp"][f"{lamp}CommandedOn"][0]
-                state[lamp] = (bool(lamp_state), 0.0)
+                state[lamp] = (bool(commanded_on), bool(commanded_on), 0.0)
             else:
                 lamp_state = self.actor.models["mcp"][f"{lamp}Lamp"]
                 last_seen = lamp_state.last_seen
@@ -73,7 +78,7 @@ class LampsHelper(HALHelper):
                     lamp_state = False
                 else:
                     raise HALError(f"Failed determining state for lamp {lamp}.")
-                state[lamp] = (lamp_state, time.time() - last_seen)
+                state[lamp] = (bool(commanded_on), lamp_state, time.time() - last_seen)
 
         return state
 
@@ -85,6 +90,7 @@ class LampsHelper(HALHelper):
         wait: bool = True,
         wait_for_warmup: bool = False,
         turn_off_others: bool = False,
+        force: bool = False,
     ):
         """Turns a lamp on or off.
 
@@ -101,6 +107,8 @@ class LampsHelper(HALHelper):
             being turned on).
         turn_off_others
             Turn off all other lamps.
+        force
+            If `True`, send the on/off command regardless of status.
 
         """
 
@@ -112,36 +120,44 @@ class LampsHelper(HALHelper):
                 raise HALError(f"Invalid lamp {lamp}.")
 
         current_status = self.list_status()
-        changing: bool = False
 
         tasks = []
         for ll in self.LAMPS:
             if ll in lamps:
-                if current_status[ll][0] is state:
+                if force is False and current_status[ll][0] is state:
                     pass
                 else:
-                    changing = True
                     tasks.append(self._command_one(command, ll, state))
             else:
-                if turn_off_others is True and current_status[ll][0] is not False:
-                    tasks.append(self._command_one(command, ll, False))
+                if turn_off_others is True:
+                    if current_status[ll][0] is not False or force is True:
+                        tasks.append(self._command_one(command, ll, False))
 
-        if wait:
-            await asyncio.gather(*tasks)
+        await asyncio.gather(*tasks)
 
-        if wait and wait_for_warmup and changing is True and state is True:
-            for lamp in lamps:
+        if wait is False:
+            await asyncio.sleep(1)
+            return
+
+        done_lamps: list[bool] = [False] * len(lamps)
+        warmed: list[bool] = [False] * len(lamps)
+        while True:
+
+            if all(done_lamps):
+                if state is False or wait_for_warmup is False:
+                    return
+                elif all(warmed):
+                    return
+
+            for i, lamp in enumerate(lamps):
                 new_status = self.list_status()
+                # Index 1 is if the lamp is actually on/off, not only commanded.
+                if new_status[lamp][1] is state:
+                    done_lamps[i] = True
+                    if wait_for_warmup:
+                        # Index 2 is the elapsed time since it was completely on/off.
+                        elapsed = new_status[lamp][2]
+                        if elapsed >= self.WARMUP[lamp]:
+                            warmed[i] = True
 
-                if new_status[lamp][0] is False:
-                    wait_time = self.WARMUP[lamp]
-                else:
-                    elapsed = time.time() - new_status[lamp][1]
-                    wait_time = self.WARMUP[lamp] - elapsed
-
-                if wait_time > 0:
-                    command.debug(
-                        f"Waiting additional {round(wait_time, 1)} seconds for "
-                        f"{lamp} to warm up."
-                    )
-                    await asyncio.sleep(wait_time)
+            await asyncio.sleep(1)
