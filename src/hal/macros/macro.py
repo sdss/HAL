@@ -73,6 +73,15 @@ class Macro:
 
         self.stages = self.__STAGES__ + self.__CLEANUP__
 
+        for stage in self.__CLEANUP__:
+            if not isinstance(stage, str):
+                raise MacroError("Cleanup stages cannot run in parallel.")
+            if stage in flatten(self.__STAGES__):
+                raise MacroError(f"Cleanup stage {stage} cannot be a normal stage.")
+
+        if len(self.stages) != len(set(self.stages)):
+            raise MacroError("Duplicate stages found.")
+
         self.stage_status: dict[str, StageStatus] = {}
 
         self.command: HALCommandType
