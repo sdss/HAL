@@ -8,7 +8,15 @@
 
 from __future__ import annotations
 
-from . import HALCommandType, hal_command_parser
+from typing import TYPE_CHECKING
+
+from . import hal_command_parser, stages
+
+
+if TYPE_CHECKING:
+    from hal.macros import Macro
+
+    from . import HALCommandType
 
 
 @hal_command_parser.group()
@@ -19,15 +27,11 @@ def calibrations():
 
 
 @calibrations.command(name="apogee-dome-flat")
-async def apogee_dome_flat(command: HALCommandType):
+@stages("apogee_dome_flat")
+async def apogee_dome_flat(command: HALCommandType, macro: Macro):
     """Runs the APOGEE dome flat sequence."""
 
-    actor = command.actor
-
-    apogee_dome_flat = actor.helpers.macros["apogee_dome_flat"]
-    apogee_dome_flat.reset(command=command)
-
-    result = await apogee_dome_flat.run()
+    result = await macro.run()
 
     if result is False:
         return command.fail()

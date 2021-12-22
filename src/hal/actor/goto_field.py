@@ -8,22 +8,26 @@
 
 from __future__ import annotations
 
-from . import HALCommandType, hal_command_parser
+from typing import TYPE_CHECKING
+
+from . import hal_command_parser, stages
+
+
+if TYPE_CHECKING:
+    from hal.macros import Macro
+
+    from . import HALCommandType
 
 
 __all__ = ["goto_field"]
 
 
 @hal_command_parser.command(name="goto-field")
-async def goto_field(command: HALCommandType):
+@stages("goto_field")
+async def goto_field(command: HALCommandType, macro: Macro):
     """Execute the go to field macro."""
 
-    actor = command.actor
-
-    goto_macro = actor.helpers.macros["goto_field"]
-    goto_macro.reset(command=command)
-
-    result = await goto_macro.run()
+    result = await macro.run()
 
     if result is False:
         return command.fail()
