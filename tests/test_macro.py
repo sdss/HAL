@@ -25,7 +25,7 @@ async def test_macro(actor, macro: Macro):
 
     await macro.run()
 
-    assert len(actor.mock_replies) == 12
+    assert len(actor.mock_replies) == 10
 
 
 async def test_macro_stage_fails(actor, macro: Macro, mocker):

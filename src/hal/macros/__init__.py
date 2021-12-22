@@ -14,7 +14,7 @@ import warnings
 
 from hal.exceptions import HALUserWarning
 
-from .macro import Macro, StageHelper
+from .macro import Macro
 
 
 # Dynamically inspect all the files in this directory and import the subclasses
@@ -46,4 +46,4 @@ for f_ in files:
 
 os.chdir(cwd)
 
-__all__ = ["all_macros", "Macro", "StageHelper"]
+__all__ = ["all_macros", "Macro"]

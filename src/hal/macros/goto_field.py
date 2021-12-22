@@ -12,7 +12,6 @@ import asyncio
 from time import time
 
 from hal import config
-from hal.actor import HALCommandType
 from hal.exceptions import MacroError
 from hal.macros import Macro
 
@@ -20,7 +19,7 @@ from hal.macros import Macro
 __all__ = ["GotoFieldMacro"]
 
 
-class GotoFieldMacro(Macro[HALCommandType]):
+class GotoFieldMacro(Macro):
     """Go to field macro."""
 
     name = "goto_field"

@@ -8,26 +8,27 @@
 
 from __future__ import annotations
 
-import abc
 import asyncio
 import enum
-import logging
 import warnings
 from contextlib import suppress
 
-from typing import ClassVar, Coroutine, Generic, Optional, TypeVar, Union, cast
+from typing import TYPE_CHECKING, ClassVar, Coroutine, Optional, Union
 
-from clu import Command, CommandStatus, FakeCommand
+from clu import Command, CommandStatus
 
-from hal import HALCommandType, log
-from hal.exceptions import HALError, HALUserWarning, MacroError
+from hal import log
+from hal.exceptions import HALUserWarning, MacroError
 
 
-__all__ = ["Macro", "StageHelper"]
+if TYPE_CHECKING:
+    from hal.actor import HALCommandType
+
+
+__all__ = ["Macro"]
 
 
 StageType = Union[str, tuple[str, ...], list[str]]
-Command_co = TypeVar("Command_co", bound=Union[HALCommandType, FakeCommand])
 
 
 class StageStatus(enum.Flag):
@@ -41,7 +42,7 @@ class StageStatus(enum.Flag):
     FAILED = enum.auto()
 
 
-def flatten_stages(stages: list[StageType]) -> list[str]:
+def flatten(stages: list[StageType]) -> list[str]:
     flat = []
     for stage in stages:
         if isinstance(stage, str):
@@ -51,19 +52,7 @@ def flatten_stages(stages: list[StageType]) -> list[str]:
     return flat
 
 
-class StageHelper(abc.ABCMeta):
-    """A stage helper."""
-
-    @abc.abstractmethod
-    async def run(self, macro: Macro, *args, **kwargs):
-        """Stage task."""
-        pass
-
-    def __call__(self, macro: Macro, *args, **kwargs):
-        return self.run(macro, *args, **kwargs)
-
-
-class Macro(Generic[Command_co]):
+class Macro:
     """A base macro class that offers concurrency and cancellation."""
 
     __RUNNING__: ClassVar[list[str]] = []
@@ -73,66 +62,67 @@ class Macro(Generic[Command_co]):
     __STAGES__: list[StageType]
     __CLEANUP__: list[StageType] = []
 
-    def __init__(
-        self,
-        name: Optional[str] = None,
-        stages: Optional[list[StageType]] = None,
-    ):
+    def __init__(self, name: Optional[str] = None):
 
         if name is None and not hasattr(self, "name"):
-            raise HALError("The macro does not have a name attribute.")
+            raise MacroError("The macro does not have a name attribute.")
         self.name = name or self.name
 
-        # Stages to actually run (may skip some from __STAGES__)
-        if stages is None and not hasattr(self, "__STAGES__"):
-            raise HALError("The macro does not have a __STAGES__ attribute.")
+        if not hasattr(self, "__STAGES__"):
+            raise MacroError("Must override __STAGES__.")
 
-        self.stages = stages or self.__STAGES__.copy()
-        self.stages += self.__CLEANUP__.copy()
+        self.stages = self.__STAGES__ + self.__CLEANUP__
 
         self.stage_status: dict[str, StageStatus] = {}
 
-        null_log = logging.Logger("hal-null-log")
-        null_log.addHandler(logging.NullHandler())
-
-        self.command: Command_co = cast(Command_co, FakeCommand(null_log))
+        self.command: HALCommandType
 
         self._running = False
         self.failed = False
 
         self._running_task: asyncio.Task | None = None
 
-        self.reset(self.stages)
-
     def __repr__(self):
-        stages = flatten_stages(self.stages)
+        stages = flatten(self.stages)
         return f"<{self.__class__.__name__} (name={self.name}, stages={stages})>"
 
-    def reset(
-        self,
-        stages: Optional[list[StageType]] = None,
-        command: Optional[Command_co] = None,
-    ):
+    def reset(self, command: HALCommandType, reset_stages: Optional[list[str]] = None):
         """Resets stage status."""
 
-        if stages is None:
-            stages = self.__STAGES__.copy()
+        if command is None:
+            raise MacroError("A new command must be passed to reset.")
+
+        if reset_stages is None:
+            self.stages = self.__STAGES__ + self.__CLEANUP__
         else:
-            stages = stages.copy()
+            self.stages = []
 
-        if len(stages) == 0:
-            raise HALError("No stages found.")
+            if not all([isinstance(st, str) for st in reset_stages]):
+                raise MacroError("Reset stages must be a list of strings.")
 
-        stages += self.__CLEANUP__.copy()
-        self.stages = stages
+            for stage in self.__STAGES__:
+                if isinstance(stage, str) and stage in reset_stages:
+                    self.stages.append(stage)
+                elif isinstance(stage, (tuple, list)):
+                    if all([x in reset_stages for x in stage]):
+                        self.stages.append(stage)
+                    else:
+                        for x in stage:
+                            if x in reset_stages:
+                                self.stages.append(x)
+
+            self.stages += self.__CLEANUP__  # Always run cleanup stages.
+
+        if len(self.stages) == 0:
+            raise MacroError("No stages found.")
 
         self.failed = False
-
-        self.stage_status = {st: StageStatus.WAITING for st in flatten_stages(stages)}
+        print(self.stages)
+        self.stage_status = {st: StageStatus.WAITING for st in flatten(self.stages)}
 
         for st in self.stage_status:
             if getattr(self, st, None) is None:
-                raise HALError(f"Cannot find method for stage {st!r}.")
+                raise MacroError(f"Cannot find method for stage {st!r}.")
 
         self.running = False
         self._running_task = None
@@ -145,9 +135,6 @@ class Macro(Generic[Command_co]):
     @property
     def actor(self):
         """Returns the command actor."""
-
-        if not isinstance(self.command, Command):
-            raise HALError("Command does not have an actor.")
 
         return self.command.actor
 
@@ -203,7 +190,7 @@ class Macro(Generic[Command_co]):
 
     def output_stage_status(
         self,
-        command: Optional[Command_co] = None,
+        command: Optional[HALCommandType] = None,
         level: str = "d",
     ):
         """Outputs the stage status to the actor."""
@@ -218,19 +205,19 @@ class Macro(Generic[Command_co]):
 
         out_command.write(level, stage_status=status_keyw)
 
-    def list_stages(self, command: Optional[Command_co] = None, level: str = "i"):
+    def list_stages(self, command: Optional[HALCommandType] = None, level: str = "i"):
         """Outputs stages to the actor."""
 
         list_command = command or self.command
 
         list_command.write(
             level,
-            stages=[self.name] + [st for st in flatten_stages(self.stages)],
+            stages=[self.name] + [st for st in flatten(self.stages)],
         )
         list_command.write(
             level,
             all_stages=[self.name]
-            + [st for st in flatten_stages(self.__STAGES__ + self.__CLEANUP__)],
+            + [st for st in flatten(self.__STAGES__ + self.__CLEANUP__)],
         )
 
     async def fail_macro(
@@ -242,7 +229,7 @@ class Macro(Generic[Command_co]):
 
         self.command.error(error=error)
 
-        if not isinstance(error, HALError):
+        if not isinstance(error, MacroError):
             log.exception(error)
 
         self.failed = True
@@ -253,26 +240,27 @@ class Macro(Generic[Command_co]):
             if not isinstance(stage, (list, tuple)):
                 stage = [stage]
 
-        is_cleanup: bool = False
         for ss in stage:
             if self.stage_status[ss] == StageStatus.ACTIVE:
                 self.stage_status[ss] = StageStatus.FAILED
-            if ss in self.__CLEANUP__:
-                is_cleanup = True
 
         self.output_stage_status()
 
-        if len(self.__CLEANUP__) > 0 and is_cleanup is False:
-            self.command.warning("Running cleanup tasks.")
-            for cleanup_stage in self.__CLEANUP__:
-                try:
-                    self.set_stage_status(cleanup_stage, StageStatus.ACTIVE)
-                    await asyncio.gather(*self._get_coros(cleanup_stage))
-                    self.set_stage_status(cleanup_stage, StageStatus.FINISHED)
-                except Exception as err:
-                    self.command.error(f"Cleanup {cleanup_stage} failed: {err}")
-                    self.set_stage_status(cleanup_stage, StageStatus.FAILED)
-                    break
+        for icleanup, cleanup_stage in enumerate(self.__CLEANUP__):
+            if self.stage_status[str(cleanup_stage)] != StageStatus.WAITING:
+                continue
+
+            if icleanup == 0:
+                self.command.warning("Running cleanup tasks.")
+
+            try:
+                self.set_stage_status(cleanup_stage, StageStatus.ACTIVE)
+                await asyncio.gather(*self._get_coros(cleanup_stage))
+                self.set_stage_status(cleanup_stage, StageStatus.FINISHED)
+            except Exception as err:
+                self.command.error(f"Cleanup {cleanup_stage} failed: {err}")
+                self.set_stage_status(cleanup_stage, StageStatus.FAILED)
+                break
 
         self.running = False
 
@@ -280,10 +268,13 @@ class Macro(Generic[Command_co]):
         """Executes the macro allowing for cancellation."""
 
         if self.running:
-            raise HALError("This macro is already running.")
+            raise MacroError("This macro is already running.")
 
-        if self.command is None:
-            raise HALError("Cannot start a macro without an active command.")
+        if not hasattr(self, "command") or self.command is None:
+            raise MacroError("Cannot start a macro without an active command.")
+
+        if self.command.status.is_done:
+            raise MacroError("The command is done.")
 
         self.running = True
         self._running_task = asyncio.create_task(self._do_run())
@@ -307,7 +298,7 @@ class Macro(Generic[Command_co]):
             stage_method = getattr(self, stage)
 
             if not asyncio.iscoroutinefunction(stage_method):
-                raise HALError(f"Stage function for {stage} is not a coroutine.")
+                raise MacroError(f"Stage function for {stage} is not a coroutine.")
 
             return [stage_method()]
 
@@ -323,7 +314,7 @@ class Macro(Generic[Command_co]):
 
         current_task: asyncio.Future | None = None
 
-        for istage, stage in enumerate(self.stages + self.__CLEANUP__.copy()):
+        for istage, stage in enumerate(self.stages):
             stage_coros = self._get_coros(stage)
             current_task = asyncio.gather(*stage_coros)
 
@@ -336,7 +327,7 @@ class Macro(Generic[Command_co]):
                     current_task.cancel()
                     await current_task
                 # Cancel this and all future stages.
-                cancel_stages = flatten_stages(self.stages[istage:])
+                cancel_stages = flatten(self.stages[istage:])
                 self.set_stage_status(cancel_stages, StageStatus.CANCELLED)
                 return
             except Exception as err:
@@ -353,7 +344,7 @@ class Macro(Generic[Command_co]):
         """Cancels the execution ot the macro."""
 
         if not self.running or not self._running_task:
-            raise HALError("The macro is not running.")
+            raise MacroError("The macro is not running.")
 
         self._running_task.cancel()
 
