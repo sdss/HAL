@@ -8,6 +8,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from typing import TYPE_CHECKING
 
 from hal import HALCommandType, config
@@ -27,6 +29,7 @@ class BOSSHelper(HALHelper):
     """Control for BOSS spectrograph."""
 
     __readout_pending: bool = False
+    __readout_task: asyncio.Task | None = None
 
     def __init__(self, actor: HALActor):
         super().__init__(actor)
@@ -43,23 +46,14 @@ class BOSSHelper(HALHelper):
         exp_time: float = 0.0,
         exp_type: str = "object",
         readout: bool = True,
+        read_async: bool = False,
     ):
         """Exposes BOSS. If ``readout=False``, does not read the exposure."""
 
-        if self.readout_pending is True:
+        if self.readout_pending is not False:
             raise HALError(
                 "Cannot expose. The camera is exposing or a readout is pending."
             )
-
-        command_parts = [f"exposure {exp_type}"]
-
-        if exp_type != "bias":
-            command_parts.append(f"itime={round(exp_time, 1)}")
-
-        if readout is False:
-            command_parts.append("noreadout")
-
-        command_string = " ".join(command_parts)
 
         timeout = (
             exp_time
@@ -67,27 +61,53 @@ class BOSSHelper(HALHelper):
             + config["timeouts"]["boss_flushing"]
         )
 
-        if readout is True:
+        command_parts = [f"exposure {exp_type}"]
+
+        if exp_type != "bias":
+            command_parts.append(f"itime={round(exp_time, 1)}")
+
+        if readout is False or read_async is True:
+            command_parts.append("noreadout")
+        else:
             timeout += config["timeouts"]["boss_readout"]
 
-        command.debug(f"Taking BOSS {exp_type} exposure.")
+        command_string = " ".join(command_parts)
 
         self.__readout_pending = True
+
         await self._send_command(command, "boss", command_string, time_limit=timeout)
+
+        if readout is True and read_async is True:
+            # We use a _send_command because readout cannot await on itself.
+            self.__readout_task = asyncio.create_task(
+                self._send_command(
+                    command,
+                    "boss",
+                    "exposure readout",
+                    time_limit=25.0 + config["timeouts"]["boss_readout"],
+                )
+            )
+            return
 
         self.__readout_pending = not readout
 
     async def readout(self, command: HALCommandType):
         """Reads a pending readout."""
 
-        if not self.readout_pending:
+        if self.readout_pending is False:
             raise HALError("No pending readout.")
 
-        command.debug("Reading pending BOSS exposure.")
+        if self.readout_pending and self.__readout_task:
+            await self.__readout_task
 
-        await self._send_command(
-            command,
-            "boss",
-            "exposure readout",
-            time_limit=25.0 + config["timeouts"]["boss_readout"],
-        )
+        else:
+            command.debug("Reading pending BOSS exposure.")
+
+            await self._send_command(
+                command,
+                "boss",
+                "exposure readout",
+                time_limit=25.0 + config["timeouts"]["boss_readout"],
+            )
+
+        self.__readout_pending = False
