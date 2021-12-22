@@ -117,7 +117,7 @@ class Macro:
             raise MacroError("No stages found.")
 
         self.failed = False
-        print(self.stages)
+
         self.stage_status = {st: StageStatus.WAITING for st in flatten(self.stages)}
 
         for st in self.stage_status:
