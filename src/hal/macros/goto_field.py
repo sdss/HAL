@@ -157,7 +157,7 @@ class GotoFieldMacro(Macro):
             wait_for_warmup=True,
         )
 
-        arc_time = config["macros"][self.name]["arc_time"]
+        arc_time = self.config["arc_time"]
 
         await self.helpers.boss.expose(
             self.command,
@@ -190,7 +190,7 @@ class GotoFieldMacro(Macro):
         await asyncio.gather(*pretasks)
 
         # Now take the flat. Do not read it yet.
-        flat_time = config["macros"][self.name]["flat_time"]
+        flat_time = self.config["flat_time"]
 
         await self.helpers.boss.expose(
             self.command,
@@ -226,6 +226,15 @@ class GotoFieldMacro(Macro):
         self.command.info("Re-slewing to field.")
         await self.slew()
 
+    async def _set_guider_offset(self):
+        """Sets the guider offset."""
+
+        offset = self.config["guider_offset"]
+        if offset is not None:
+            offset = " ".join(offset)
+            self.command.info(f"Setting guide offset to {offset}.")
+            await self.send_command("cherno", f"offset {offset}")
+
     async def acquire(self):
         """Acquires the field."""
 
@@ -233,12 +242,9 @@ class GotoFieldMacro(Macro):
             self.command.info("Opening FFS")
             await self.helpers.ffs.open(self.command)
 
-        if config["macros"][self.name]["offset"] is not None:
-            offset = " ".join(config["macros"][self.name]["offset"])
-            self.command.info("Setting guide offset.")
-            await self.send_command("cherno", f"offset {offset}")
+        await self._set_guider_offset()
 
-        guider_time = config["macros"][self.name]["guider_time"]
+        guider_time = self.config["guider_time"]
 
         self.command.info("Acquiring field.")
         await self.send_command(
@@ -254,13 +260,10 @@ class GotoFieldMacro(Macro):
             self.command.info("Opening FFS")
             await self.helpers.ffs.open(self.command)
 
-        offset = config["macros"][self.name]["offset"]
-        if offset is not None and "acquire" not in self.stages:
-            offset = " ".join(offset)
-            self.command.info("Setting guide offset.")
-            await self.send_command("cherno", f"offset {offset}")
+        if "acquire" not in self.stage_status:
+            await self._set_guider_offset()
 
-        guider_time = config["macros"][self.name]["guider_time"]
+        guider_time = self.config["guider_time"]
 
         self.command.info("Starting guide loop.")
         asyncio.create_task(self.send_command("cherno", f"acquire -c -t {guider_time}"))

@@ -37,8 +37,8 @@ macros:
   goto_field:
     arc_time: 4
     flat_time: 25
-    offset: [0, 0, -432]
     guider_time: 15.
+    guider_offset: [0, 0, -432]
 
 goto:
   stow:

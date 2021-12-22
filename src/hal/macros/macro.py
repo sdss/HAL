@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, ClassVar, Coroutine, Optional, Union
 
 from clu import Command, CommandStatus
 
-from hal import log
+from hal import config, log
 from hal.exceptions import HALUserWarning, MacroError
 
 
@@ -84,6 +84,7 @@ class Macro:
 
         self.stage_status: dict[str, StageStatus] = {}
 
+        self.config = config["macros"].get(self.name, {})
         self.command: HALCommandType
 
         self._running = False
