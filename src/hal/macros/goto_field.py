@@ -161,7 +161,7 @@ class GotoFieldMacro(Macro):
     async def boss_flat(self):
         """Takes the BOSS flat."""
 
-        self.command.info("Taking BOSS arc.")
+        self.command.info("Taking BOSS flat.")
 
         await self._close_ffs()
 
