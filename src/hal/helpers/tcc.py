@@ -66,8 +66,7 @@ class TCCHelper(HALHelper):
 
         # Now do the actual slewing.
         slew_result = await self.do_slew(command, where)
-        axis_stop_result = await self.axis_stop(command)
-        if slew_result is False or axis_stop_result is False:
+        if slew_result is False:
             raise HALError(f"Failed going to position {where}.")
 
         return command.info(text=f"At position {where}.")
