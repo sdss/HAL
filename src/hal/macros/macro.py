@@ -350,7 +350,7 @@ class Macro:
                 # Cancel this and all future stages.
                 cancel_stages = flatten(self.stages[istage:])
                 self.set_stage_status(cancel_stages, StageStatus.CANCELLED)
-                await self.fail_macro(MacroError('The macro was cancelled'))
+                await self.fail_macro(MacroError("The macro was cancelled"))
                 return
             except Exception as err:
                 warnings.warn(
