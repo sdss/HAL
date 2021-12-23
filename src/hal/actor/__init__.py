@@ -45,7 +45,6 @@ def stages(macro_name: str, reset: bool = True):
         return _stages
 
     def decorator(f):
-        @functools.wraps(f)
         @click.option(
             "--list-stages",
             is_flag=True,
@@ -59,6 +58,7 @@ def stages(macro_name: str, reset: bool = True):
             callback=_split_stages,
             help="Comma-separated list of stages to execute.",
         )
+        @functools.wraps(f)
         async def wrapper(
             command: Command[HALActor],
             *args,
