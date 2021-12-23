@@ -218,6 +218,12 @@ class TCCHelper(HALHelper):
         limit = self.actor.config["goto"]["alt_limit"]
         return self.actor.models["tcc"]["axePos"][1] < limit
 
+    def check_axes_status(self, status: str) -> bool:
+        """Returns `True` if all the axes are at ``status``."""
+
+        axes_status = self.actor.models["tcc"]["AxisCmdState"].values
+        return all([axis.lower() == status.lower() for axis in axes_status])
+
     async def do_slew(
         self,
         command,
