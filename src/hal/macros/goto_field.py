@@ -231,7 +231,7 @@ class GotoFieldMacro(Macro):
 
         offset = self.config["guider_offset"]
         if offset is not None:
-            offset = " ".join(offset)
+            offset = " ".join(map(str, offset))
             self.command.info(f"Setting guide offset to {offset}.")
             await self.send_command("cherno", f"offset {offset}")
 
