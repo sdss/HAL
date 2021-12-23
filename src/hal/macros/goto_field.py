@@ -88,7 +88,7 @@ class GotoFieldMacro(Macro):
         ra, dec, pa = configuration_loaded[3:6]
 
         if any([ra is None, dec is None, pa is None]):
-            raise MacroError("Unknwond RA/Dec/PA coordinates for field.")
+            raise MacroError("Unknown RA/Dec/PA coordinates for field.")
 
         await self.helpers.tcc.goto_position(
             self.command,
