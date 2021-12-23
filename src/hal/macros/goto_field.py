@@ -238,6 +238,9 @@ class GotoFieldMacro(Macro):
     async def acquire(self):
         """Acquires the field."""
 
+        if not self.helpers.tcc.check_axes_status("Tracking"):
+            raise MacroError("Axes must be tracking for acquisition.")
+
         if not self.helpers.ffs.all_open():
             self.command.info("Opening FFS")
             await self.helpers.ffs.open(self.command)
@@ -255,6 +258,9 @@ class GotoFieldMacro(Macro):
 
     async def guide(self):
         """Starts the guide loop."""
+
+        if not self.helpers.tcc.check_axes_status("Tracking"):
+            raise MacroError("Axes must be tracking for guiding.")
 
         if not self.helpers.ffs.all_open():
             self.command.info("Opening FFS")
