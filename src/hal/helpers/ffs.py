@@ -28,7 +28,7 @@ class FFSHelper(HALHelper):
         """Returns the FFS status flags."""
 
         values = self.actor.models["mcp"]["ffsStatus"].value
-        if len(values) == 0:
+        if len(values) == 0 or all([value is None for value in values]):
             return [FFSStatus.UNKNWON] * 8
 
         return [FFSStatus(value) for value in values]

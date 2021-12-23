@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, TypeVar
 
-from clu import CommandStatus
+from clu import CluError, CommandStatus
 
 from hal.exceptions import HALError
 
@@ -35,6 +35,9 @@ class HALHelper:
         **kwargs,
     ):
         """Sends a command to a target."""
+
+        if self.actor.tron is None or self.actor.tron.connected() is False:
+            raise HALError("Not connected to Tron. Cannot send commands.")
 
         cmd = await command.send_command(target, cmd_str, **kwargs)
         if raise_on_fail and cmd.status.did_fail:

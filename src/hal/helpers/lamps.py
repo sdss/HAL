@@ -66,11 +66,17 @@ class LampsHelper(HALHelper):
 
         state = {}
         for lamp in self.LAMPS:
-            commanded_on = self.actor.models["mcp"][f"{lamp}LampCommandedOn"][0]
+            commanded_key = f"{lamp}LampCommandedOn"
+            commanded_on = self.actor.models["mcp"][commanded_key][0]
+            if commanded_on is None:
+                raise HALError(f"Failed getting {commanded_key}.")
             if lamp in ["wht", "UV"]:
                 state[lamp] = (bool(commanded_on), bool(commanded_on), 0.0)
             else:
-                lamp_state = self.actor.models["mcp"][f"{lamp}Lamp"]
+                lamp_key = f"{lamp}Lamp"
+                lamp_state = self.actor.models["mcp"][lamp_key]
+                if any([lv is None for lv in lamp_state]):
+                    raise HALError(f"Failed getting {lamp_key}.")
                 last_seen = lamp_state.last_seen
                 if sum(lamp_state.value) == 4:
                     lamp_state = True
