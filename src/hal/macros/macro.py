@@ -84,7 +84,9 @@ class Macro:
 
         self.stage_status: dict[str, StageStatus] = {}
 
-        self.config = config["macros"].get(self.name, {})
+        self._base_config = config["macros"].get(self.name, {}).copy()
+        self.config = self._base_config.copy()
+
         self.command: HALCommandType
 
         self._running = False
@@ -96,7 +98,12 @@ class Macro:
         stages = flatten(self.stages)
         return f"<{self.__class__.__name__} (name={self.name}, stages={stages})>"
 
-    def reset(self, command: HALCommandType, reset_stages: Optional[list[str]] = None):
+    def reset(
+        self,
+        command: HALCommandType,
+        reset_stages: Optional[list[str]] = None,
+        **opts,
+    ):
         """Resets stage status."""
 
         if command is None:
@@ -125,6 +132,10 @@ class Macro:
 
         if len(self.stages) == 0:
             raise MacroError("No stages found.")
+
+        # Reload the config and update it with custom options for this run.
+        self.config = self._base_config.copy()
+        self.config.update(opts)
 
         self.failed = False
 

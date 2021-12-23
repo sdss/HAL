@@ -24,8 +24,16 @@ hal_command_parser = command_parser
 HALCommandType = Command[HALActor]
 
 
-def stages(macro_name: str):
-    """A decorator that adds ``--stages`` and ``--list-stages`` options."""
+def stages(macro_name: str, reset: bool = True):
+    """A decorator that adds ``--stages`` and ``--list-stages`` options.
+
+    If ``reset=True`` resets the macro with the list of stages to run and passes
+    the command and macro to the callback. If ``reset=False`` it does not reset
+    the macro and, in addition to command and macro, also passes the list of
+    stages. The latter is useful when additional options need to be passsed to
+    the macro at reset.
+
+    """
 
     def _split_stages(ctx, param, values):
 
@@ -73,9 +81,11 @@ def stages(macro_name: str):
                     if stage not in flatten(macro.__STAGES__ + macro.__CLEANUP__):
                         raise click.BadArgumentUsage(f"Invalid stage {stage}")
 
-            macro.reset(command, stages)
-
-            return await coro_helper(f, command, macro, *args, **kwargs)
+            if reset:
+                macro.reset(command, stages)
+                return await coro_helper(f, command, macro, *args, **kwargs)
+            else:
+                return await coro_helper(f, command, macro, stages, *args, **kwargs)
 
         return functools.update_wrapper(wrapper, f)
 
