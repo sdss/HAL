@@ -27,9 +27,9 @@ class GotoFieldMacro(Macro):
         "prepare",
         ("slew", "reconfigure"),
         "boss_hartmann",
+        "fvc",
         "boss_arcs",
         "boss_flat",
-        "fvc",
         "acquire",
         "guide",
     ]
