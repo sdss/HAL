@@ -41,7 +41,7 @@ async def goto_field(
     stages: list[str],
     guider_time: float,
 ):
-    """Execute the go to field macro."""
+    """Execute the go-to-field macro."""
 
     macro.reset(command, stages, guider_time=guider_time)
     result = await macro.run()
