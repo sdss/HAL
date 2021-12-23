@@ -101,10 +101,23 @@ class Macro:
     def reset(
         self,
         command: HALCommandType,
-        reset_stages: Optional[list[str]] = None,
+        reset_stages: Optional[list[StageType]] = None,
+        force: bool = False,
         **opts,
     ):
-        """Resets stage status."""
+        """Resets stage status.
+
+        ``reset_stages`` is a list of stages to be executed when calling `.run`.
+        If ``reset_stages`` is a list of string and ``force=False``, the reset
+        stages are rearranged according to the original ``__STAGES__`` order,
+        including concurrent stages. If the list of ``reset_stages`` includes
+        tuples representing stages that must be run concurrently, or
+        ``force=True``, then the stages are run as input.
+
+        ``opts`` parameters will be used to override the macro configuration
+        options only until the next reset.
+
+        """
 
         if command is None:
             raise MacroError("A new command must be passed to reset.")
@@ -114,21 +127,27 @@ class Macro:
         else:
             self.stages = []
 
-            if not all([isinstance(st, str) for st in reset_stages]):
-                raise MacroError("Reset stages must be a list of strings.")
-
-            for stage in self.__STAGES__:
-                if isinstance(stage, str) and stage in reset_stages:
-                    self.stages.append(stage)
-                elif isinstance(stage, (tuple, list)):
-                    if all([x in reset_stages for x in stage]):
+            if force is False and all([isinstance(x, str) for x in reset_stages]):
+                for stage in self.__STAGES__:
+                    if isinstance(stage, str) and stage in reset_stages:
                         self.stages.append(stage)
-                    else:
-                        for x in stage:
-                            if x in reset_stages:
-                                self.stages.append(x)
+                    elif isinstance(stage, (tuple, list)):
+                        if all([x in reset_stages for x in stage]):
+                            self.stages.append(stage)
+                        else:
+                            for x in stage:
+                                if x in reset_stages:
+                                    self.stages.append(x)
+            else:
+                self.stages = reset_stages.copy()
 
-            self.stages += self.__CLEANUP__  # Always run cleanup stages.
+            for stage in flatten(self.stages):
+                if stage not in flatten(self.__STAGES__):
+                    raise MacroError(f"Unknown stage {stage}.")
+
+            for cleanup_stage in self.__CLEANUP__:
+                if cleanup_stage not in flatten(self.stages):
+                    self.stages.append(cleanup_stage)
 
         if len(self.stages) == 0:
             raise MacroError("No stages found.")
