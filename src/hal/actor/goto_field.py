@@ -10,6 +10,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import click
+
+from hal import config
+
 from . import hal_command_parser, stages
 
 
@@ -23,10 +27,23 @@ __all__ = ["goto_field"]
 
 
 @hal_command_parser.command(name="goto-field", cancellable=True)
-@stages("goto_field")
-async def goto_field(command: HALCommandType, macro: Macro):
+@stages("goto_field", reset=False)
+@click.option(
+    "--guider-time",
+    type=float,
+    default=config["macros"]["goto_field"]["guider_time"],
+    show_default=True,
+    help="Exposure time for guiding/acquisition.",
+)
+async def goto_field(
+    command: HALCommandType,
+    macro: Macro,
+    stages: list[str],
+    guider_time: float,
+):
     """Execute the go to field macro."""
 
+    macro.reset(command, stages, guider_time=guider_time)
     result = await macro.run()
 
     if result is False:
