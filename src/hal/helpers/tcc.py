@@ -123,13 +123,13 @@ class TCCHelper(HALHelper):
 
         return True
 
-    async def axis_stop(self, command: HALCommandType) -> bool:
+    async def axis_stop(self, command: HALCommandType, axis: str = "") -> bool:
         """Issues an axis stop to the TCC."""
 
         axis_stop_cmd = await self._send_command(
             command,
             "tcc",
-            "axis stop",
+            (f"axis stop {axis}").strip(),
             time_limit=30.0,
             raise_on_fail=False,
         )
