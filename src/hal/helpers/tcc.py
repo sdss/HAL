@@ -129,7 +129,7 @@ class TCCHelper(HALHelper):
         axis_stop_cmd = await self._send_command(
             command,
             "tcc",
-            (f"axis stop {axis}").strip(),
+            f"axis stop {axis}".strip(),
             time_limit=30.0,
             raise_on_fail=False,
         )

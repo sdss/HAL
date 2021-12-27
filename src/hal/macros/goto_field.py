@@ -207,7 +207,7 @@ class GotoFieldMacro(Macro):
         """Run the FVC loop."""
 
         self.command.info("Halting the axes.")
-        await self.helpers.tcc.axis_stop(self.command)
+        await self.helpers.tcc.axis_stop(self.command, axis="rot")
 
         self.command.info("Running FVC loop.")
         fvc_command = await self.send_command(
