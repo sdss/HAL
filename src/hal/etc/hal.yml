@@ -39,6 +39,7 @@ macros:
     flat_time: 25
     guider_time: 15.
     guider_offset: [0, 0, -432]
+    fvc_rms_threshold: 10.0
 
 goto:
   stow:

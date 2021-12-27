@@ -216,12 +216,15 @@ class GotoFieldMacro(Macro):
             time_limit=config["timeouts"]["fvc"],
             raise_on_fail=False,
         )
+
+        # fvc loop should never fail unless an uncaught exception.
         if fvc_command.status.did_fail:
-            fvc_rms = self.actor.models["jaeger"]["fvc_rms"][0]
-            if fvc_rms <= 10.0:
-                self.command.warning("FVC loop failed but RMS < 10 microns.")
-            else:
-                raise MacroError(f"FVC loop failed. RMS={fvc_rms}.")
+            raise MacroError("FVC loop failed.")
+
+        # Check RMS to determine whether to continue or not.
+        fvc_rms = self.actor.models["jaeger"]["fvc_rms"][0]
+        if fvc_rms > self.config["fvc_rms_threshold"]:
+            raise MacroError(f"FVC loop failed. RMS={fvc_rms}.")
 
         self.command.info("Re-slewing to field.")
         await self.slew()
