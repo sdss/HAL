@@ -63,11 +63,11 @@ jobs:
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
-          poetry run flake8 . --count --show-source --statistics
+          poetry run flake8 src/hal --count --show-source --statistics
 
       - name: Lint with black
         run: |
-          poetry run black --check .
+          poetry run black --check src/hal
 
       - name: Lint with isort
         run: |
