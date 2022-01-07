@@ -23,7 +23,6 @@ class MacroError(HALError):
     pass
 
 
-
 class HALNotImplemented(HALError):
     """A custom exception for not yet implemented features."""
 
