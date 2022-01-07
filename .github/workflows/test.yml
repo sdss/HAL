@@ -23,7 +23,7 @@ jobs:
         python-version: ['3.9', '3.10']
 
     env:
-      PYTHONPATH: '/home/runner/work/hal/hal/actorkeys/python'
+      PYTHONPATH: '/home/runner/work/hal/hal/actorkeys/actorkeys/python'
       OBSERVATORY: 'APO'
 
     steps:
@@ -48,6 +48,9 @@ jobs:
           repository: sdss/actorkeys
           ref: sdss5
           path: actorkeys
+
+      - name: LS
+        run: ls /home/runner/work/hal/hal/actorkeys
 
       - name: Setup node.js (for pyright)
         uses: actions/setup-node@v2
