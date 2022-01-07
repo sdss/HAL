@@ -51,8 +51,8 @@ jobs:
 
       - name: LS
         run: |
-        pwd
-        ls /home/runner/work/hal/
+          pwd
+          ls /home/runner/work/hal/
 
       - name: Setup node.js (for pyright)
         uses: actions/setup-node@v2
