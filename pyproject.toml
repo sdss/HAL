@@ -28,13 +28,13 @@ include = ["src/hal/etc/*"]
 hal = "hal.__main__:hal"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.9,<4.0"
 sdsstools = "^0.4.0"
 sdss-clu = "^1.4.0"
 click-default-group = "^1.2.2"
 
 [tool.poetry.dev-dependencies]
-ipython = ">=7.11.0"
+ipython = ">=8.0.0rc1"
 matplotlib = ">=3.1.1"
 flake8 = ">=3.7.9"
 doc8 = ">=0.8.0"
