@@ -34,12 +34,12 @@ class FFSHelper(HALHelper):
         return [FFSStatus(value) for value in values]
 
     def all_closed(self):
-        """Returns `True` fi all the petals are closed."""
+        """Returns `True` if all the petals are closed."""
 
         return all([x == FFSStatus.CLOSED for x in self.get_values()])
 
     def all_open(self):
-        """Returns `True` fi all the petals are open."""
+        """Returns `True` if all the petals are open."""
 
         return all([x == FFSStatus.OPEN for x in self.get_values()])
 
