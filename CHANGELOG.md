@@ -4,7 +4,7 @@
 
 ### 🚀 New
 
-* Basic insfrastructure for scripts and macros.
+* Basic infrastructure for scripts and macros.
 * [#1](https://github.com/sdss/HAL/pull/1) Command to run scripts.
 * Goto commands and TCC status.
 * `goto-field` macro.
