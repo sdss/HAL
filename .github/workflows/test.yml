@@ -50,7 +50,7 @@ jobs:
           path: actorkeys
 
       - name: LS
-        run: ls /home/runner/work/hal/hal/actorkeys
+        run: ls /home/runner/work/hal/actorkeys
 
       - name: Setup node.js (for pyright)
         uses: actions/setup-node@v2
