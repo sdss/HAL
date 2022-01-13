@@ -6,7 +6,10 @@
 # @Filename: __main__.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
+from __future__ import annotations
+
 import os
+import sys
 
 import click
 from click_default_group import DefaultGroup
@@ -14,10 +17,16 @@ from click_default_group import DefaultGroup
 from clu.tools import cli_coro
 from sdsstools.daemonizer import DaemonGroup
 
+from hal import __version__
 from hal.actor import HALActor
 
 
-@click.group(cls=DefaultGroup, default="actor", default_if_no_args=True)
+@click.group(
+    cls=DefaultGroup,
+    default="actor",
+    default_if_no_args=True,
+    invoke_without_command=True,
+)
 @click.option(
     "-c",
     "--config",
@@ -31,17 +40,31 @@ from hal.actor import HALActor
     count=True,
     help="Debug mode.",
 )
+@click.option(
+    "--version",
+    is_flag=True,
+    help="Print version and exit.",
+)
 @click.pass_context
-def hal(ctx, config_file, verbose):
-    """HAL"""
+def hal(
+    ctx: click.Context,
+    config_file: str | None = None,
+    verbose: bool = False,
+    version: bool = False,
+):
+    """HAL actor."""
 
     ctx.obj = {"verbose": verbose, "config_file": config_file}
+
+    if version is True:
+        click.echo(__version__)
+        sys.exit(0)
 
 
 @hal.group(cls=DaemonGroup, prog="hal-actor", workdir=os.getcwd())
 @click.pass_context
 @cli_coro
-async def actor(ctx):
+async def actor(ctx: click.Context):
     """Runs the actor."""
 
     default_config_file = os.path.join(os.path.dirname(__file__), "etc/hal.yml")
