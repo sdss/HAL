@@ -63,7 +63,7 @@ class BOSSHelper(HALHelper):
         self,
         command: HALCommandType,
         exp_time: float = 0.0,
-        exp_type: str = "object",
+        exp_type: str = "science",
         readout: bool = True,
         read_async: bool = False,
     ):
