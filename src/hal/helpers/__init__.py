@@ -42,9 +42,9 @@ class HALHelper:
         cmd = await command.send_command(target, cmd_str, **kwargs)
         if raise_on_fail and cmd.status.did_fail:
             if cmd.status == CommandStatus.TIMEDOUT:
-                raise HALError(f"{target} {cmd_str} timed out.")
+                raise HALError(f"Command '{target} {cmd_str}' timed out.")
             else:
-                raise HALError(f"{target} {cmd_str} failed.")
+                raise HALError(f"Command '{target} {cmd_str}' failed.")
 
         return cmd
 
