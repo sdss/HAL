@@ -77,6 +77,6 @@ goto:
     rot: 0
   alt_limit: 18
 
-bypasses: ['ffs']
+bypasses: []
 
 scripts: etc/scripts/
