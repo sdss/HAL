@@ -17,8 +17,8 @@ actor:
   log_dir: /data/logs/actors/hal
 
 durations:
-  boss_flushing: 18
-  boss_readout: 73
+  boss_flushing: 17
+  boss_readout: 63
 
 timeouts:
   ffs: 30.0
