@@ -201,13 +201,14 @@ class APOGEEHelper(HALHelper):
         exp_time
             The exposure time.
         exp_type
-            The exposure type. Valid values are ``object``, ``dark``, and ``flat``.
+            The exposure type. Valid values are ``object``, ``dark``, ``flat``,
+            and ``DomeFlat``.
         dither_position
             The dither position. If `None`, uses the current position.
 
         """
 
-        if exp_type.lower() not in ["object", "dark", "flat"]:
+        if exp_type.lower() not in ["object", "dark", "flat", "domeflat"]:
             raise HALError(f"Invalid exposure type {exp_type}.")
 
         if dither_position:
