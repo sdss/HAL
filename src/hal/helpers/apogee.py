@@ -28,19 +28,131 @@ class APOGEEHelper(HALHelper):
 
         self.gang_helper = APOGEEGangHelper(actor)
 
-    async def shutter(self, command: HALCommandType, open=True):
-        """Opens/closes the shutter."""
+    async def shutter(
+        self,
+        command: HALCommandType,
+        open: bool = True,
+        shutter: str = "apogee",
+        force: bool = False,
+    ):
+        """Opens/closes the shutter.
+
+        Parameters
+        ----------
+        command
+            The command instance to use to command the shutter.
+        open
+            If `True`, opens the shutter, otherwise closes it.
+        shutter
+            The shutter to query. Can be ``apogee`` or ``fpi``.
+        force
+            If `True`, sends the command to the shutter even if it reports to
+            already be in that position.
+
+        Returns
+        -------
+        shutter_command
+            The command sent to the shutter after been awaited for completion or
+            `None` if the shutter is already at that position.
+
+        """
 
         position = "open" if open is True else "close"
 
-        shutter_command = await self._send_command(
-            command,
-            "apogee",
-            f"shutter {position}",
-            time_limit=config["timeouts"]["apogee_shutter"],
-        )
+        if force is False:
+            current_position = self.get_shutter_position(shutter)
+            if current_position is None and current_position == open:
+                return None
+
+        if shutter == "apogee":
+            shutter_command = await self._send_command(
+                command,
+                "apogee",
+                f"shutter {position}",
+                time_limit=config["timeouts"]["apogee_shutter"],
+            )
+
+        elif shutter == "fpi":
+            shutter_command = await self._send_command(
+                command,
+                "apogeefpi",
+                position,
+                time_limit=config["timeouts"]["apogee_shutter"],
+            )
+
+        else:
+            raise ValueError(f"Invalid shutter {shutter}.")
 
         return shutter_command
+
+    def get_shutter_position(self, shutter: str = "apogee") -> bool | None:
+        """Returns the shutter status.
+
+        Parameters
+        ----------
+        shutter
+            The shutter to query. Can be ``apogee`` or ``fpi``.
+
+        Returns
+        -------
+        shutter_status
+            `True` if the shutter is open, `False` if closed, `None` if unknown.
+
+        """
+
+        shutter = shutter.lower()
+
+        if shutter == "apogee":
+            limit_switch = self.actor.models["apogee"]["shutterLimitSwitch"]
+            if limit_switch is None or None in limit_switch.value:
+                return None
+            if limit_switch.value[0] is False and limit_switch.value[1] is True:
+                return False
+            elif limit_switch.value[1] is False and limit_switch.value[0] is True:
+                return True
+            else:
+                return None
+
+        elif shutter == "fpi":
+            shutter_position = self.actor.models["apogeefpi"]["shutter_position"]
+            if (
+                shutter_position is None
+                or shutter_position.value[0] is None
+                or shutter_position.value[0] == "?"
+            ):
+                return None
+            elif shutter_position.value[0].lower() == "closed":
+                return False
+            elif shutter_position.value[0].lower() == "open":
+                return True
+            else:
+                return None
+
+        else:
+            raise ValueError(f"Invalid shutter {shutter}.")
+
+    def get_dither_position(self) -> str | None:
+        """Returns the dither position or `None` if unknown."""
+
+        position = self.actor.models["apogee"]["ditherPosition"]
+        if position is None or None in position.value:
+            return None
+
+        return position.value[1]
+
+    def is_exposing(self):
+        """Returns `True` if APOGEE is exposing or stopping."""
+
+        exposure_state = self.actor.models["apogee"]["exposureState"]
+
+        if exposure_state.value is None or None in exposure_state.value:
+            raise ValueError("Unknown APOGEE exposure state.")
+
+        state = exposure_state.value[0].lower()
+        if state in ["exposing", "stopping"]:
+            return True
+        else:
+            return False
 
     async def expose(
         self,
