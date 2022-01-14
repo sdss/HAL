@@ -42,11 +42,13 @@ class BOSSHelper(HALHelper):
 
         return self.__readout_pending
 
+    def clear_readout(self):
+        """Clears any pending readouts."""
+
+        self.__readout_pending = False
+
     def is_exposing(self):
         """Returns `True` if the BOSS spectrograph is currently exposing."""
-
-        if self.readout_pending is not False:
-            return True
 
         exposure_state = self.actor.models["boss"]["exposureState"]
 
@@ -92,9 +94,9 @@ class BOSSHelper(HALHelper):
 
         command_string = " ".join(command_parts)
 
-        self.__readout_pending = True
-
         await self._send_command(command, "boss", command_string, time_limit=timeout)
+
+        self.__readout_pending = True
 
         if readout is True and read_async is True:
             # We use a _send_command because readout cannot await on itself.
