@@ -399,7 +399,7 @@ class Macro:
                 return
             except Exception as err:
                 warnings.warn(
-                    f"Macro {self.name} failed with error {err}",
+                    f"Macro {self.name} failed with error '{err}'",
                     HALUserWarning,
                 )
                 await self.fail_macro(err, stage=stage)
