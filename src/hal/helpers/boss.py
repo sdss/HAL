@@ -31,6 +31,8 @@ class BOSSHelper(HALHelper):
     __readout_pending: bool = False
     __readout_task: asyncio.Task | None = None
 
+    name = "boss"
+
     def __init__(self, actor: HALActor):
         super().__init__(actor)
 
@@ -40,11 +42,30 @@ class BOSSHelper(HALHelper):
 
         return self.__readout_pending
 
+    def clear_readout(self):
+        """Clears any pending readouts."""
+
+        self.__readout_pending = False
+
+    def is_exposing(self):
+        """Returns `True` if the BOSS spectrograph is currently exposing."""
+
+        exposure_state = self.actor.models["boss"]["exposureState"]
+
+        if exposure_state is None or None in exposure_state.value:
+            raise ValueError("Unknown BOSS exposure state.")
+
+        state = exposure_state.value[0].lower()
+        if state in ["idle", "aborted"]:
+            return False
+        else:
+            return True
+
     async def expose(
         self,
         command: HALCommandType,
         exp_time: float = 0.0,
-        exp_type: str = "object",
+        exp_type: str = "science",
         readout: bool = True,
         read_async: bool = False,
     ):
@@ -73,9 +94,9 @@ class BOSSHelper(HALHelper):
 
         command_string = " ".join(command_parts)
 
-        self.__readout_pending = True
-
         await self._send_command(command, "boss", command_string, time_limit=timeout)
+
+        self.__readout_pending = True
 
         if readout is True and read_async is True:
             # We use a _send_command because readout cannot await on itself.

@@ -36,4 +36,6 @@ async def status(command: HALCommandType, full: bool = False):
             macros[macro_name].list_stages(command, level="d")
             macros[macro_name].output_stage_status(command, level="d")
 
+    command.info(bypasses=list(command.actor.helpers.bypasses))
+
     return command.finish(text="Alles ist gut.")

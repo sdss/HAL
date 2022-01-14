@@ -48,6 +48,7 @@ class ActorHelpers:
             APOGEEHelper,
             BOSSHelper,
             FFSHelper,
+            HALHelper,
             LampsHelper,
             Scripts,
             TCCHelper,
@@ -59,6 +60,14 @@ class ActorHelpers:
         self.ffs = FFSHelper(actor)
         self.lamps = LampsHelper(actor)
         self.tcc = TCCHelper(actor)
+
+        self.bypasses: set[str] = set(actor.config["bypasses"])
+        self._available_bypasses = []
+        self._available_bypasses += [
+            helper.name
+            for helper in HALHelper.__subclasses__()
+            if helper.name is not None
+        ]
 
         self.scripts = Scripts(actor, actor.config["scripts"])
 

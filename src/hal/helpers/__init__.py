@@ -8,9 +8,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, cast
 
-from clu import CluError, CommandStatus
+from clu import Command, CommandStatus
 
 from hal.exceptions import HALError
 
@@ -21,6 +21,8 @@ if TYPE_CHECKING:
 
 class HALHelper:
     """A helper class to control an actor or piece of hardware."""
+
+    name: str | None = None
 
     def __init__(self, actor: HALActor):
 
@@ -36,17 +38,23 @@ class HALHelper:
     ):
         """Sends a command to a target."""
 
+        # If the helper is bypassed, just returns a fake done command.
+        if self.name and self.name in self.actor.helpers.bypasses:
+            cmd = Command()
+            cmd.set_status(CommandStatus.DONE)
+            return cmd
+
         if self.actor.tron is None or self.actor.tron.connected() is False:
             raise HALError("Not connected to Tron. Cannot send commands.")
 
         cmd = await command.send_command(target, cmd_str, **kwargs)
         if raise_on_fail and cmd.status.did_fail:
             if cmd.status == CommandStatus.TIMEDOUT:
-                raise HALError(f"{target} {cmd_str} timed out.")
+                raise HALError(f"Command '{target} {cmd_str}' timed out.")
             else:
-                raise HALError(f"{target} {cmd_str} failed.")
+                raise HALError(f"Command '{target} {cmd_str}' failed.")
 
-        return cmd
+        return cast(Command, cmd)
 
 
 from .apogee import *

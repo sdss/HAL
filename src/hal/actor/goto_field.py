@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 import click
 
 from hal import config
+from hal.macros.macro import StageType
 
 from . import hal_command_parser, stages
 
@@ -38,7 +39,7 @@ __all__ = ["goto_field"]
 async def goto_field(
     command: HALCommandType,
     macro: Macro,
-    stages: list[str],
+    stages: list[StageType],
     guider_time: float,
 ):
     """Execute the go-to-field macro."""

@@ -9,16 +9,22 @@ actor:
     - tcc
     - mcp
     - apogee
+    - apogeefpi
     - jaeger
     - cherno
     - boss
     - hartmann
   log_dir: /data/logs/actors/hal
 
+durations:
+  boss_flushing: 17
+  boss_readout: 63
+
 timeouts:
   ffs: 30.0
   lamps: 30.0
   apogee_shutter: 15.0
+  apogee_dither: 30.0
   boss_flushing: 25.0
   boss_readout: 82.0
   expose: 25.0
@@ -40,6 +46,17 @@ macros:
     guider_time: 15.
     guider_offset: [0, 0, -432]
     fvc_rms_threshold: 10.0
+  expose:
+    boss_exposure_time: 900.
+    apogee_exposure_time: null
+    count: 1
+    count_apogee: null
+    count_boss: null
+    apogee: true
+    boss: true
+    single: false
+    initial_apogee_dither: null
+    with_fpi: true
 
 goto:
   stow:
@@ -59,5 +76,7 @@ goto:
     az: 121
     rot: 0
   alt_limit: 18
+
+bypasses: []
 
 scripts: etc/scripts/

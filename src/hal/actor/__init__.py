@@ -16,7 +16,7 @@ from clu import Command
 from clu.parsers.click import command_parser, coro_helper
 
 from hal.actor.actor import HALActor
-from hal.macros.macro import flatten
+from hal.macros.macro import StageType, flatten
 
 
 hal_command_parser = command_parser
@@ -63,7 +63,7 @@ def stages(macro_name: str, reset: bool = True):
             command: Command[HALActor],
             *args,
             list_stages: bool = False,
-            stages: list[str] | None = None,
+            stages: list[StageType] | None = None,
             **kwargs,
         ):
 
@@ -92,7 +92,9 @@ def stages(macro_name: str, reset: bool = True):
     return decorator
 
 
+from .bypass import *
 from .calibrations import *
+from .expose import *
 from .goto import *
 from .goto_field import *
 from .script import *
