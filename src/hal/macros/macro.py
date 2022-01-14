@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import enum
 import warnings
+from collections import defaultdict
 from contextlib import suppress
 
 from typing import TYPE_CHECKING, ClassVar, Coroutine, Optional, Union
@@ -85,7 +86,7 @@ class Macro:
         self.stage_status: dict[str, StageStatus] = {}
 
         self._base_config = config["macros"].get(self.name, {}).copy()
-        self.config = self._base_config.copy()
+        self.config = defaultdict(lambda: None, self._base_config.copy())
 
         self.command: HALCommandType
 
@@ -153,7 +154,7 @@ class Macro:
             raise MacroError("No stages found.")
 
         # Reload the config and update it with custom options for this run.
-        self.config = self._base_config.copy()
+        self.config = defaultdict(lambda: None, self._base_config.copy())
         self.config.update(opts)
 
         self.failed = False
