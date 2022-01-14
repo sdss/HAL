@@ -23,7 +23,7 @@ __all__ = ["APOGEEHelper"]
 class APOGEEHelper(HALHelper):
     """APOGEE instrument helper."""
 
-    name = 'apogee'
+    name = "apogee"
 
     def __init__(self, actor: HALActor):
 

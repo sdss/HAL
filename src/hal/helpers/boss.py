@@ -31,7 +31,7 @@ class BOSSHelper(HALHelper):
     __readout_pending: bool = False
     __readout_task: asyncio.Task | None = None
 
-    name = 'boss'
+    name = "boss"
 
     def __init__(self, actor: HALActor):
         super().__init__(actor)

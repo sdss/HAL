@@ -26,7 +26,7 @@ class LampsHelper(HALHelper):
     LAMPS = ["ff", "HgCd", "Ne"]
     WARMUP = config["lamp_warmup"].copy()
 
-    name = 'lamps'
+    name = "lamps"
 
     def _command_one(self, command: HALCommandType, lamp: str, state: bool):
         """Commands one lamp."""
