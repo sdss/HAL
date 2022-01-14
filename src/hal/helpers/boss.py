@@ -40,6 +40,23 @@ class BOSSHelper(HALHelper):
 
         return self.__readout_pending
 
+    def is_exposing(self):
+        """Returns `True` if the BOSS spectrograph is currently exposing."""
+
+        if self.readout_pending is not False:
+            return True
+
+        exposure_state = self.actor.models["boss"]["exposureState"]
+
+        if exposure_state is None or None in exposure_state.value:
+            raise ValueError("Unknown BOSS exposure state.")
+
+        state = exposure_state.value[0].lower()
+        if state in ["idle", "aborted"]:
+            return False
+        else:
+            return True
+
     async def expose(
         self,
         command: HALCommandType,
