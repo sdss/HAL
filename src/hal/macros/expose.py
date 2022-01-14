@@ -9,6 +9,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from hal.exceptions import MacroError
 from hal.macros import Macro
 
@@ -38,9 +40,51 @@ class ExposeMacro(Macro):
             raise MacroError("BOSS is already exposing.")
 
         # Check lamps. They must be turned off manually (but maybe add a parameter?)
-        lamp_status = [lamp[0] for lamp in self.helpers.lamps.list_status()]
+        lamp_status = [lamp[0] for lamp in self.helpers.lamps.list_status().values()]
         if any(lamp_status):
             raise MacroError("Some lamps are on.")
+
+        # Concurrent tasks to run.
+        tasks = [self.helpers.ffs.open(self.command)]
+
+        if do_apogee:
+            initial_dither = self.config["initial_apogee_dither"]
+            if initial_dither:
+                tasks.append(
+                    self.helpers.apogee.set_dither_position(
+                        self.command,
+                        initial_dither,
+                    )
+                )
+
+            tasks.append(
+                self.helpers.apogee.shutter(
+                    self.command,
+                    open=True,
+                    shutter="apogee",
+                )
+            )
+
+            if self.config["with_fpi"]:
+                tasks.append(
+                    self.helpers.apogee.shutter(
+                        self.command,
+                        open=True,
+                        shutter="fpi",
+                    )
+                )
+
+        await asyncio.gather(*tasks)
+
+    async def expose_boss(self):
+        """Exposes BOSS."""
+
+        pass
+
+    async def expose_apogee(self):
+        """Exposes APOGEE."""
+
+        pass
 
     async def cleanup(self):
         """Finish the expose macro."""
