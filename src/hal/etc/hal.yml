@@ -20,6 +20,7 @@ timeouts:
   ffs: 30.0
   lamps: 30.0
   apogee_shutter: 15.0
+  apogee_dither: 30.0
   boss_flushing: 25.0
   boss_readout: 82.0
   expose: 25.0
