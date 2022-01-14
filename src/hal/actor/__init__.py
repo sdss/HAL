@@ -92,6 +92,7 @@ def stages(macro_name: str, reset: bool = True):
     return decorator
 
 
+from .bypass import *
 from .calibrations import *
 from .expose import *
 from .goto import *

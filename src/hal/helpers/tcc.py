@@ -21,6 +21,8 @@ __all__ = ["TCCHelper"]
 class TCCHelper(HALHelper):
     """Helper for the TCC."""
 
+    name = "tcc"
+
     is_slewing: bool = False
 
     async def goto_position(

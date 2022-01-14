@@ -24,6 +24,8 @@ class FFSHelper(HALHelper):
 
     TIMEOUT: float = config["timeouts"]["ffs"]
 
+    name = 'ffs'
+
     def get_values(self):
         """Returns the FFS status flags."""
 

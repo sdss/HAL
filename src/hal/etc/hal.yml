@@ -62,4 +62,6 @@ goto:
     rot: 0
   alt_limit: 18
 
+bypasses: []
+
 scripts: etc/scripts/
