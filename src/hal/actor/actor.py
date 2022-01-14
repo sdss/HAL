@@ -17,7 +17,7 @@ from clu.legacy import LegacyActor
 from hal import __version__
 
 
-__all__ = ["HALActor"]
+__all__ = ["HALActor", "ActorHelpers"]
 
 
 T = TypeVar("T", bound="HALActor")

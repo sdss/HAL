@@ -42,7 +42,7 @@ source_parsers = {
 master_doc = "index"
 
 # General information about the project.
-project = project = "hal"
+project = "HAL"
 copyright = "{0}, {1}".format("2021-", "José Sánchez-Gallego")
 author = "José Sánchez-Gallego"
 
@@ -125,7 +125,7 @@ rst_epilog = f"""
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 html_theme = "furo"
-html_title = "hal"
+html_title = "HAL"
 html_logo = "_static/HAL_logo.png"
 html_favicon = "./_static/favicon.ico"
 

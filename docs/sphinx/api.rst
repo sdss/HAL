@@ -7,18 +7,34 @@ HAL Reference
 Actor
 -----
 
-.. automodule:: hal.actor
+.. automodule:: hal.actor.actor
    :members:
    :show-inheritance:
 
 
-Tools
------
+Helpers
+-------
 
-.. automodule:: hal.tools.tcc
+.. automodule:: hal.helpers.apogee
    :members:
    :show-inheritance:
 
-.. automodule:: hal.tools.scripts
+.. automodule:: hal.helpers.boss
+   :members:
+   :show-inheritance:
+
+.. automodule:: hal.helpers.ffs
+   :members:
+   :show-inheritance:
+
+.. automodule:: hal.helpers.lamps
+   :members:
+   :show-inheritance:
+
+.. automodule:: hal.helpers.tcc
+   :members:
+   :show-inheritance:
+
+.. automodule:: hal.helpers.scripts
    :members:
    :show-inheritance:
