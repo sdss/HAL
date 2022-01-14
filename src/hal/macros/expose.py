@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import asyncio
+import math
 
 from hal import config
 from hal.exceptions import MacroError
@@ -101,6 +102,10 @@ class ExposeMacro(Macro):
         exp_time: float = self.config["boss_exposure_time"]
         assert exp_time, "Invalid exposure time."
 
+        # Just in case there's a readout pending from some previous error. Although
+        # maybe it's better to have to manually force this.
+        self.helpers.boss.clear_readout()
+
         etr_one = (
             config["durations"]["boss_flushing"]
             + exp_time
@@ -113,7 +118,7 @@ class ExposeMacro(Macro):
 
             self.command.info(exposure_state_boss=self._exposure_state_boss)
 
-            # await self.helpers.boss.expose(self.command, exp_time)
+            await self.helpers.boss.expose(self.command, exp_time)
 
     async def expose_apogee(self):
         """Exposes APOGEE."""
@@ -142,6 +147,7 @@ class ExposeMacro(Macro):
             exp_time = boss_exp_time + boss_flushing + boss_readout
             if pairs:
                 exp_time /= 2.0
+        exp_time = float(math.ceil(exp_time))
 
         # We want the final exposure or dither pair to finish as the BOSS readout
         # begins. This allows us to do something during readout like slewing or
@@ -153,6 +159,7 @@ class ExposeMacro(Macro):
                 last_exp_time = exp_time - boss_readout / 2.0
             else:
                 last_exp_time = exp_time - boss_readout
+        last_exp_time = float(math.ceil(last_exp_time))
 
         # Determine how many exposures we have left.
         n_full_left = count - 2 if pairs else count - 1
@@ -199,17 +206,17 @@ class ExposeMacro(Macro):
             self.command.info(exposure_state_apogee=self._exposure_state_apogee)
 
             # Determine whether this is the last exposure/dither pair.
-            is_last = True if n_full_left > 0 else False
+            is_last = False if n_full_left > 0 else True
 
             # Determine what exposure time to use and expose.
             this_exp_time = exp_time if is_last is False else last_exp_time
-            print("exp_time", this_exp_time)
-            # await self.helpers.apogee.expose(
-            #     self.command,
-            #     this_exp_time,
-            #     exp_type="object",
-            #     dither_position=new_dither_position,
-            # )
+
+            await self.helpers.apogee.expose(
+                self.command,
+                this_exp_time,
+                exp_type="object",
+                dither_position=new_dither_position,
+            )
 
             # Update the counter for full and last exposures.
             if n_full_left > 0:
@@ -218,6 +225,20 @@ class ExposeMacro(Macro):
                 n_last_left -= 1
 
     async def cleanup(self):
-        """Finish the expose macro."""
+        """Cancel any running exposures."""
 
-        pass
+        if not self.failed:
+            return
+
+        # Wait a bit to give APOGEE or BOSS time to update exposureStatus if the
+        # macro failed very quickly.
+        await asyncio.sleep(5)
+
+        if self.helpers.apogee.is_exposing():
+            self.command.warning("Cancelling current APOGEE exposure.")
+            await self.send_command("apogee", "expose stop")
+
+        if self.helpers.boss.is_exposing():
+            self.command.warning("Cancelling current BOSS exposure.")
+            await self.send_command("boss", "exposure abort")
+            await self.send_command("boss", "exposure clearExposure")
