@@ -16,6 +16,10 @@ actor:
     - hartmann
   log_dir: /data/logs/actors/hal
 
+durations:
+  boss_flushing: 18
+  boss_readout: 73
+
 timeouts:
   ffs: 30.0
   lamps: 30.0
@@ -42,6 +46,17 @@ macros:
     guider_time: 15.
     guider_offset: [0, 0, -432]
     fvc_rms_threshold: 10.0
+  expose:
+    boss_exposure_time: 300.
+    apogee_exposure_time: null
+    count: 1
+    count_apogee: null
+    count_boss: null
+    apogee: true
+    boss: true
+    single: false
+    initial_apogee_dither: null
+    with_fpi: true
 
 goto:
   stow:
@@ -62,6 +77,6 @@ goto:
     rot: 0
   alt_limit: 18
 
-bypasses: []
+bypasses: ['ffs']
 
 scripts: etc/scripts/

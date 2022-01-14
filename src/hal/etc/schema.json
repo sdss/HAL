@@ -47,7 +47,24 @@
       "type": "array",
       "items": { "type": "string" }
     },
-
+    "exposure_state_apogee": {
+      "type": "array",
+      "items": [
+        { "title": "current_apogee", "type": "integer" },
+        { "title": "n_apogee", "type": "integer" },
+        { "title": "pair", "type": "boolean" },
+        { "title": "apogee_dither", "type": "string" },
+        { "title": "etr_apogee", "type": "number" }
+      ]
+    },
+    "exposure_state_boss": {
+      "type": "array",
+      "items": [
+        { "title": "current_boss", "type": "integer" },
+        { "title": "n_boss", "type": "integer" },
+        { "title": "etr_boss", "type": "number" }
+      ]
+    },
     "additionalProperties": false
   }
 }
