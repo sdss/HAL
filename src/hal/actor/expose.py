@@ -59,10 +59,16 @@ __all__ = ["expose"]
     help="Expose BOSS.",
 )
 @click.option(
-    "--single",
-    "-S",
+    "--pairs/--no-pairs",
+    " /-P",
+    default=True,
+    help="Do dither pairs or single exposures. If --pairs, the exposure time for "
+    "APOGEE refers to each dither and --counts refers to dither pairs.",
+)
+@click.option(
+    "--disable-dithering",
     is_flag=True,
-    help="Take a single APOGEE exposure instead of a dither pair.",
+    help="If set, the dither position will not change between exposures.",
 )
 @click.option(
     "-b",
@@ -95,7 +101,8 @@ async def expose(
     count_boss: int | None = None,
     apogee: bool = True,
     boss: bool = True,
-    single: bool = False,
+    pairs: bool = True,
+    disable_dithering: bool = False,
     boss_exposure_time: float | None = None,
     apogee_exposure_time: float | None = None,
     initial_apogee_dither: str | None = None,
@@ -117,7 +124,8 @@ async def expose(
         count_boss=count_boss,
         apogee=apogee,
         boss=boss,
-        apogee_single=single,
+        pairs=pairs,
+        disable_dithering=disable_dithering,
         boss_exposure_time=boss_exposure_time,
         apogee_exposure_time=apogee_exposure_time,
         initial_apogee_dither=initial_apogee_dither,

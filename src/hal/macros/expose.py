@@ -113,7 +113,7 @@ class ExposeMacro(Macro):
 
             self.command.info(exposure_state_boss=self._exposure_state_boss)
 
-            await self.helpers.boss.expose(self.command, exp_time)
+            # await self.helpers.boss.expose(self.command, exp_time)
 
     async def expose_apogee(self):
         """Exposes APOGEE."""
@@ -122,46 +122,60 @@ class ExposeMacro(Macro):
         assert count, "Invalid number of exposures."
 
         # For APOGEE we report the number of dithers.
-        single = self.config["single"]
-        if single is False:
+        pairs = self.config["pairs"]
+        if pairs:
             count *= 2
 
         self._exposure_state_apogee[1] = count
-        self._exposure_state_apogee[2] = not single
+        self._exposure_state_apogee[2] = pairs
 
         boss_exp_time: float = self.config["boss_exposure_time"]
         boss_flushing: float = config["durations"]["boss_flushing"]
         boss_readout: float = config["durations"]["boss_readout"]
 
+        # If the exposure time for APOGEE is not set, use the one for BOSS
+        # but divide by two if we are doing dither pairs. Otherwise just use
+        # apogee_exposure_time is always per exposure (rewardless of whether we
+        # are doing dither pairs or single exposures).
         exp_time: float | None = self.config["apogee_exposure_time"]
         if exp_time is None:
             exp_time = boss_exp_time + boss_flushing + boss_readout
-            if single is False:
+            if pairs:
                 exp_time /= 2.0
 
-        final_exp_time = exp_time
+        # We want the final exposure or dither pair to finish as the BOSS readout
+        # begins. This allows us to do something during readout like slewing or
+        # folding the FPS. We calculate an exposure time for the last exposure/pair
+        # by removing the BOSS readout time.
+        last_exp_time = exp_time
         if "expose_boss" in self._flat_stages:
-            if single:
-                final_exp_time = exp_time - boss_readout
+            if pairs:
+                last_exp_time = exp_time - boss_readout / 2.0
             else:
-                final_exp_time = exp_time - boss_readout / 2.0
+                last_exp_time = exp_time - boss_readout
 
+        # Determine how many exposures we have left.
+        n_full_left = count - 2 if pairs else count - 1
+        n_last_left = 2 if pairs else 1
+
+        # Set the first dither and determine the dither sequence.
         if self.config["initial_apogee_dither"]:
             await self.helpers.apogee.set_dither_position(
                 self.command,
                 self.config["initial_apogee_dither"],
             )
 
-        n_full = n_full_left = count - 2 if single is False else count - 1
-        n_final_left = 2 if single is False else 1
-
         current_dither_position = self.helpers.apogee.get_dither_position()
         if current_dither_position is None:
             raise MacroError("Invalid current dither position.")
 
-        if single:
+        if self.config["disable_dithering"]:
+            # If disable_dithering, just keep using the current dither position.
             dither_sequence = current_dither_position * count
         else:
+            # If we are dithering, the sequence starts on the current position
+            # and changes every two dithers to minimise how much we move the
+            # mechanism, e.g., ABBAABBA.
             dither_sequence = current_dither_position
             for i in range(1, count):
                 if i % 2 != 0:
@@ -174,18 +188,9 @@ class ExposeMacro(Macro):
 
         for n_exp in range(count):
 
-            is_final = True if n_exp >= n_full else False
-            if is_final is False and n_exp > 0:
-                n_final_left -= 1
-            if is_final:
-                if n_full > 0 and n_full_left > 0:
-                    n_full_left -= 1
-                elif n_exp > 0:
-                    n_final_left -= 1
-
             self._exposure_state_apogee[0] = n_exp + 1
 
-            etr = n_full_left * exp_time + n_final_left * final_exp_time
+            etr = n_full_left * exp_time + n_last_left * last_exp_time
             self._exposure_state_apogee[4] = etr
 
             new_dither_position = dither_sequence[n_exp]
@@ -193,13 +198,24 @@ class ExposeMacro(Macro):
 
             self.command.info(exposure_state_apogee=self._exposure_state_apogee)
 
-            this_exp_time = exp_time if is_final is False else final_exp_time
-            await self.helpers.apogee.expose(
-                self.command,
-                this_exp_time,
-                exp_type="object",
-                dither_position=new_dither_position,
-            )
+            # Determine whether this is the last exposure/dither pair.
+            is_last = True if n_full_left > 0 else False
+
+            # Determine what exposure time to use and expose.
+            this_exp_time = exp_time if is_last is False else last_exp_time
+            print("exp_time", this_exp_time)
+            # await self.helpers.apogee.expose(
+            #     self.command,
+            #     this_exp_time,
+            #     exp_type="object",
+            #     dither_position=new_dither_position,
+            # )
+
+            # Update the counter for full and last exposures.
+            if n_full_left > 0:
+                n_full_left -= 1
+            else:
+                n_last_left -= 1
 
     async def cleanup(self):
         """Finish the expose macro."""
