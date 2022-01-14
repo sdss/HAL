@@ -381,27 +381,37 @@ class Macro:
         current_task: asyncio.Future | None = None
 
         for istage, stage in enumerate(self.stages):
-            stage_coros = self._get_coros(stage)
+            stage_coros = [asyncio.create_task(coro) for coro in self._get_coros(stage)]
             current_task = asyncio.gather(*stage_coros)
 
             self.set_stage_status(stage, StageStatus.ACTIVE)
 
             try:
                 await current_task
+
             except asyncio.CancelledError:
                 with suppress(asyncio.CancelledError):
                     current_task.cancel()
                     await current_task
+
                 # Cancel this and all future stages.
                 cancel_stages = flatten(self.stages[istage:])
                 self.set_stage_status(cancel_stages, StageStatus.CANCELLED)
                 await self.fail_macro(MacroError("The macro was cancelled"))
                 return
+
             except Exception as err:
                 warnings.warn(
                     f"Macro {self.name} failed with error '{err}'",
                     HALUserWarning,
                 )
+
+                # Cancel stage tasks (in case we are running multiple concurrently).
+                with suppress(asyncio.CancelledError):
+                    for task in stage_coros:
+                        if not task.done():
+                            task.cancel()
+
                 await self.fail_macro(err, stage=stage)
                 return
 
