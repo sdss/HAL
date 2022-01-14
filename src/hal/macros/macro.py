@@ -14,7 +14,7 @@ import warnings
 from collections import defaultdict
 from contextlib import suppress
 
-from typing import TYPE_CHECKING, ClassVar, Coroutine, Optional, Union
+from typing import TYPE_CHECKING, Any, ClassVar, Coroutine, Optional, Union
 
 from clu import Command, CommandStatus
 
@@ -73,6 +73,7 @@ class Macro:
             raise MacroError("Must override __STAGES__.")
 
         self.stages = self.__STAGES__ + self.__CLEANUP__
+        self._flat_stages = flatten(self.stages)
 
         for stage in self.__CLEANUP__:
             if not isinstance(stage, str):
@@ -86,7 +87,9 @@ class Macro:
         self.stage_status: dict[str, StageStatus] = {}
 
         self._base_config = config["macros"].get(self.name, {}).copy()
-        self.config = defaultdict(lambda: None, self._base_config.copy())
+        self.config: defaultdict[str, Any] = defaultdict(
+            lambda: None, self._base_config.copy()
+        )
 
         self.command: HALCommandType
 
@@ -98,6 +101,11 @@ class Macro:
     def __repr__(self):
         stages = flatten(self.stages)
         return f"<{self.__class__.__name__} (name={self.name}, stages={stages})>"
+
+    def _reset_internal(self, **opts):
+        """Internal reset method that can be overridden by the subclasses."""
+
+        pass
 
     def reset(
         self,
@@ -122,6 +130,8 @@ class Macro:
 
         if command is None:
             raise MacroError("A new command must be passed to reset.")
+
+        self._reset_internal(**opts)
 
         if reset_stages is None:
             self.stages = self.__STAGES__ + self.__CLEANUP__
@@ -153,9 +163,13 @@ class Macro:
         if len(self.stages) == 0:
             raise MacroError("No stages found.")
 
+        self._flat_stages = flatten(self.stages)
+
         # Reload the config and update it with custom options for this run.
         self.config = defaultdict(lambda: None, self._base_config.copy())
-        self.config.update(opts)
+        self.config.update(
+            {k: v for k, v in opts.items() if k not in self.config or v is not None}
+        )
 
         self.failed = False
 
