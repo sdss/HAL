@@ -102,7 +102,7 @@ __all__ = ["expose"]
 async def expose(
     command: HALCommandType,
     macro: Macro,
-    stages: list[StageType],
+    stages: list[StageType] | None,
     count: int = 1,
     count_apogee: int | None = None,
     count_boss: int | None = None,
@@ -117,12 +117,6 @@ async def expose(
     no_readout_match: bool = False,
 ):
     """Take science exposures."""
-
-    if boss is False and "expose_boss" in stages:
-        stages.remove("expose_boss")
-
-    if apogee is False and "expose_apogee" in stages:
-        stages.remove("expose_apogee")
 
     macro.reset(
         command,
@@ -140,6 +134,12 @@ async def expose(
         with_fpi=with_fpi,
         no_readout_match=no_readout_match,
     )
+
+    if boss is False and "expose_boss" in macro.stages:
+        macro.stages.remove("expose_boss")
+
+    if apogee is False and "expose_apogee" in macro.stages:
+        macro.stages.remove("expose_apogee")
 
     result = await macro.run()
 
