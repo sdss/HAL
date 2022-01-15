@@ -94,6 +94,9 @@ class ExposeMacro(Macro):
     async def expose_boss(self):
         """Exposes BOSS."""
 
+        if self.config["boss"] is False:
+            return
+
         count: int = self.config["count_boss"] or self.config["count"]
         assert count, "Invalid number of exposures."
 
@@ -122,6 +125,9 @@ class ExposeMacro(Macro):
 
     async def expose_apogee(self):
         """Exposes APOGEE."""
+
+        if self.config["apogee"] is False:
+            return
 
         count: int = self.config["count_apogee"] or self.config["count"]
         assert count, "Invalid number of exposures."
