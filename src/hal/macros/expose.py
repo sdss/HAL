@@ -247,4 +247,4 @@ class ExposeMacro(Macro):
         if self.helpers.boss.is_exposing():
             self.command.warning("Cancelling current BOSS exposure.")
             await self.send_command("boss", "exposure abort")
-            await self.send_command("boss", "exposure clearExposure")
+            await self.send_command("boss", "clearExposure")
