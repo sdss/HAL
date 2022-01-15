@@ -93,8 +93,9 @@ class Macro:
 
         self.command: HALCommandType
 
-        self._running = False
-        self.failed = False
+        self._running: bool = False
+        self.failed: bool = False
+        self.cancelled: bool = False
 
         self._running_task: asyncio.Task | None = None
 
@@ -172,6 +173,7 @@ class Macro:
         )
 
         self.failed = False
+        self.cancelled = False
 
         self.stage_status = {st: StageStatus.WAITING for st in flatten(self.stages)}
 
@@ -407,6 +409,7 @@ class Macro:
                     StageStatus.CANCELLED,
                     output=False,
                 )
+                self.cancelled = True
                 await self.fail_macro(MacroError("The macro was cancelled"))
                 return
 
