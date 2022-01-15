@@ -92,6 +92,13 @@ __all__ = ["expose"]
     default=True,
     help="Open the FPI shutter.",
 )
+@click.option(
+    "-M",
+    "--no-readout-match",
+    is_flag=True,
+    help="If set, does not attempt to match the APOGEE exposure time to finish reading "
+    "at the as the same time the BOSS exposure start reading.",
+)
 async def expose(
     command: HALCommandType,
     macro: Macro,
@@ -107,6 +114,7 @@ async def expose(
     apogee_exposure_time: float | None = None,
     initial_apogee_dither: str | None = None,
     with_fpi: bool = True,
+    no_readout_match: bool = False,
 ):
     """Take science exposures."""
 
@@ -130,6 +138,7 @@ async def expose(
         apogee_exposure_time=apogee_exposure_time,
         initial_apogee_dither=initial_apogee_dither,
         with_fpi=with_fpi,
+        no_readout_match=no_readout_match,
     )
 
     result = await macro.run()

@@ -154,7 +154,8 @@ class ExposeMacro(Macro):
         # folding the FPS. We calculate an exposure time for the last exposure/pair
         # by removing the BOSS readout time.
         last_exp_time = exp_time
-        if "expose_boss" in self._flat_stages:
+        no_readout_match: bool = self.config["no_readout_match"]
+        if "expose_boss" in self._flat_stages and no_readout_match is False:
             if pairs:
                 last_exp_time = exp_time - boss_readout / 2.0
             else:

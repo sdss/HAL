@@ -54,9 +54,11 @@ macros:
     count_boss: null
     apogee: true
     boss: true
-    single: false
+    pairs: true
+    disable_dithering: false
     initial_apogee_dither: null
     with_fpi: true
+    no_readout_match: false
 
 goto:
   stow:
