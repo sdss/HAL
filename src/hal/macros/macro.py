@@ -397,8 +397,16 @@ class Macro:
                     await current_task
 
                 # Cancel this and all future stages.
-                cancel_stages = flatten(self.stages[istage:])
-                self.set_stage_status(cancel_stages, StageStatus.CANCELLED)
+                cancel_stages = [
+                    stg
+                    for stg in flatten(self.stages[istage:])
+                    if stg not in self.__CLEANUP__
+                ]
+                self.set_stage_status(
+                    cancel_stages,
+                    StageStatus.CANCELLED,
+                    output=False,
+                )
                 await self.fail_macro(MacroError("The macro was cancelled"))
                 return
 
