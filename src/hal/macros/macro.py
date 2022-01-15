@@ -224,6 +224,7 @@ class Macro:
         self,
         stages: StageType,
         status: StageStatus,
+        output: bool = True,
     ):
         """Set the stage status and inform the actor."""
 
@@ -241,7 +242,8 @@ class Macro:
 
             self.stage_status[stage] = status
 
-        self.output_stage_status()
+        if output:
+            self.output_stage_status()
 
     def output_stage_status(
         self,
