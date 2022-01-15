@@ -11,6 +11,25 @@ Actor
    :members:
    :show-inheritance:
 
+Macros
+------
+
+.. automodule:: hal.macros.macro
+   :members:
+   :show-inheritance:
+
+.. automodule:: hal.macros.apogee_dome_flat
+   :members:
+   :show-inheritance:
+
+.. automodule:: hal.macros.expose
+   :members:
+   :show-inheritance:
+
+.. automodule:: hal.macros.goto_field
+   :members:
+   :show-inheritance:
+
 
 Helpers
 -------
