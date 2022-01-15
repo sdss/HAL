@@ -76,14 +76,13 @@ class ExposeMacro(Macro):
                 )
             )
 
-            if self.config["with_fpi"]:
-                tasks.append(
-                    self.helpers.apogee.shutter(
-                        self.command,
-                        open=True,
-                        shutter="fpi",
-                    )
+            tasks.append(
+                self.helpers.apogee.shutter(
+                    self.command,
+                    open=self.config["with_fpi"],
+                    shutter="fpi",
                 )
+            )
 
         await asyncio.gather(*tasks)
 
