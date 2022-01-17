@@ -38,8 +38,11 @@ class HALHelper:
     ):
         """Sends a command to a target."""
 
+        bypasses = self.actor.helpers.bypasses
+
         # If the helper is bypassed, just returns a fake done command.
-        if self.name and self.name in self.actor.helpers.bypasses:
+        if (self.name and self.name in bypasses) or ("all" in bypasses):
+            command.warning(f"Bypassing command '{target} {cmd_str}'")
             cmd = Command()
             cmd.set_status(CommandStatus.DONE)
             return cmd
