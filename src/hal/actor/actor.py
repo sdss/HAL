@@ -62,7 +62,7 @@ class ActorHelpers:
         self.tcc = TCCHelper(actor)
 
         self.bypasses: set[str] = set(actor.config["bypasses"])
-        self._available_bypasses = []
+        self._available_bypasses = ["all"]
         self._available_bypasses += [
             helper.name
             for helper in HALHelper.__subclasses__()
