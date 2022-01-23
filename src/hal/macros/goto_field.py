@@ -226,9 +226,6 @@ class GotoFieldMacro(Macro):
         if fvc_rms > self.config["fvc_rms_threshold"]:
             raise MacroError(f"FVC loop failed. RMS={fvc_rms}.")
 
-        self.command.info("Re-slewing to field.")
-        await self.slew()
-
     async def _set_guider_offset(self):
         """Sets the guider offset."""
 
@@ -240,6 +237,9 @@ class GotoFieldMacro(Macro):
 
     async def acquire(self):
         """Acquires the field."""
+
+        self.command.info("Re-slewing to field.")
+        await self.slew()
 
         if not self.helpers.tcc.check_axes_status("Tracking"):
             raise MacroError("Axes must be tracking for acquisition.")
@@ -261,6 +261,10 @@ class GotoFieldMacro(Macro):
 
     async def guide(self):
         """Starts the guide loop."""
+
+        if "acquire" not in self._flat_stages:
+            self.command.info("Re-slewing to field.")
+            await self.slew()
 
         if not self.helpers.tcc.check_axes_status("Tracking"):
             raise MacroError("Axes must be tracking for guiding.")
