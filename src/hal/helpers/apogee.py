@@ -47,7 +47,7 @@ class APOGEEHelper(HALHelper):
         open
             If `True`, opens the shutter, otherwise closes it.
         shutter
-            The shutter to query. Can be ``apogee`` or ``fpi``.
+            The shutter to query. Can be ``apogee``, ``calbox``, or ``fpi``.
         force
             If `True`, sends the command to the shutter even if it reports to
             already be in that position.
@@ -83,6 +83,14 @@ class APOGEEHelper(HALHelper):
                 time_limit=config["timeouts"]["apogee_shutter"],
             )
 
+        elif shutter == "calbox":
+            shutter_command = await self._send_command(
+                command,
+                "apogeecal",
+                "shutterOpen" if open else "shutterClose",
+                time_limit=config["timeouts"]["apogee_shutter"],
+            )
+
         else:
             raise ValueError(f"Invalid shutter {shutter}.")
 
@@ -94,7 +102,7 @@ class APOGEEHelper(HALHelper):
         Parameters
         ----------
         shutter
-            The shutter to query. Can be ``apogee`` or ``fpi``.
+            The shutter to query. Can be ``apogee``, ``calbox``, or ``fpi``.
 
         Returns
         -------
@@ -116,8 +124,12 @@ class APOGEEHelper(HALHelper):
             else:
                 return None
 
-        elif shutter == "fpi":
-            shutter_position = self.actor.models["apogeefpi"]["shutter_position"]
+        elif shutter in ["calbox", "fpi"]:
+            if shutter == "calbox":
+                shutter_position = self.actor.models["apogeecal"]["calShutter"]
+            else:
+                shutter_position = self.actor.models["apogeefpi"]["shutter_position"]
+
             if (
                 shutter_position is None
                 or shutter_position.value[0] is None
