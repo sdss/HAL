@@ -53,6 +53,8 @@ class GotoFieldMacro(Macro):
         # Start closing the FFS if they are open but do not block.
         await self._close_ffs(wait=False)
 
+        await self.helpers.tcc.axis_stop(self.command)
+
         # If lamps are needed, turn them on now but do not wait for them to warm up.
         if "boss_hartmann" in self.stages or "boss_arcs" in self.stages:
             await self.helpers.lamps.turn_lamp(
