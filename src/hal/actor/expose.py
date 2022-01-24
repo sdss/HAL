@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 
 import click
 
+from hal import config
 from hal.macros.macro import StageType
 
 from . import hal_command_parser, stages
@@ -84,6 +85,12 @@ __all__ = ["expose"]
     help="APOGEE exposure time in seconds. If not passed, matches the BOSS exposure.",
 )
 @click.option(
+    "-r",
+    "--reads",
+    type=int,
+    help="Number of APOGEE reads. Incompatible with --apogee-exposure-time.",
+)
+@click.option(
     "--initial-apogee-dither",
     type=str,
     help="Initial APOGEE dither position.",
@@ -106,11 +113,17 @@ async def expose(
     disable_dithering: bool = False,
     boss_exposure_time: float | None = None,
     apogee_exposure_time: float | None = None,
+    reads: int | None = None,
     initial_apogee_dither: str | None = None,
     with_fpi: bool = True,
-    no_readout_match: bool = False,
 ):
     """Take science exposures."""
+
+    if reads is not None and apogee_exposure_time is not None:
+        return command.fail("--reads and --apogee-exposure-time are incompatible.")
+
+    if reads is not None:
+        apogee_exposure_time = reads * config["durations"]["apogee_read"]
 
     macro.reset(
         command,
