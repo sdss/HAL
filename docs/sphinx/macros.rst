@@ -38,14 +38,14 @@ The list of available options, with default values, for ``expose`` is:
 
 For reference on how to use these options with the ``hal expose`` command, refer to the :ref:`actor documentation <actor-commands>` or do ``hal expose --help``.
 
-By default the command will expose both APOGEE and BOSS. To avoid exposing one of them you'll need to pass ``--no-apogee`` or ``--no-boss`` when calling the command. The ``--count`` parameter always refers to full exposures for BOSS. For APOGEE the count refers to *dither pairs* if ``--pairs`` (the default) or to single exposures if ``--no-pairs``. By default if ``--count`` is greater than zero the dither position will change between exposures (while attempting to minimising moves). Some examples (all assume the APOGEE dither mechanism is at ``A``):
+By default the command will expose both APOGEE and BOSS. To avoid exposing one of them you'll need to pass ``--no-apogee`` or ``--no-boss`` when calling the command. This is equivalent to choosing only the ``expose_apogee`` or ``expose_boss`` stages. The ``--count`` parameter always refers to full exposures for BOSS. For APOGEE the count refers to *dither pairs* if ``--pairs`` (the default) or to single exposures if ``--no-pairs``. By default if ``--count`` is greater than zero the dither position will change between exposures (while attempting to minimising moves). Some examples (all assume the APOGEE dither mechanism is at ``A``):
 
-- ``hal expose --count 1`` will expose BOSS for 900 seconds and in the meantime it will take two APOGEE exposures for a total of 900 seconds with dither sequence ``AB``.
+- ``hal expose --count 1`` will expose BOSS for 900 seconds and in the meantime it will take two APOGEE exposures with dither sequence ``AB``.
 - ``hal expose --count 2`` will take two BOSS exposures of 900 seconds and two APOGEE dither pairs for a full sequence ``ABBA``.
-- ``hal expose --count 2 --no-pairs`` will take 2x900 seconds for BOSS and two 900 second APOGEE exposures ``AB``.
-- ``hal expose --count 2 --no-pairs --disable-dithering`` will take 2x900 seconds for BOSS and two 900 second APOGEE exposures without modifying the dither position (``AA``).
+- ``hal expose --count 2 --no-pairs`` will take 2x900 seconds for BOSS and two APOGEE exposures ``AB``.
+- ``hal expose --count 2 --no-pairs --disable-dithering`` will take 2x900 seconds for BOSS and two APOGEE exposures without modifying the dither position (``AA``).
 
-It is possible to pass an exposure time to APOGEE, in which case that will be the exposure time used. Note that *the exposure time always refers to a single exposure* but the total exposure time will depend on whether ``--pairs`` (the default) is used or ``-no-pairs``. For example, ``hal expose --count 3 --apogee-exposure-time 300 --no-pairs`` will take 3x300 seconds exposures but ``hal expose --count 3 --apogee-exposure-time 300`` will take 6x300 seconds (three dither pairs).
+It is possible to pass an exposure time to APOGEE, in which case that will be the exposure time used. Note that *the exposure time always refers to a single exposure* but the total exposure time will depend on whether ``--pairs`` (the default) is used or ``-no-pairs``. For example, ``hal expose --no-boss --count 3 --apogee-exposure-time 300 --no-pairs`` will take 3x300 seconds exposures but ``hal expose --no-boss --count 3 --apogee-exposure-time 300`` will take 6x300 seconds (three dither pairs).
 
 Most commonly, the exposure time for APOGEE is calculated to match the BOSS exposure time (if BOSS is being exposed). Here's where things get a bit complicated. If taking a single BOSS exposure, ``hal expose`` will calculate the APOGEE number of reads so that the APOGEE exposures (single or dither pair) finish as the BOSS readout begins. This allows to do something else during the readout, such as slewing, folding the FPS, etc. However, if multiple exposures are taken back to back, the APOGEE exposure time will be the BOSS exposure time plus overheads *except for the last exposure/dither pair*.
 
@@ -58,7 +58,13 @@ The readout time for BOSS is estimated to 63 second, and flushing is 17 seconds.
 
 If only APOGEE is exposed without passing an exposure time (``hal expose --no-boss``), the APOGEE exposure time is still :math:`900+63+17=980`.
 
-This is the desired behaviour during science operations but it can be disabled by passing ``--no-readout-match``, in which case the APOGEE exposure time will be the BOSS exposure time plus overheads.
+This is the desired behaviour during science operations but it can be overridden by passing a specific APOGEE exposure time. For example ::
+
+    hal expose --count 2 --boss-exposure-time 900 --apogee-exposure-time 500
+
+will take two 900 seconds BOSS exposures and 4x500 seconds APOGEE exposures.
+
+It's also possible to specify the APOGEE exposure time as number of reads, e.g., ``hal expose --no-boss --reads 40`` will take a dither pair with each exposure taking 424 seconds approximately.
 
 While the macro is exposing, a series of keywords are output indicating the current exposure, total number of exposures, and estimated remaining time. For example, if ``hal expose --count 2`` is executed one should see the sequence of keywords::
 
