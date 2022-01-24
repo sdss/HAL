@@ -10,7 +10,8 @@
 from __future__ import annotations
 
 import asyncio
-import math
+
+import numpy
 
 from hal import config
 from hal.exceptions import MacroError
@@ -156,29 +157,31 @@ class ExposeMacro(Macro):
         # but divide by two if we are doing dither pairs. Otherwise just use
         # apogee_exposure_time is always per exposure (rewardless of whether we
         # are doing dither pairs or single exposures).
-        exp_time: float | None = self.config["apogee_exposure_time"]
-        if exp_time is None:
-            exp_time = boss_exp_time + boss_flushing + boss_readout
+        apogee_exp_time: float | None = self.config["apogee_exposure_time"]
+        if apogee_exp_time is None:
+            readout_match = True
+            apogee_exp_time = boss_exp_time + boss_flushing + boss_readout
             if pairs:
-                exp_time /= 2.0
-        exp_time = float(math.ceil(exp_time))
+                apogee_exp_time /= 2.0
+        else:
+            readout_match = False
+
+        # Initially we assume all the exposures have the same exposure time.
+        exposure_times = [apogee_exp_time] * count
 
         # We want the final exposure or dither pair to finish as the BOSS readout
         # begins. This allows us to do something during readout like slewing or
         # folding the FPS. We calculate an exposure time for the last exposure/pair
         # by removing the BOSS readout time.
-        last_exp_time = exp_time
-        no_readout_match: bool = self.config["no_readout_match"]
-        if "expose_boss" in self._flat_stages and no_readout_match is False:
+        if "expose_boss" in self._flat_stages and readout_match is True:
             if pairs:
-                last_exp_time = exp_time - boss_readout / 2.0
+                last_exp_time = apogee_exp_time - boss_readout / 2.0
+                exposure_times[-2:] = [last_exp_time, last_exp_time]
             else:
-                last_exp_time = exp_time - boss_readout
-        last_exp_time = float(math.ceil(last_exp_time))
+                last_exp_time = apogee_exp_time - boss_readout
+                exposure_times[-1] = last_exp_time
 
-        # Determine how many exposures we have left.
-        n_full_left = count - 2 if pairs else count - 1
-        n_last_left = 2 if pairs else 1
+        exposure_times = numpy.ceil(exposure_times)
 
         # Set the first dither and determine the dither sequence.
         if self.config["initial_apogee_dither"]:
@@ -187,10 +190,10 @@ class ExposeMacro(Macro):
                 self.config["initial_apogee_dither"],
             )
 
-        current_dither_position = self.helpers.apogee.get_dither_position()
-        if current_dither_position is None:
-            raise MacroError("Invalid current dither position.")
-
+        # current_dither_position = self.helpers.apogee.get_dither_position()
+        # if current_dither_position is None:
+        #     raise MacroError("Invalid current dither position.")
+        current_dither_position = "A"
         if self.config["disable_dithering"]:
             # If disable_dithering, just keep using the current dither position.
             dither_sequence = current_dither_position * count
@@ -212,7 +215,7 @@ class ExposeMacro(Macro):
 
             self._exposure_state_apogee[0] = n_exp + 1
 
-            etr = n_full_left * exp_time + n_last_left * last_exp_time
+            etr = sum(exposure_times[n_exp:])
             self._exposure_state_apogee[4] = etr
 
             new_dither_position = dither_sequence[n_exp]
@@ -220,24 +223,12 @@ class ExposeMacro(Macro):
 
             self.command.info(exposure_state_apogee=self._exposure_state_apogee)
 
-            # Determine whether this is the last exposure/dither pair.
-            is_last = False if n_full_left > 0 else True
-
-            # Determine what exposure time to use and expose.
-            this_exp_time = exp_time if is_last is False else last_exp_time
-
             await self.helpers.apogee.expose(
                 self.command,
-                this_exp_time,
+                exposure_times[n_exp],
                 exp_type="object",
                 dither_position=new_dither_position,
             )
-
-            # Update the counter for full and last exposures.
-            if n_full_left > 0:
-                n_full_left -= 1
-            else:
-                n_last_left -= 1
 
     async def cleanup(self):
         """Cancel any running exposures."""

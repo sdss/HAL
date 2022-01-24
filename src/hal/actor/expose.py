@@ -33,8 +33,9 @@ __all__ = ["expose"]
     "-c",
     type=int,
     default=1,
-    help="How many exposures to take. If exposing APOGEE, the last dither pair or "
-    "exposure will finish as the BOSS readout begins.",
+    help="How many exposures to take. If exposing APOGEE and APOGEE exposure time "
+    "is not explicitely defined, the last APOGEE exposure will finish as the "
+    "BOSS readout begins.",
 )
 @click.option(
     "--count-apogee",
@@ -92,13 +93,6 @@ __all__ = ["expose"]
     default=True,
     help="Open the FPI shutter.",
 )
-@click.option(
-    "-M",
-    "--no-readout-match",
-    is_flag=True,
-    help="If set, does not attempt to match the APOGEE exposure time to finish reading "
-    "at the as the same time the BOSS exposure start reading.",
-)
 async def expose(
     command: HALCommandType,
     macro: Macro,
@@ -132,7 +126,6 @@ async def expose(
         apogee_exposure_time=apogee_exposure_time,
         initial_apogee_dither=initial_apogee_dither,
         with_fpi=with_fpi,
-        no_readout_match=no_readout_match,
     )
 
     if boss is False and "expose_boss" in macro.stages:
