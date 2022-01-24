@@ -61,6 +61,7 @@ class Macro:
     name: str
 
     __STAGES__: list[StageType]
+    __PRECONDITIONS__: list[StageType] = []
     __CLEANUP__: list[StageType] = []
 
     def __init__(self, name: Optional[str] = None):
@@ -72,14 +73,16 @@ class Macro:
         if not hasattr(self, "__STAGES__"):
             raise MacroError("Must override __STAGES__.")
 
-        self.stages = self.__STAGES__ + self.__CLEANUP__
+        self.stages = self.__PRECONDITIONS__ + self.__STAGES__ + self.__CLEANUP__
         self._flat_stages = flatten(self.stages)
 
-        for stage in self.__CLEANUP__:
+        for stage in self.__PRECONDITIONS__ + self.__CLEANUP__:
             if not isinstance(stage, str):
-                raise MacroError("Cleanup stages cannot run in parallel.")
+                raise MacroError(
+                    "Preconditions and cleanup stages cannot run in parallel."
+                )
             if stage in flatten(self.__STAGES__):
-                raise MacroError(f"Cleanup stage {stage} cannot be a normal stage.")
+                raise MacroError(f"Stage {stage} cannot be a selectable stage.")
 
         if len(self.stages) != len(set(self.stages)):
             raise MacroError("Duplicate stages found.")
@@ -135,7 +138,7 @@ class Macro:
         self._reset_internal(**opts)
 
         if reset_stages is None:
-            self.stages = self.__STAGES__ + self.__CLEANUP__
+            self.stages = self.__PRECONDITIONS__ + self.__STAGES__ + self.__CLEANUP__
         else:
             self.stages = []
 
@@ -156,6 +159,10 @@ class Macro:
             for stage in flatten(self.stages):
                 if stage not in flatten(self.__STAGES__):
                     raise MacroError(f"Unknown stage {stage}.")
+
+            for pre_stage in self.__PRECONDITIONS__:
+                if pre_stage not in flatten(self.stages):
+                    self.stages.insert(0, pre_stage)
 
             for cleanup_stage in self.__CLEANUP__:
                 if cleanup_stage not in flatten(self.stages):
