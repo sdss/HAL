@@ -26,7 +26,8 @@ class ExposeMacro(Macro):
 
     name = "expose"
 
-    __STAGES__ = ["prepare", ("expose_boss", "expose_apogee")]
+    __PRECONDITIONS__ = ["prepare"]
+    __STAGES__ = [("expose_boss", "expose_apogee")]
     __CLEANUP__ = ["cleanup"]
 
     _exposure_state_apogee: list = [0, 0, True, "A", 0.0]

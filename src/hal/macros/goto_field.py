@@ -23,8 +23,9 @@ class GotoFieldMacro(Macro):
     """Go to field macro."""
 
     name = "goto_field"
+
+    __PRECONDITIONS__ = ["prepare"]
     __STAGES__ = [
-        "prepare",
         ("slew", "reconfigure"),
         "boss_hartmann",
         "fvc",
