@@ -691,7 +691,7 @@ tox_to_nox = ["jinja2", "tox"]
 name = "numpy"
 version = "1.22.1"
 description = "NumPy is the fundamental package for array computing with Python."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.8"
 
@@ -1405,7 +1405,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9,<4.0"
-content-hash = "e75f314471cd5da888af24ff61fd647c72c643ca0a17f7a45da9709164f376f5"
+content-hash = "48ffd5b33a453e203424b586dbbb1a0c97680cf644dc2eff24f5689d5e85c3e1"
 
 [metadata.files]
 aio-pika = [
