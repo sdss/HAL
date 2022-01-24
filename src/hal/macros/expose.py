@@ -30,14 +30,14 @@ class ExposeMacro(Macro):
     __STAGES__ = [("expose_boss", "expose_apogee")]
     __CLEANUP__ = ["cleanup"]
 
-    _exposure_state_apogee: list = [0, 0, True, "A", 0.0]
-    _exposure_state_boss: list = [0, 0, 0.0]
+    _exposure_state_apogee: list = [0, 0, True, "A", 0.0, 0.0]
+    _exposure_state_boss: list = [0, 0, 0.0, 0.0]
 
     def _reset_internal(self, **opts):
         """Reset the exposure status."""
 
-        self._exposure_state_apogee = [0, 0, True, "A", 0.0]
-        self._exposure_state_boss = [0, 0, 0.0]
+        self._exposure_state_apogee = [0, 0, True, "A", 0.0, 0.0]
+        self._exposure_state_boss = [0, 0, 0.0, 0.0]
 
     async def prepare(self):
         """Prepare for exposures and run checks."""
@@ -124,6 +124,7 @@ class ExposeMacro(Macro):
             + exp_time
             + config["durations"]["boss_readout"]
         )
+        self._exposure_state_boss[3] = count * etr_one
 
         for n_exp in range(count):
             self._exposure_state_boss[0] = n_exp + 1
@@ -183,6 +184,7 @@ class ExposeMacro(Macro):
                 exposure_times[-1] = last_exp_time
 
         exposure_times = numpy.ceil(exposure_times)
+        self._exposure_state_apogee[5] = sum(exposure_times)
 
         # Set the first dither and determine the dither sequence.
         if self.config["initial_apogee_dither"]:
