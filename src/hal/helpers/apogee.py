@@ -124,11 +124,8 @@ class APOGEEHelper(HALHelper):
             else:
                 return None
 
-        elif shutter in ["calbox", "fpi"]:
-            if shutter == "calbox":
-                shutter_position = self.actor.models["apogeecal"]["calShutter"]
-            else:
-                shutter_position = self.actor.models["apogeefpi"]["shutter_position"]
+        elif shutter == "fpi":
+            shutter_position = self.actor.models["apogeefpi"]["shutter_position"]
 
             if (
                 shutter_position is None
@@ -143,6 +140,17 @@ class APOGEEHelper(HALHelper):
             else:
                 return None
 
+        elif shutter == "calbox":
+            shutter_position = self.actor.models["apogeecal"]["calShutter"]
+
+            if (
+                shutter_position is None
+                or shutter_position.value[0] is None
+                or shutter_position.value[0] == "?"
+            ):
+                return None
+            else:
+                return shutter_position.value[0]
         else:
             raise ValueError(f"Invalid shutter {shutter}.")
 

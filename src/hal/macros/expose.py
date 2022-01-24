@@ -87,7 +87,9 @@ class ExposeMacro(Macro):
             if self.config["with_fpi"]:
                 tasks.append(
                     self.helpers.apogee.shutter(
-                        self.command, open=True, shutter="calbox"
+                        self.command,
+                        open=True,
+                        shutter="calbox",
                     )
                 )
 
