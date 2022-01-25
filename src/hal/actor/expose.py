@@ -8,12 +8,12 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import click
 
 from hal import config
-from hal.macros.macro import StageType
+from hal.macros.macro import StageType, flatten
 
 from . import hal_command_parser, stages
 
@@ -125,9 +125,17 @@ async def expose(
     if reads is not None:
         apogee_exposure_time = reads * config["durations"]["apogee_read"]
 
+    selected_stages = cast(list[StageType], stages or flatten(macro.__STAGES__.copy()))
+
+    if boss is False and "expose_boss" in selected_stages:
+        selected_stages.remove("expose_boss")
+
+    if apogee is False and "expose_apogee" in selected_stages:
+        selected_stages.remove("expose_apogee")
+
     macro.reset(
         command,
-        stages,
+        selected_stages,
         count=count,
         count_apogee=count_apogee,
         count_boss=count_boss,
@@ -140,12 +148,6 @@ async def expose(
         initial_apogee_dither=initial_apogee_dither,
         with_fpi=with_fpi,
     )
-
-    if boss is False and "expose_boss" in macro.stages:
-        macro.stages.remove("expose_boss")
-
-    if apogee is False and "expose_apogee" in macro.stages:
-        macro.stages.remove("expose_apogee")
 
     result = await macro.run()
 
