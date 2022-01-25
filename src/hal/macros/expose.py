@@ -86,15 +86,6 @@ class ExposeMacro(Macro):
                 )
             )
 
-            if self.config["with_fpi"]:
-                tasks.append(
-                    self.helpers.apogee.shutter(
-                        self.command,
-                        open=True,
-                        shutter="calbox",
-                    )
-                )
-
         await asyncio.gather(*tasks)
 
         self._exposure_state_apogee[3] = self.helpers.apogee.get_dither_position()
