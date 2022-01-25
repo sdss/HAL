@@ -316,9 +316,9 @@ class Macro:
         for ss in stage:
             if ss in self.__CLEANUP__:
                 continue
-            if self.stage_status[ss] in StageStatus.ACTIVE:
+            if self.stage_status[ss] == StageStatus.ACTIVE:
                 self.stage_status[ss] = StageStatus.FAILED
-            if self.stage_status[ss] in StageStatus.WAITING:
+            if self.stage_status[ss] == StageStatus.WAITING:
                 self.stage_status[ss] = StageStatus.CANCELLED
 
         self.output_stage_status()
