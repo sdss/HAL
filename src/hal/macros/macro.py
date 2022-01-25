@@ -410,6 +410,7 @@ class Macro:
                     stg
                     for stg in flatten(self.stages[istage:])
                     if stg not in self.__CLEANUP__
+                    and self.stage_status[stg] != StageStatus.FINISHED
                 ]
                 self.set_stage_status(
                     cancel_stages,
