@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import asyncio
+from time import time
 
 import numpy
 
@@ -30,14 +31,29 @@ class ExposeMacro(Macro):
     __STAGES__ = [("expose_boss", "expose_apogee")]
     __CLEANUP__ = ["cleanup"]
 
-    _exposure_state_apogee: list = [0, 0, True, "A", 0.0, 0.0]
-    _exposure_state_boss: list = [0, 0, 0.0, 0.0]
+    _state_apogee: dict = {
+        "current": 0,
+        "n": 0,
+        "pairs": True,
+        "dither": "A",
+        "etr": 0.0,
+        "total_time": 0.0,
+        "timestamp": 0,
+    }
+
+    _state_boss: dict = {
+        "current": 0,
+        "n": 0,
+        "etr": 0.0,
+        "total_time": 0.0,
+        "timestamp": 0,
+    }
 
     def _reset_internal(self, **opts):
         """Reset the exposure status."""
 
-        self._exposure_state_apogee = [0, 0, True, "A", 0.0, 0.0]
-        self._exposure_state_boss = [0, 0, 0.0, 0.0]
+        self._state_apogee = ExposeMacro._state_apogee.copy()
+        self._state_boss = ExposeMacro._state_boss.copy()
 
     async def prepare(self):
         """Prepare for exposures and run checks."""
@@ -88,9 +104,9 @@ class ExposeMacro(Macro):
 
         await asyncio.gather(*tasks)
 
-        self._exposure_state_apogee[3] = self.helpers.apogee.get_dither_position()
-        self.command.info(exposure_state_apogee=self._exposure_state_apogee)
-        self.command.info(exposure_state_boss=self._exposure_state_boss)
+        self._state_apogee["dither"] = self.helpers.apogee.get_dither_position()
+        self.command.info(exposure_state_apogee=list(self._state_apogee.values()))
+        self.command.info(exposure_state_boss=list(self._state_boss.values()))
 
     async def expose_boss(self):
         """Exposes BOSS."""
@@ -101,7 +117,7 @@ class ExposeMacro(Macro):
         count: int = self.config["count_boss"] or self.config["count"]
         assert count, "Invalid number of exposures."
 
-        self._exposure_state_boss[1] = count
+        self._state_boss["n"] = count
 
         exp_time: float = self.config["boss_exposure_time"]
         assert exp_time, "Invalid exposure time."
@@ -115,13 +131,16 @@ class ExposeMacro(Macro):
             + exp_time
             + config["durations"]["boss_readout"]
         )
-        self._exposure_state_boss[3] = count * etr_one
+        self._state_boss["total_time"] = count * etr_one
 
         for n_exp in range(count):
-            self._exposure_state_boss[0] = n_exp + 1
-            self._exposure_state_boss[2] = (count - n_exp) * etr_one
+            self._state_boss["current"] = n_exp + 1
+            self._state_boss["etr"] = (count - n_exp) * etr_one
 
-            self.command.info(exposure_state_boss=self._exposure_state_boss)
+            # Timestamp
+            self._state_boss["timestamp"] = time()
+
+            self.command.info(exposure_state_boss=list(self._state_boss.values()))
 
             await self.helpers.boss.expose(self.command, exp_time)
 
@@ -139,8 +158,8 @@ class ExposeMacro(Macro):
         if pairs:
             count *= 2
 
-        self._exposure_state_apogee[1] = count
-        self._exposure_state_apogee[2] = pairs
+        self._state_apogee["count"] = count
+        self._state_apogee["pairs"] = pairs
 
         boss_exp_time: float = self.config["boss_exposure_time"]
         boss_flushing: float = config["durations"]["boss_flushing"]
@@ -175,7 +194,7 @@ class ExposeMacro(Macro):
                 exposure_times[-1] = last_exp_time
 
         exposure_times = numpy.ceil(exposure_times)
-        self._exposure_state_apogee[5] = sum(exposure_times)
+        self._state_apogee["total_time"] = sum(exposure_times)
 
         # Set the first dither and determine the dither sequence.
         if self.config["initial_apogee_dither"]:
@@ -207,15 +226,18 @@ class ExposeMacro(Macro):
 
         for n_exp in range(count):
 
-            self._exposure_state_apogee[0] = n_exp + 1
+            self._state_apogee["current"] = n_exp + 1
 
             etr = sum(exposure_times[n_exp:])
-            self._exposure_state_apogee[4] = etr
+            self._state_apogee["etr"] = etr
 
             new_dither_position = dither_sequence[n_exp]
-            self._exposure_state_apogee[3] = new_dither_position
+            self._state_apogee["dither"] = new_dither_position
 
-            self.command.info(exposure_state_apogee=self._exposure_state_apogee)
+            # Timestamp
+            self._state_apogee["timestamp"] = time()
+
+            self.command.info(exposure_state_apogee=list(self._state_apogee.values()))
 
             await self.helpers.apogee.expose(
                 self.command,
