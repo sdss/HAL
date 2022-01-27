@@ -158,7 +158,7 @@ class ExposeMacro(Macro):
         if pairs:
             count *= 2
 
-        self._state_apogee["count"] = count
+        self._state_apogee["n"] = count
         self._state_apogee["pairs"] = pairs
 
         boss_exp_time: float = self.config["boss_exposure_time"]
