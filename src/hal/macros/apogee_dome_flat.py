@@ -78,7 +78,7 @@ class APOGEEDomeFlatMacro(Macro):
         return True
 
     async def _flash_lamps(self, key: TronKey):
-        """Flases the FF lamps."""
+        """Flashes the FF lamps."""
 
         if len(key.value) == 0:
             return
