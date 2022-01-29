@@ -152,7 +152,7 @@ class GotoFieldMacro(Macro):
         await self._close_ffs()
 
         # This won't wait if the lamps are already on and warmed up.
-        self.command.debug("Waiting for lamps to warm up.")
+        self.command.info("Waiting for lamps to warm up.")
         await self.helpers.lamps.turn_lamp(
             self.command,
             ["HgCd", "Ne"],
@@ -190,7 +190,7 @@ class GotoFieldMacro(Macro):
         if self.helpers.boss.readout_pending:  # Readout from the arc.
             pretasks.append(self.helpers.boss.readout(self.command))
 
-        self.command.debug("Preparing lamps and reading pending exposures.")
+        self.command.info("Preparing lamps and reading pending exposures.")
         await asyncio.gather(*pretasks)
 
         # Now take the flat. Do not read it yet.
