@@ -213,6 +213,8 @@ class GotoFieldMacro(Macro):
         self.command.info("Halting the axes.")
         await self.helpers.tcc.axis_stop(self.command, axis="rot")
 
+        await asyncio.sleep(3)
+
         self.command.info("Running FVC loop.")
         fvc_command = await self.send_command(
             "jaeger",
