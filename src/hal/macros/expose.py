@@ -68,6 +68,10 @@ class ExposeMacro(Macro):
         if do_boss and self.helpers.boss.is_exposing():
             raise MacroError("BOSS is already exposing.")
 
+        if do_apogee:
+            if not self.command.actor.helpers.apogee.gang_helper.at_cartridge():
+                raise MacroError("The APOGEE gang connector is not at the cart.")
+
         # Check lamps. They must be turned off manually (but maybe add a parameter?)
         lamp_status = [lamp[0] for lamp in self.helpers.lamps.list_status().values()]
         if any(lamp_status):
