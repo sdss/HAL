@@ -48,6 +48,7 @@ macros:
     guider_time: 15.
     guider_offset: [0, 0, -432]
     fvc_rms_threshold: 20.0
+    fvc_rms_critical: 50.0
   expose:
     boss_exposure_time: 900.
     apogee_exposure_time: null
