@@ -230,7 +230,7 @@ class GotoFieldMacro(Macro):
         # Check RMS to determine whether to continue or not.
         fvc_rms = self.actor.models["jaeger"]["fvc_rms"][0]
         if fvc_rms > self.config["fvc_rms_threshold"]:
-            raise MacroError(f"FVC loop failed. RMS={fvc_rms}.")
+            self.command.error(f"FVC loop failed. RMS={fvc_rms}.")
 
     async def _set_guider_offset(self):
         """Sets the guider offset."""
