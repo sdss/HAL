@@ -261,10 +261,7 @@ class ExposeMacro(Macro):
         await asyncio.sleep(5)
 
         if self.helpers.apogee.is_exposing():
-            self.command.warning("Cancelling current APOGEE exposure.")
-            await self.send_command("apogee", "expose stop")
+            self.command.warning("APOGEE exposure is running. Not cancelling it.")
 
         if self.helpers.boss.is_exposing():
-            self.command.warning("Cancelling current BOSS exposure.")
-            await self.send_command("boss", "exposure abort")
-            await self.send_command("boss", "clearExposure")
+            self.command.warning("BOSS exposure is running. Not cancelling it.")
