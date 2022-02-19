@@ -29,8 +29,7 @@ class GotoFieldMacro(Macro):
     __STAGES__ = [
         ("slew", "reconfigure"),
         "boss_hartmann",
-        "fvc",
-        "boss_arcs",
+        ("fvc", "boss_arcs"),
         "boss_flat",
         "acquire",
         "guide",
