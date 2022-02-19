@@ -103,11 +103,7 @@ class GotoFieldMacro(Macro):
 
         self.command.info("Reconfiguring FPS array.")
 
-        if self.actor.models["jaeger"]["folded"][0] is not True:
-            self.command.warning("FPS is not folded. Unwinding.")
-            await self.send_command("jaeger", "explode 5")
-            await self.send_command("jaeger", "unwind")
-
+        await self.send_command("jaeger", "configuration reverse")
         await self.send_command("jaeger", "configuration execute")
 
     async def boss_hartmann(self):
