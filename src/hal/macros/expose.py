@@ -207,10 +207,10 @@ class ExposeMacro(Macro):
                 self.config["initial_apogee_dither"],
             )
 
-        # current_dither_position = self.helpers.apogee.get_dither_position()
-        # if current_dither_position is None:
-        #     raise MacroError("Invalid current dither position.")
-        current_dither_position = "A"
+        current_dither_position = self.helpers.apogee.get_dither_position()
+        if current_dither_position is None:
+            raise MacroError("Invalid current dither position.")
+
         if self.config["disable_dithering"]:
             # If disable_dithering, just keep using the current dither position.
             dither_sequence = current_dither_position * count
