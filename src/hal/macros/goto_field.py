@@ -54,6 +54,11 @@ class GotoFieldMacro(Macro):
         # Start closing the FFS if they are open but do not block.
         await self._close_ffs(wait=False)
 
+        # Stop the guider.
+        # TODO: create a Cherno helper to group these commands and monitor if the
+        # guider is running.
+        await self.send_command("cherno", "stop")
+
         await self.helpers.tcc.axis_stop(self.command)
 
         # If lamps are needed, turn them on now but do not wait for them to warm up.
