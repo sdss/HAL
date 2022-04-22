@@ -265,3 +265,11 @@ class ExposeMacro(Macro):
 
         if self.helpers.boss.is_exposing():
             self.command.warning("BOSS exposure is running. Not cancelling it.")
+
+        # Close the APOGEE cold shutter.
+        if "expose_apogee" in self._flat_stages:
+            await self.helpers.apogee.shutter(
+                self.command,
+                open=False,
+                shutter="apogee",
+            )

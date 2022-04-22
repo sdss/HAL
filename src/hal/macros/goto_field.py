@@ -61,6 +61,13 @@ class GotoFieldMacro(Macro):
 
         await self.helpers.tcc.axis_stop(self.command)
 
+        # Ensure the APOGEE shutter is closed.
+        await self.helpers.apogee.shutter(
+            self.command,
+            open=False,
+            shutter="apogee",
+        )
+
         # If lamps are needed, turn them on now but do not wait for them to warm up.
         if "boss_hartmann" in self.stages or "boss_arcs" in self.stages:
             await self.helpers.lamps.turn_lamp(
