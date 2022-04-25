@@ -199,14 +199,21 @@ class GotoFieldMacro(Macro):
 
         await self._close_ffs()
 
-        pretasks = [
-            self.helpers.lamps.turn_lamp(
-                self.command,
-                ["ff"],
-                True,
-                turn_off_others=True,
+        pretasks = []
+
+        if "boss_arcs" in self.stages or "boss_hartmann" in self.stages:
+            pretasks.append(
+                self.helpers.lamps.turn_lamp(
+                    self.command,
+                    ["ff"],
+                    True,
+                    turn_off_others=True,
+                )
             )
-        ]
+        else:
+            if self._lamps_task and not self._lamps_task.done():
+                await self._lamps_task
+
         if self.helpers.boss.readout_pending:  # Readout from the arc.
             pretasks.append(self.helpers.boss.readout(self.command))
 
