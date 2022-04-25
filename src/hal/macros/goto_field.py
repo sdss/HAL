@@ -131,16 +131,19 @@ class GotoFieldMacro(Macro):
     async def boss_hartmann(self):
         """Takes the hartmann sequence."""
 
-        self.command.info("Running hartmann collimate.")
-
         # First check that the FFS are closed and lamps on. We don't care for how long.
         await self._close_ffs()
+
+        if "slew" not in self.stages and "reconfigure" not in self.stages:
+            self.command.info("Waiting 10 seconds for the lamps to warm-up.")
+            await asyncio.sleep(10)
 
         lamp_status = self.helpers.lamps.list_status()
         if lamp_status["Ne"][0] is not True or lamp_status["HgCd"][0] is not True:
             raise MacroError("Lamps are not on for Hartmann. This should not happen.")
 
         # Run hartmann and adjust the collimator but ignore residuals.
+        self.command.info("Running hartmann collimate.")
         await self.send_command(
             "hartmann",
             "collimate ignoreResiduals",
