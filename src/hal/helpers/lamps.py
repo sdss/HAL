@@ -40,19 +40,14 @@ class LampsHelper(HALHelper):
             time_limit=config["timeouts"]["lamps"],
         )
 
-    async def all_off(
-        self,
-        command: HALCommandType,
-        wait: bool = True,
-        force: bool = False,
-    ):
+    async def all_off(self, command: HALCommandType, force: bool = False):
         """Turn off all the lamps."""
 
         tasks = []
         for lamp in self.LAMPS:
-            tasks.append(self.turn_lamp(command, lamp, False, wait=wait, force=force))
+            tasks.append(self.turn_lamp(command, lamp, False, force=force))
 
-        commands = asyncio.gather(*tasks)
+        await asyncio.gather(*tasks)
 
     def list_status(self) -> dict[str, tuple[bool, bool, float, bool]]:
         """Returns a dictionary with the state of the lamps.
@@ -101,12 +96,13 @@ class LampsHelper(HALHelper):
         command: HALCommandType,
         lamps: str | list[str],
         state: bool,
-        wait: bool = True,
-        wait_for_warmup: bool = False,
         turn_off_others: bool = False,
         force: bool = False,
     ):
         """Turns a lamp on or off.
+
+        This routine always blocks until the lamps are on and warmed up. If
+        you don't want to block, call it as a task.
 
         Parameters
         ----------
@@ -114,11 +110,6 @@ class LampsHelper(HALHelper):
             The command that issues the lamp switching.
         lamp
             Name of the lamp(s) to turn on or off.
-        wait
-            Whether to wait until the MCP confirms the lamp has been commanded.
-        wait_for_warmup
-            Whether to block until the lamp has warmed up (if the lamp is
-            being turned on).
         turn_off_others
             Turn off all other lamps.
         force
@@ -149,29 +140,41 @@ class LampsHelper(HALHelper):
 
         await asyncio.gather(*tasks)
 
-        if wait is False:
-            await asyncio.sleep(1)
-            return
-
         done_lamps: list[bool] = [False] * len(lamps)
         warmed: list[bool] = [False] * len(lamps)
+
+        n_iter = 0
         while True:
 
             if all(done_lamps):
-                if state is False or wait_for_warmup is False:
+                if state is False:
+                    command.info(f"Lamps {','.join(lamps)} are off.")
                     return
                 elif all(warmed):
+                    command.info(f"Lamps {','.join(lamps)} are on and warmed up.")
                     return
 
+            new_status = self.list_status()
             for i, lamp in enumerate(lamps):
-                new_status = self.list_status()
+                # Don't don't anything if we're already at the state.
+                if done_lamps[i]:
+                    continue
+
                 # Index 1 is if the lamp is actually on/off, not only commanded.
                 if new_status[lamp][1] is state:
                     done_lamps[i] = True
-                    if wait_for_warmup:
-                        # Index 2 is the elapsed time since it was completely on/off.
-                        elapsed = new_status[lamp][2]
-                        if elapsed >= self.WARMUP[lamp]:
-                            warmed[i] = True
+
+                if state is True:
+                    # Index 2 is the elapsed time since it was completely on/off.
+                    elapsed = new_status[lamp][2]
+                    if elapsed >= self.WARMUP[lamp]:
+                        command.debug(f"Lamp {lamp}: warm-up complete.")
+                        warmed[i] = True
+                    elif (n_iter % 5) == 0:
+                        remaining = round(self.WARMUP[lamp] - elapsed, 1)
+                        command.debug(
+                            f"Warming up lamp {lamp}: " f"{remaining} s remaining."
+                        )
 
             await asyncio.sleep(1)
+            n_iter += 1
