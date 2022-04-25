@@ -201,7 +201,6 @@ class GotoFieldMacro(Macro):
                 ["ff"],
                 True,
                 turn_off_others=True,
-                wait_for_warmup=True,
             )
         ]
         if self.helpers.boss.readout_pending:  # Readout from the arc.
@@ -222,7 +221,7 @@ class GotoFieldMacro(Macro):
         )
 
         # We are done with lamps at this point.
-        await self.helpers.lamps.all_off(self.command, wait=False)
+        await self.helpers.lamps.all_off(self.command)
 
     async def fvc(self):
         """Run the FVC loop."""
