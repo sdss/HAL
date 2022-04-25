@@ -161,7 +161,7 @@ class LampsHelper(HALHelper):
             new_status = self.list_status()
             for i, lamp in enumerate(lamps):
                 # Don't don't anything if we're already at the state.
-                if done_lamps[i]:
+                if done_lamps[i] and (state is False or warmed[i]):
                     continue
 
                 # Index 1 is if the lamp is actually on/off, not only commanded.
