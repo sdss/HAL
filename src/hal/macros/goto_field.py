@@ -36,10 +36,14 @@ class GotoFieldMacro(Macro):
     ]
     __CLEANUP__ = ["cleanup"]
 
+    _lamps_task: asyncio.Task | None = None
+
     async def prepare(self):
         """Check configuration and run pre-slew checks."""
 
         all_stages = list(self.stage_status.keys())
+
+        self._lamps_task = None
 
         if "reconfigure" in all_stages:
 
@@ -70,19 +74,25 @@ class GotoFieldMacro(Macro):
 
         # If lamps are needed, turn them on now but do not wait for them to warm up.
         if "boss_hartmann" in self.stages or "boss_arcs" in self.stages:
-            await self.helpers.lamps.turn_lamp(
-                self.command,
-                ["HgCd", "Ne"],
-                True,
-                turn_off_others=True,
+            self._lamps_task = asyncio.create_task(
+                self.helpers.lamps.turn_lamp(
+                    self.command,
+                    ["HgCd", "Ne"],
+                    True,
+                    turn_off_others=True,
+                )
             )
         elif "boss_flat" in self.stages:
-            await self.helpers.lamps.turn_lamp(
-                self.command,
-                ["ff"],
-                True,
-                turn_off_others=True,
+            self._lamps_task = asyncio.create_task(
+                self.helpers.lamps.turn_lamp(
+                    self.command,
+                    ["ff"],
+                    True,
+                    turn_off_others=True,
+                )
             )
+        else:
+            await self.helpers.lamps.all_off(self.command)
 
     async def _close_ffs(self, wait: bool = True):
         """Closes the FFS."""
