@@ -158,19 +158,25 @@ class GotoFieldMacro(Macro):
     async def boss_arcs(self):
         """Takes BOSS arcs."""
 
-        self.command.info("Taking BOSS arc.")
-
         await self._close_ffs()
 
-        # This won't wait if the lamps are already on and warmed up.
-        self.command.info("Waiting for lamps to warm up.")
-        await self.helpers.lamps.turn_lamp(
-            self.command,
-            ["HgCd", "Ne"],
-            True,
-            turn_off_others=True,
-            wait_for_warmup=True,
-        )
+        # Check lamps. Use HgCd since if it's on Ne should also be.
+        lamp_status = self.helpers.lamps.list_status()
+        if lamp_status["HgCd"][3] is False:
+            if lamp_status["HgCd"][0] is True and self._lamps_task is not None:
+                # Lamp has been commanded on but it's not warmed up yet.
+                self.command.info("Waiting for lamps to warm up.")
+                await self._lamps_task
+            else:
+                self.command.warning("Arc lamps are not on. Turning them on.")
+                await self.helpers.lamps.turn_lamp(
+                    self.command,
+                    ["HgCd", "Ne"],
+                    True,
+                    turn_off_others=True,
+                )
+
+        self.command.info("Taking BOSS arc.")
 
         arc_time = self.config["arc_time"]
 
