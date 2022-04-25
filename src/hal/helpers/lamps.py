@@ -82,12 +82,8 @@ class LampsHelper(HALHelper):
                     raise HALError(f"Failed determining state for lamp {lamp}.")
 
                 elapsed = time.time() - last_seen
-                state[lamp] = (
-                    bool(commanded_on),
-                    lamp_state,
-                    elapsed,
-                    elapsed >= self.WARMUP[lamp],
-                )
+                warmed = (elapsed >= self.WARMUP[lamp]) if bool(commanded_on) else False
+                state[lamp] = (bool(commanded_on), lamp_state, elapsed, warmed)
 
         return state
 
