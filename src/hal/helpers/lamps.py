@@ -43,8 +43,12 @@ class LampsHelper(HALHelper):
     async def all_off(self, command: HALCommandType, force: bool = False):
         """Turn off all the lamps."""
 
+        status = self.list_status()
+
         tasks = []
         for lamp in self.LAMPS:
+            if force is False and status[lamp][0] is False and status[lamp][-1] is True:
+                continue
             tasks.append(self.turn_lamp(command, lamp, False, force=force))
 
         await asyncio.gather(*tasks)
@@ -120,19 +124,18 @@ class LampsHelper(HALHelper):
             if lamp not in self.LAMPS:
                 raise HALError(f"Invalid lamp {lamp}.")
 
-        current_status = self.list_status()
+        status = self.list_status()
 
         tasks = []
         for ll in self.LAMPS:
             if ll in lamps:
-                if force is False and current_status[ll][0] is state:
+                if force is False and status[ll][0] is state and status[ll][-1] is True:
                     pass
                 else:
                     tasks.append(self._command_one(command, ll, state))
             else:
                 if turn_off_others is True:
-                    if current_status[ll][0] is not False or force is True:
-                        tasks.append(self._command_one(command, ll, False))
+                    if status[ll][0] is not False or force is True:
 
         await asyncio.gather(*tasks)
 
