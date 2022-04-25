@@ -305,7 +305,10 @@ class GotoFieldMacro(Macro):
     async def cleanup(self):
         """Turns off all lamps."""
 
-        await self.helpers.lamps.all_off(self.command, wait=False, force=True)
+        if self._lamps_task is not None and not self._lamps_task.done():
+            self._lamps_task.cancel()
+
+        await self.helpers.lamps.all_off(self.command, force=True)
 
         # Read any pending BOSS exposure.
         if self.helpers.boss.readout_pending:
