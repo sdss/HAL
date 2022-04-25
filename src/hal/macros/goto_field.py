@@ -128,13 +128,7 @@ class GotoFieldMacro(Macro):
 
         lamp_status = self.helpers.lamps.list_status()
         if lamp_status["Ne"][0] is not True or lamp_status["HgCd"][0] is not True:
-            await self.helpers.lamps.turn_lamp(
-                self.command,
-                ["HgCd", "Ne"],
-                True,
-                turn_off_others=True,
-                wait_for_warmup=False,
-            )
+            raise MacroError("Lamps are not on for Hartmann. This should not happen.")
 
         # Run hartmann and adjust the collimator but ignore residuals.
         await self.send_command(
