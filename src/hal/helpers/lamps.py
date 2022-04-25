@@ -54,15 +54,13 @@ class LampsHelper(HALHelper):
 
         commands = asyncio.gather(*tasks)
 
-        if wait:
-            await commands
-
-    def list_status(self) -> dict[str, tuple[bool, bool, float]]:
+    def list_status(self) -> dict[str, tuple[bool, bool, float, bool]]:
         """Returns a dictionary with the state of the lamps.
 
         For each lamp the first value in the returned tuple is whether the
         lamp has been commanded on. The second value is whether the lamps is
-        actually on. The final value is how long since it changed states.
+        actually on. The third value is how long since it changed states.
+        The final value indicates whether the lamp has warmed up.
 
         """
 
@@ -73,7 +71,8 @@ class LampsHelper(HALHelper):
             if commanded_on is None:
                 raise HALError(f"Failed getting {commanded_key}.")
             if lamp in ["wht", "UV"]:
-                state[lamp] = (bool(commanded_on), bool(commanded_on), 0.0)
+                is_on = bool(commanded_on)
+                state[lamp] = (is_on, is_on, 0.0, is_on)
             else:
                 lamp_key = f"{lamp}Lamp"
                 lamp_state = self.actor.models["mcp"][lamp_key]
@@ -86,7 +85,14 @@ class LampsHelper(HALHelper):
                     lamp_state = False
                 else:
                     raise HALError(f"Failed determining state for lamp {lamp}.")
-                state[lamp] = (bool(commanded_on), lamp_state, time.time() - last_seen)
+
+                elapsed = time.time() - last_seen
+                state[lamp] = (
+                    bool(commanded_on),
+                    lamp_state,
+                    elapsed,
+                    elapsed >= self.WARMUP[lamp],
+                )
 
         return state
 
