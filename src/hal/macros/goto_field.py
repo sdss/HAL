@@ -165,9 +165,10 @@ class GotoFieldMacro(Macro):
 
         # Check lamps. Use HgCd since if it's on Ne should also be.
         lamp_status = self.helpers.lamps.list_status()
+
         if lamp_status["HgCd"][3] is False:
-            if lamp_status["HgCd"][0] is True and self._lamps_task is not None:
-                # Lamp has been commanded on but it's not warmed up yet.
+            if self._lamps_task is not None:
+                # Lamps have been commanded on but are not warmed up yet.
                 self.command.info("Waiting for lamps to warm up.")
                 await self._lamps_task
             else:
