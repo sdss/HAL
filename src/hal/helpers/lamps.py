@@ -175,7 +175,7 @@ class LampsHelper(HALHelper):
                         command.debug(f"Lamp {lamp}: warm-up complete.")
                         warmed[i] = True
                     elif (n_iter % 5) == 0:
-                        remaining = round(self.WARMUP[lamp] - elapsed, 1)
+                        remaining = int(self.WARMUP[lamp] - elapsed)
                         command.debug(
                             f"Warming up lamp {lamp}: " f"{remaining} s remaining."
                         )
