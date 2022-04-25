@@ -127,6 +127,7 @@ class LampsHelper(HALHelper):
         status = self.list_status()
 
         tasks = []
+        turn_off_tasks = []
         for ll in self.LAMPS:
             if ll in lamps:
                 if force is False and status[ll][0] is state and status[ll][-1] is True:
@@ -136,6 +137,10 @@ class LampsHelper(HALHelper):
             else:
                 if turn_off_others is True:
                     if status[ll][0] is not False or force is True:
+                        turn_off_tasks.append(self._command_one(command, ll, False))
+
+        if len(turn_off_tasks) > 0:
+            await asyncio.gather(*turn_off_tasks)
 
         await asyncio.gather(*tasks)
 
