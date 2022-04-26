@@ -309,9 +309,7 @@ class GotoFieldMacro(Macro):
         self.command.info("Starting guide loop.")
 
         with suppress(Exception):
-            asyncio.create_task(
-                self.send_command("cherno", f"acquire -c -t {guider_time}")
-            )
+            asyncio.shield(self.send_command("cherno", f"acquire -c -t {guider_time}"))
 
     async def cleanup(self):
         """Turns off all lamps."""
