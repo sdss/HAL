@@ -73,7 +73,7 @@ class GotoFieldMacro(Macro):
         )
 
         # If lamps are needed, turn them on now but do not wait for them to warm up.
-        if "boss_hartmann" in self.stages or "boss_arcs" in self.stages:
+        if "boss_hartmann" in self._flat_stages or "boss_arcs" in self._flat_stages:
             self._lamps_task = asyncio.create_task(
                 self.helpers.lamps.turn_lamp(
                     self.command,
@@ -82,7 +82,7 @@ class GotoFieldMacro(Macro):
                     turn_off_others=True,
                 )
             )
-        elif "boss_flat" in self.stages:
+        elif "boss_flat" in self._flat_stages:
             self._lamps_task = asyncio.create_task(
                 self.helpers.lamps.turn_lamp(
                     self.command,
@@ -134,7 +134,7 @@ class GotoFieldMacro(Macro):
         # First check that the FFS are closed and lamps on. We don't care for how long.
         await self._close_ffs()
 
-        if "slew" not in self.stages and "reconfigure" not in self.stages:
+        if "slew" not in self._flat_stages and "reconfigure" not in self._flat_stages:
             self.command.info("Waiting 10 seconds for the lamps to warm-up.")
             await asyncio.sleep(10)
 
@@ -201,7 +201,7 @@ class GotoFieldMacro(Macro):
 
         pretasks = []
 
-        if "boss_arcs" in self.stages or "boss_hartmann" in self.stages:
+        if "boss_arcs" in self._flat_stages or "boss_hartmann" in self._flat_stages:
             pretasks.append(
                 self.helpers.lamps.turn_lamp(
                     self.command,
