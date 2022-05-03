@@ -199,6 +199,7 @@ class GotoFieldMacro(Macro):
         pretasks = []
 
         if "boss_arcs" in self._flat_stages or "boss_hartmann" in self._flat_stages:
+            self.command.debug("Preparing FF lamps.")
             pretasks.append(
                 self.helpers.lamps.turn_lamp(
                     self.command,
@@ -214,11 +215,12 @@ class GotoFieldMacro(Macro):
         if self.helpers.boss.readout_pending:  # Readout from the arc.
             pretasks.append(self.helpers.boss.readout(self.command))
 
-        self.command.info("Preparing lamps and reading pending exposures.")
         await asyncio.gather(*pretasks)
 
         # Now take the flat. Do not read it yet.
         flat_time = self.config["flat_time"]
+
+        self.command.debug("Starting BOSS flat exposure.")
 
         await self.helpers.boss.expose(
             self.command,
