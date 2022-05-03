@@ -276,8 +276,6 @@ class GotoFieldMacro(Macro):
             self.command.info("Opening FFS")
             await self.helpers.ffs.open(self.command)
 
-        await self._set_guider_offset()
-
         guider_time = self.config["guider_time"]
 
         self.command.info("Acquiring field.")
@@ -300,9 +298,6 @@ class GotoFieldMacro(Macro):
         if not self.helpers.ffs.all_open():
             self.command.info("Opening FFS")
             await self.helpers.ffs.open(self.command)
-
-        if "acquire" not in self.stage_status:
-            await self._set_guider_offset()
 
         guider_time = self.config["guider_time"]
 
