@@ -41,12 +41,9 @@ class GotoFieldMacro(Macro):
     async def prepare(self):
         """Check configuration and run pre-slew checks."""
 
-        all_stages = list(self.stage_status.keys())
-
         self._lamps_task = None
 
-        if "reconfigure" in all_stages:
-
+        if "reconfigure" in self._flat_stages:
             configuration_loaded = self.actor.models["jaeger"]["configuration_loaded"]
             last_seen = configuration_loaded.last_seen
 
