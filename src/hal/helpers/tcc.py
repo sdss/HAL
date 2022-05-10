@@ -57,7 +57,7 @@ class TCCHelper(HALHelper):
         if self.is_slewing:
             raise HALError("TCC is already slewing.")
 
-        await self.axis_init(command)
+        # await self.axis_init(command)
 
         # Even if this is already checked in axis_init(), let's check again that the
         # axes are ok, but if alt < limit, we only check az and alt because we won't
