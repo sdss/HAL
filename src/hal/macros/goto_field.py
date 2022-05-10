@@ -270,15 +270,18 @@ class GotoFieldMacro(Macro):
         self.command.info("Re-slewing to field.")
         pretasks.append(self.slew())
 
-        if not self.helpers.tcc.check_axes_status("Tracking"):
-            raise MacroError("Axes must be tracking for acquisition.")
-
         if not self.helpers.ffs.all_open():
             self.command.info("Opening FFS")
             pretasks.append(self.helpers.ffs.open(self.command))
 
         # Open FFS and re-slew at the same time.
         await asyncio.gather(*pretasks)
+
+        # A bit of delay to make sure the axis status keyword is updated.
+        await asyncio.sleep(1)
+
+        if not self.helpers.tcc.check_axes_status("Tracking"):
+            raise MacroError("Axes must be tracking for acquisition.")
 
         guider_time = self.config["guider_time"]
 
