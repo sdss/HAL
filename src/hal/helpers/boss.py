@@ -118,12 +118,12 @@ class BOSSHelper(HALHelper):
         if self.readout_pending is False:
             raise HALError("No pending readout.")
 
+        command.debug("Reading pending BOSS exposure.")
+
         if self.readout_pending and self.__readout_task:
             await self.__readout_task
 
         else:
-            command.debug("Reading pending BOSS exposure.")
-
             await self._send_command(
                 command,
                 "boss",

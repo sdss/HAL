@@ -38,7 +38,7 @@ lamp_warmup:
   ff: 1
   wht: 0
   UV: 0
-  HgCd: 120
+  HgCd: 108
   Ne: 20
 
 macros:
