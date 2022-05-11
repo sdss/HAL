@@ -46,7 +46,7 @@ macros:
     arc_time: 4
     flat_time: 25
     guider_time: 15.
-    guider_offset: [0, 0, -432]
+    n_acquisition: 5
   expose:
     boss_exposure_time: 900.
     apogee_exposure_time: null

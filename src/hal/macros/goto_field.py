@@ -284,11 +284,12 @@ class GotoFieldMacro(Macro):
             raise MacroError("Axes must be tracking for acquisition.")
 
         guider_time = self.config["guider_time"]
+        n_acquisition = self.config["n_acquisition"]
 
         self.command.info("Acquiring field.")
         await self.send_command(
             "cherno",
-            f"acquire -t {guider_time} --full",
+            f"acquire -t {guider_time} --count {n_acquisition} --full",
             time_limit=guider_time + 60.0,
         )
 
