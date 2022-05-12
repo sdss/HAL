@@ -290,7 +290,6 @@ class GotoFieldMacro(Macro):
         await self.send_command(
             "cherno",
             f"acquire -t {guider_time} --count {n_acquisition} --full",
-            time_limit=guider_time + 60.0,
         )
 
     async def guide(self):
