@@ -1,13 +1,8 @@
 # morningcals: takes morning calibration sequence:
-# No Dither version with timeouts for STUI.
-#   3 long darks
-#   3 QTH
-#   2 ThAr
-#   2 UNe
-#   internal flat field
-#  12/01/2020
+
 10.0 apogeecal allOff
 15.0 apogee shutter close
+apogeefpi close
 650.0 apogee expose nreads=60 ; object=Dark
 650.0 apogee expose nreads=60 ; object=Dark
 650.0 apogee expose nreads=60 ; object=Dark
@@ -18,21 +13,34 @@ apogeecal SourceOn source=Quartz
 110.0 apogee expose nreads=10 ; object=QuartzFlat
 110.0 apogee expose nreads=10 ; object=QuartzFlat
 apogeecal SourceOff source=Quartz
+apogee dither namedpos=B
 apogeecal SourceOn source=ThAr
-130.0 apogee expose nreads=12 ; object=ArcLamp
 130.0 apogee expose nreads=12 ; object=ArcLamp
 apogeecal SourceOff source=ThAr
 apogeecal SourceOn source=UNe
 440.0 apogee expose nreads=40 ; object=ArcLamp
+apogeecal SourceOff source=UNe
+apogee dither namedpos=A
+apogeecal SourceOn source=ThAr
+130.0 apogee expose nreads=12 ; object=ArcLamp
+apogeecal SourceOff source=ThAr
+apogeecal SourceOn source=UNe
 440.0 apogee expose nreads=40 ; object=ArcLamp
 apogeecal SourceOff source=UNe
 10.0 apogeecal shutterClose
-apogeecal allOff
+10.0 apogeecal allOff
 330.0 apogee expose nreads=30 ; object=Dark
 apogee shutter ledControl=15
 330.0 apogee expose nreads=30 ; object=InternalFlat
 330.0 apogee expose nreads=30 ; object=InternalFlat
 330.0 apogee expose nreads=30 ; object=InternalFlat
 apogee shutter ledControl=0
+15.0 apogee shutter close
 330.0 apogee expose nreads=30 ; object=Dark
+15.0 apogee shutter open
+10.0 apogeecal shutterOpen
+apogeefpi open
+apogee expose nreads=30; object=ArcLamp; comment="FPI"
+apogeefpi close
+10.0 apogeecal shutterClose
 15.0 apogee shutter close
