@@ -1,5 +1,4 @@
 # eveningcals: takes evening calibration sequence:
-
 10.0 apogeecal allOff
 15.0 apogee shutter close
 apogeefpi close
