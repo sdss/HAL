@@ -131,4 +131,4 @@ class BOSSHelper(HALHelper):
                 time_limit=25.0 + config["timeouts"]["boss_readout"],
             )
 
-        self.__readout_pending = False
+        self.clear_readout()
