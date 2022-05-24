@@ -7,6 +7,59 @@ Macros
 Introduction
 ------------
 
+Macros are defined as a procedure that is composed of a series of nuclear steps, or *stages*. Stages can be run concurrently and the list of stages that run with a macro can be customised by the user.
+
+There are three distinct types of stages:
+
+- *Precondition* stages. These stages always run before the normal stages. A precondition stage cannot run concurrently with other preconditions. Precondition stages are mostly intended to prepare the system for the stages ahead (e.g., turn on lamps, open shutters, etc.)
+- *Normal* stages. These form the bulk of the macro and can be run concurrently. Each stage should represent a well defined part of the macro procedure. Examples of stages are slewing the telescope to a field, taking a BOSS arc, etc.
+- *Cleanup* stages. These stages always run at the end of the macro or if the macro fails at any point. Their purpose is to leave the system in a safe condition regardless of the result of the macro execution. Cleanup stages cannot run concurrently.
+
+Macros are defined as a subclass of the `.Macro` base class, with each stage a coroutine method in the class with a name that matches the stage. A minimal example is ::
+
+    class ExposeMacro(Macro):
+    """Takes a science exposure with APOGEE and/or BOSS."""
+
+    name = "expose"
+
+    __PRECONDITIONS__ = ["prepare"]
+    __STAGES__ = [("expose_boss", "expose_apogee")]
+    __CLEANUP__ = ["cleanup"]
+
+    async def prepare(self):
+        """Prepare for exposures and run checks."""
+
+        ...
+
+    async def expose_boss(self):
+        """Exposes BOSS."""
+
+        ...
+
+    async def expose_apogee(self):
+        """Exposes APOGEE."""
+
+        ...
+
+    async def cleanup(self):
+        """Cancel any running exposures."""
+
+        ...
+
+Note that in this example ``expose_boss`` and ``expose_apogee`` run concurrently, which is specified by listing both stages in the ``__STAGES__`` attribute as a tuple.
+
+
+.. _macro-goto-field:
+
+Go to field
+-----------
+
+The following diagram shows the stages in the `.GotoFieldMacro` macro. Note that the durations for each stage may change depending on the stages that are actually selected to run. The indicated durations assume that all the stages are selected.
+
+.. image:: _static/diagrams/HAL_goto-field.png
+    :width: 60%
+    :align: center
+
 .. _macro-expose:
 
 Expose
