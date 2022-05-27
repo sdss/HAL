@@ -229,7 +229,8 @@ class TCCHelper(HALHelper):
     async def do_slew(
         self,
         command,
-        coords: dict[str, float],
+        coords: dict[str, float] | None = None,
+        track_command: str | None = None,
         keep_offsets=False,
         offset=False,
     ) -> bool:
@@ -241,70 +242,82 @@ class TCCHelper(HALHelper):
         keep_args = "/keep=(obj,arc,gcorr,calib,bore)" if keep_offsets else ""
 
         slew_cmd = None
-        if not offset:
-
-            if "ra" in coords and "dec" in coords and "rot" in coords:
-                ra = coords["ra"]
-                dec = coords["dec"]
-                rot = coords["rot"]
-
-                command.info(
-                    text="Slewing to (ra, dec, rot) == "
-                    f"({ra:.4f}, {dec:.4f}, {rot:g})"
-                )
-                if keep_args:
-                    command.warning(text="keeping all offsets")
-
-                slew_cmd = self._send_command(
-                    command,
-                    "tcc",
-                    f"track {ra}, {dec} icrs /rottype=object/rotang={rot:g}"
-                    f"/rotwrap=mid {keep_args}",
-                    time_limit=config["timeouts"]["slew"],
-                    raise_on_fail=False,
-                )
-
-            elif "az" in coords and "alt" in coords and "rot" in coords:
-                alt = coords["alt"]
-                az = coords["az"]
-                rot = coords["rot"]
-
-                command.info(
-                    text="Slewing to (az, alt, rot) == "
-                    f"({az:.4f}, {alt:.4f}, {rot:.4f})"
-                )
-
-                slew_cmd = self._send_command(
-                    command,
-                    "tcc",
-                    f"track {az:f}, {alt:f} mount/rottype=mount/rotangle={rot:f}",
-                    time_limit=config["timeouts"]["slew"],
-                    raise_on_fail=False,
-                )
-
-            else:
-
-                raise HALError("Not enough coordinates information provided.")
-
-        else:
-
-            if "alt" not in coords or "az" not in coords:
-                raise HALError("Not alt/az offsets provided.")
-
-            # In arcsec
-            alt = coords["alt"] or 0.0
-            az = coords["az"] or 0.0
-            rot = coords["rot"] or 0.0
-
-            command.info(text=f"Offseting alt={alt:.3f}, az={az:.3f}")
-
+        if track_command:
             slew_cmd = self._send_command(
                 command,
                 "tcc",
-                f"offset guide {az/3600.:g},{alt/3600.:g},{rot/3600.:g} /computed",
+                track_command,
                 time_limit=config["timeouts"]["slew"],
                 raise_on_fail=False,
             )
+        else:
+            if coords is None:
+                raise HALError("coords needed if track_command is None.")
+
+            if not offset:
+
+                if "ra" in coords and "dec" in coords and "rot" in coords:
+                    ra = coords["ra"]
+                    dec = coords["dec"]
+                    rot = coords["rot"]
+
+                    command.info(
+                        text="Slewing to (ra, dec, rot) == "
+                        f"({ra:.4f}, {dec:.4f}, {rot:g})"
+                    )
+                    if keep_args:
+                        command.warning(text="keeping all offsets")
+
+                    slew_cmd = self._send_command(
+                        command,
+                        "tcc",
+                        f"track {ra}, {dec} icrs /rottype=object/rotang={rot:g}"
+                        f"/rotwrap=mid {keep_args}",
+                        time_limit=config["timeouts"]["slew"],
+                        raise_on_fail=False,
+                    )
+
+                elif "az" in coords and "alt" in coords and "rot" in coords:
+                    alt = coords["alt"]
+                    az = coords["az"]
+                    rot = coords["rot"]
+
+                    command.info(
+                        text="Slewing to (az, alt, rot) == "
+                        f"({az:.4f}, {alt:.4f}, {rot:.4f})"
+                    )
+
+                    slew_cmd = self._send_command(
+                        command,
+                        "tcc",
+                        f"track {az:f}, {alt:f} mount/rottype=mount/rotangle={rot:f}",
+                        time_limit=config["timeouts"]["slew"],
+                        raise_on_fail=False,
+                    )
+
+                else:
+
+                    raise HALError("Not enough coordinates information provided.")
+
+            else:
+
+                if "alt" not in coords or "az" not in coords:
+                    raise HALError("Not alt/az offsets provided.")
+
+                # In arcsec
+                alt = coords["alt"] or 0.0
+                az = coords["az"] or 0.0
+                rot = coords["rot"] or 0.0
+
+                command.info(text=f"Offseting alt={alt:.3f}, az={az:.3f}")
+
+                slew_cmd = self._send_command(
+                    command,
+                    "tcc",
+                    f"offset guide {az/3600.:g},{alt/3600.:g},{rot/3600.:g} /computed",
+                    time_limit=config["timeouts"]["slew"],
+                    raise_on_fail=False,
+                )
 
         # "tcc track" in the new TCC is only Done successfully when all requested
         # axes are in the "tracking" state. All other conditions mean the command

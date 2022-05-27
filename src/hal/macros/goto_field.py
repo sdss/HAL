@@ -13,7 +13,7 @@ from contextlib import suppress
 from time import time
 
 from hal import config
-from hal.exceptions import MacroError
+from hal.exceptions import HALError, MacroError
 from hal.macros import Macro
 
 
@@ -28,8 +28,10 @@ class GotoFieldMacro(Macro):
     __PRECONDITIONS__ = ["prepare"]
     __STAGES__ = [
         ("slew", "reconfigure"),
+        "fvc",
+        "reslew",
         "boss_hartmann",
-        ("fvc", "boss_arcs"),
+        "boss_arcs",
         "boss_flat",
         "acquire",
         "guide",
@@ -70,24 +72,28 @@ class GotoFieldMacro(Macro):
         )
 
         # If lamps are needed, turn them on now but do not wait for them to warm up.
-        if "boss_hartmann" in self._flat_stages or "boss_arcs" in self._flat_stages:
-            self._lamps_task = asyncio.create_task(
-                self.helpers.lamps.turn_lamp(
-                    self.command,
-                    ["HgCd", "Ne"],
-                    True,
-                    turn_off_others=True,
+        # Do not turn lamps if we are going to take an FVC image.
+        if "fvc" not in self._flat_stages:
+            if "boss_hartmann" in self._flat_stages or "boss_arcs" in self._flat_stages:
+                self._lamps_task = asyncio.create_task(
+                    self.helpers.lamps.turn_lamp(
+                        self.command,
+                        ["HgCd", "Ne"],
+                        True,
+                        turn_off_others=True,
+                    )
                 )
-            )
-        elif "boss_flat" in self._flat_stages:
-            self._lamps_task = asyncio.create_task(
-                self.helpers.lamps.turn_lamp(
-                    self.command,
-                    ["ff"],
-                    True,
-                    turn_off_others=True,
+            elif "boss_flat" in self._flat_stages:
+                self._lamps_task = asyncio.create_task(
+                    self.helpers.lamps.turn_lamp(
+                        self.command,
+                        ["ff"],
+                        True,
+                        turn_off_others=True,
+                    )
                 )
-            )
+            else:
+                await self.helpers.lamps.all_off(self.command)
         else:
             await self.helpers.lamps.all_off(self.command)
 
@@ -104,7 +110,7 @@ class GotoFieldMacro(Macro):
                 asyncio.create_task(task)
 
     async def slew(self):
-        """Slew to field."""
+        """Slew to field but keep the rotator at a fixed position."""
 
         configuration_loaded = self.actor.models["jaeger"]["configuration_loaded"]
         ra, dec, pa = configuration_loaded[3:6]
@@ -112,9 +118,38 @@ class GotoFieldMacro(Macro):
         if any([ra is None, dec is None, pa is None]):
             raise MacroError("Unknown RA/Dec/PA coordinates for field.")
 
-        await self.helpers.tcc.goto_position(
+        result = self.actor.helpers.tcc.axes_are_clear()
+        if not result:
+            raise HALError("Some axes are not clear. Cannot continue.")
+
+        # The fixed rotator angle at which to slew for the FVC loop.
+        rota = self.config["fvc_rota"]
+
+        self.command.info("Slewing to field with fixed rotator angle.")
+
+        slew_result = await self.actor.helpers.tcc.do_slew(
             self.command,
-            where={"ra": ra, "dec": dec, "rot": pa},
+            track_command=f"track {ra}, {dec} /rota={rota} /rottype=mount",
+        )
+        if slew_result is False:
+            raise HALError("Failed slewing to position.")
+
+        self.command.info(text="Position reached.")
+
+    async def reslew(self):
+        """Re-slew to field."""
+
+        configuration_loaded = self.actor.models["jaeger"]["configuration_loaded"]
+        ra, dec, pa = configuration_loaded[3:6]
+
+        if any([ra is None, dec is None, pa is None]):
+            raise MacroError("Unknown RA/Dec/PA coordinates for field.")
+
+        self.command.info("Re-slewing to field.")
+
+        await self.actor.helpers.tcc.goto_position(
+            self.command,
+            {"ra": ra, "dec": dec, "pa": pa},
         )
 
     async def reconfigure(self):
@@ -131,13 +166,24 @@ class GotoFieldMacro(Macro):
         # First check that the FFS are closed and lamps on. We don't care for how long.
         await self._close_ffs()
 
-        if "slew" not in self._flat_stages and "reconfigure" not in self._flat_stages:
+        # Check lamps. Use HgCd since if it's on Ne should also be.
+        lamp_status = self.helpers.lamps.list_status()
+
+        if lamp_status["HgCd"][3] is False:
+            if self._lamps_task is not None:
+                # Lamps have been commanded on but are not warmed up yet.
+                pass
+            else:
+                self.command.warning("Arc lamps are not on. Turning them on.")
+                self._lamps_task = await self.helpers.lamps.turn_lamp(
+                    self.command,
+                    ["HgCd", "Ne"],
+                    True,
+                    turn_off_others=True,
+                )
+
             self.command.info("Waiting 10 seconds for the lamps to warm-up.")
             await asyncio.sleep(10)
-
-        lamp_status = self.helpers.lamps.list_status()
-        if lamp_status["Ne"][0] is not True or lamp_status["HgCd"][0] is not True:
-            raise MacroError("Lamps are not on for Hartmann. This should not happen.")
 
         # Run hartmann and adjust the collimator but ignore residuals.
         self.command.info("Running hartmann collimate.")
@@ -198,19 +244,21 @@ class GotoFieldMacro(Macro):
 
         pretasks = []
 
-        if "boss_arcs" in self._flat_stages or "boss_hartmann" in self._flat_stages:
-            self.command.debug("Preparing FF lamps.")
-            pretasks.append(
-                self.helpers.lamps.turn_lamp(
-                    self.command,
-                    ["ff"],
-                    True,
-                    turn_off_others=True,
-                )
-            )
-        else:
+        lamp_status = self.helpers.lamps.list_status()
+        if lamp_status["ff"][3] is False:
             if self._lamps_task and not self._lamps_task.done():
+                # Lamps have been commanded on but are not warmed up yet.
                 await self._lamps_task
+            else:
+                self.command.debug("Preparing FF lamps.")
+                pretasks.append(
+                    self.helpers.lamps.turn_lamp(
+                        self.command,
+                        ["ff"],
+                        True,
+                        turn_off_others=True,
+                    )
+                )
 
         if self.helpers.boss.readout_pending:  # Readout from the arc.
             pretasks.append(self.helpers.boss.readout(self.command))
@@ -236,10 +284,17 @@ class GotoFieldMacro(Macro):
     async def fvc(self):
         """Run the FVC loop."""
 
-        self.command.info("Halting the axes.")
-        await self.helpers.tcc.axis_stop(self.command, axis="rot")
+        # Check lamp status.
+        command_off: bool = False
+        lamp_status = self.helpers.lamps.list_status()
+        for name, ls in lamp_status.items():
+            if ls[1] is not False:
+                self.command.warning(f"Lamp {name} is on, will turn off.")
+                command_off = True
+                break
 
-        await asyncio.sleep(3)
+        if command_off:
+            await self.helpers.lamps.all_off(self.command)
 
         self.command.info("Running FVC loop.")
         fvc_command = await self.send_command(
@@ -267,8 +322,9 @@ class GotoFieldMacro(Macro):
 
         pretasks = []
 
-        self.command.info("Re-slewing to field.")
-        pretasks.append(self.slew())
+        if "reslew" not in self._flat_stages:
+            self.command.info("Re-slewing to field.")
+            pretasks.append(self.slew())
 
         if not self.helpers.ffs.all_open():
             self.command.info("Opening FFS")
