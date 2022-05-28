@@ -255,6 +255,9 @@ class TCCHelper(HALHelper):
             Whether to keep the existing offsets.
         rotwrap
             The type of ``/RotWrap`` to use.
+        offset
+            If defined, the coordinates will be treated as an offset and not
+            absolute positions.
 
         """
 
