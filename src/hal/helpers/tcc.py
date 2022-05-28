@@ -29,6 +29,7 @@ class TCCHelper(HALHelper):
         self,
         command: HALCommandType,
         where: str | dict[str, float],
+        **kwargs,
     ):
         """Executes the goto command.
 
@@ -39,6 +40,8 @@ class TCCHelper(HALHelper):
         where
             The name of the goto entry in the configuration file, or a
             dictionary with the keys ``(alt, az, rot)`` in degrees.
+        kwargs
+            Arguments to pass to `~.TCCHelper.do_slew`.
 
         """
 
@@ -231,10 +234,29 @@ class TCCHelper(HALHelper):
         command,
         coords: dict[str, float] | None = None,
         track_command: str | None = None,
-        keep_offsets=False,
-        offset=False,
+        keep_offsets: bool = False,
+        offset: bool = False,
+        rotwrap: str | None = None,
     ) -> bool:
-        """Correctly handle a slew command, given what parse_args had received."""
+        """Correctly handle a slew command, given what parse_args had received.
+
+        Parameters
+        ----------
+        command
+            The actor command used to send child commands to the TCC.
+        coords
+            The coordinates where to slew. It must be a dictionary with keys
+            ``ra, dec, pa`` or ``alt, az, rot``.
+        track_command
+            A raw TCC ``track`` command (without the ``tcc`` target) to send.
+            In this case other arguments like ``keep_offsets`` or ``rotwrap``
+            are ignored.
+        keep_offsets
+            Whether to keep the existing offsets.
+        rotwrap
+            The type of ``/RotWrap`` to use.
+
+        """
 
         tcc_model = self.actor.models["tcc"]
 
@@ -245,6 +267,7 @@ class TCCHelper(HALHelper):
 
         # NOTE: TBD: We should limit which offsets are kept.
         keep_args = "/keep=(obj,arc,gcorr,calib,bore)" if keep_offsets else ""
+        rotwrap = "/rotwrap={rotwrap}" if rotwrap else ""
 
         slew_cmd = None
         if track_command:
@@ -277,7 +300,7 @@ class TCCHelper(HALHelper):
                         command,
                         "tcc",
                         f"track {ra}, {dec} icrs /rottype=object/rotang={rot:g}"
-                        f"/rotwrap=mid {keep_args}",
+                        f"{rotwrap} {keep_args}",
                         time_limit=config["timeouts"]["slew"],
                         raise_on_fail=False,
                     )
@@ -295,7 +318,8 @@ class TCCHelper(HALHelper):
                     slew_cmd = self._send_command(
                         command,
                         "tcc",
-                        f"track {az:f}, {alt:f} mount/rottype=mount/rotangle={rot:f}",
+                        f"track {az:f}, {alt:f} mount /rottype=mount "
+                        f"/rotangle={rot:f} {rotwrap} {keep_args}",
                         time_limit=config["timeouts"]["slew"],
                         raise_on_fail=False,
                     )
@@ -307,7 +331,7 @@ class TCCHelper(HALHelper):
             else:
 
                 if "alt" not in coords or "az" not in coords:
-                    raise HALError("Not alt/az offsets provided.")
+                    raise HALError("No alt/az offsets provided.")
 
                 # In arcsec
                 alt = coords["alt"] or 0.0
