@@ -150,6 +150,7 @@ class GotoFieldMacro(Macro):
         await self.actor.helpers.tcc.goto_position(
             self.command,
             {"ra": ra, "dec": dec, "pa": pa},
+            rotwrap="nearest",
         )
 
     async def reconfigure(self):
