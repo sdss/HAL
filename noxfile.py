@@ -42,6 +42,7 @@ def docs_live(session):
                 # for sphinx
                 "-b=dirhtml",
                 "-a",
+                "--watch=../../src/hal",
                 docs_dir,
                 destination,
                 external=True,
