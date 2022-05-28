@@ -238,6 +238,11 @@ class TCCHelper(HALHelper):
 
         tcc_model = self.actor.models["tcc"]
 
+        # Check axes.
+        result = self.axes_are_clear()
+        if not result:
+            raise HALError("Some axes are not clear. Cannot continue.")
+
         # NOTE: TBD: We should limit which offsets are kept.
         keep_args = "/keep=(obj,arc,gcorr,calib,bore)" if keep_offsets else ""
 
