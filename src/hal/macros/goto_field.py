@@ -59,7 +59,7 @@ class GotoFieldMacro(Macro):
 
         # Stop the guider.
         # TODO: create a Cherno helper to group these commands and monitor if the
-        # guider is running.
+        #       guider is running.
         await self.send_command("cherno", "stop")
 
         await self.helpers.tcc.axis_stop(self.command)
