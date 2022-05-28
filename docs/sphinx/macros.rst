@@ -15,6 +15,8 @@ There are three distinct types of stages:
 - *Normal* stages. These form the bulk of the macro and can be run concurrently. Each stage should represent a well defined part of the macro procedure. Examples of stages are slewing the telescope to a field, taking a BOSS arc, etc.
 - *Cleanup* stages. These stages always run at the end of the macro or if the macro fails at any point. Their purpose is to leave the system in a safe condition regardless of the result of the macro execution. Cleanup stages cannot run concurrently.
 
+While the user can select what normal stages to run, the order in which the stages are executed cannot be modified.
+
 Macros are defined as a subclass of the `.Macro` base class, with each stage a coroutine method in the class with a name that matches the stage. A minimal example is ::
 
     class ExposeMacro(Macro):
