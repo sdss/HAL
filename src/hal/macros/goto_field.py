@@ -129,7 +129,7 @@ class GotoFieldMacro(Macro):
 
         slew_result = await self.actor.helpers.tcc.do_slew(
             self.command,
-            track_command=f"track {ra}, {dec} /rota={rota} /rottype=mount",
+            track_command=f"track {ra}, {dec} icrs /rota={rota} /rottype=mount",
         )
         if slew_result is False:
             raise HALError("Failed slewing to position.")
