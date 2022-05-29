@@ -136,6 +136,9 @@ class GotoFieldMacro(Macro):
 
         self.command.info(text="Position reached.")
 
+        self.command.info("Halting the rotator.")
+        await self.helpers.tcc.axis_stop(self.command, axis="rot")
+
     async def reslew(self):
         """Re-slew to field."""
 
@@ -285,14 +288,9 @@ class GotoFieldMacro(Macro):
     async def fvc(self):
         """Run the FVC loop."""
 
-        # Check lamp status.
-        command_off: bool = False
-        lamp_status = self.helpers.lamps.list_status()
-        for name, ls in lamp_status.items():
-            if ls[1] is not False:
-                self.command.warning(f"Lamp {name} is on, will turn off.")
-                command_off = True
-                break
+        if "slew" not in self._flat_stages:
+            self.command.info("Halting the rotator.")
+            await self.helpers.tcc.axis_stop(self.command, axis="rot")
 
         if command_off:
             await self.helpers.lamps.all_off(self.command)
