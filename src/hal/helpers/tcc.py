@@ -246,7 +246,7 @@ class TCCHelper(HALHelper):
             The actor command used to send child commands to the TCC.
         coords
             The coordinates where to slew. It must be a dictionary with keys
-            ``ra, dec, pa`` or ``alt, az, rot``.
+            ``ra, dec, rot`` or ``alt, az, rot``.
         track_command
             A raw TCC ``track`` command (without the ``tcc`` target) to send.
             In this case other arguments like ``keep_offsets`` or ``rotwrap``
