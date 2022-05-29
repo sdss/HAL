@@ -325,7 +325,7 @@ class GotoFieldMacro(Macro):
 
         if "reslew" not in self._flat_stages:
             self.command.info("Re-slewing to field.")
-            pretasks.append(self.slew())
+            pretasks.append(self.reslew())
 
         if not self.helpers.ffs.all_open():
             self.command.info("Opening FFS")
@@ -354,7 +354,7 @@ class GotoFieldMacro(Macro):
 
         if "acquire" not in self._flat_stages:
             self.command.info("Re-slewing to field.")
-            await self.slew()
+            await self.reslew()
 
         if not self.helpers.tcc.check_axes_status("Tracking"):
             raise MacroError("Axes must be tracking for guiding.")
