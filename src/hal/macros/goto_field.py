@@ -144,12 +144,12 @@ class GotoFieldMacro(Macro):
         az = self.config["fvc_az"]
         rot = self.config["fvc_rot"]
 
-        self.command.info("Slewing to field with fixed rotator angle.")
-
         if self.config["fixed_altaz"]:
+            self.command.info("Slewing to field with fixed rotator angle.")
             track_command = f"track {az}, {alt} mount /rota={rot} /rottype=mount"
 
         else:
+            self.command.info("Slewing to field with fixed alt/az/rot position.")
             track_command = f"track {ra}, {dec} icrs /rota={rot} /rottype=mount"
 
         slew_result = await self.actor.helpers.tcc.do_slew(
