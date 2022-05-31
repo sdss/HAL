@@ -139,15 +139,24 @@ class GotoFieldMacro(Macro):
         if not result:
             raise HALError("Some axes are not clear. Cannot continue.")
 
-        # The fixed rotator angle at which to slew for the FVC loop.
-        rota = self.config["fvc_rota"]
+        # The fixed position at which to slew for the FVC loop.
+        alt = self.config["fvc_alt"]
+        az = self.config["fvc_az"]
+        rot = self.config["fvc_rot"]
 
         self.command.info("Slewing to field with fixed rotator angle.")
 
+        if self.config["fixed_altaz"]:
+            track_command = f"track {az}, {alt} mount /rota={rot} /rottype=mount"
+
+        else:
+            track_command = f"track {ra}, {dec} icrs /rota={rot} /rottype=mount"
+
         slew_result = await self.actor.helpers.tcc.do_slew(
             self.command,
-            track_command=f"track {ra}, {dec} icrs /rota={rota} /rottype=mount",
+            track_command=track_command,
         )
+
         if slew_result is False:
             raise HALError("Failed slewing to position.")
 

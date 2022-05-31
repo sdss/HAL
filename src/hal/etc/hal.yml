@@ -47,7 +47,9 @@ macros:
     flat_time: 25
     guider_time: 15.
     n_acquisition: 5
-    fvc_rota: 190
+    fvc_az: 121
+    fvc_alt: 70
+    fvc_rot: 190
   expose:
     boss_exposure_time: 900.
     apogee_exposure_time: null
