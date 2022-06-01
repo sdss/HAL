@@ -40,7 +40,11 @@ class BOSSHelper(HALHelper):
     def readout_pending(self):
         """True if an exposure readout is pending."""
 
-        return self.__readout_pending
+        return (
+            self.__readout_pending
+            and self.__readout_task
+            and not self.__readout_task.done()
+        )
 
     def clear_readout(self):
         """Clears any pending readouts."""
