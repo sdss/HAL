@@ -72,6 +72,15 @@ class ExposeMacro(Macro):
             if not self.command.actor.helpers.apogee.gang_helper.at_cartridge():
                 raise MacroError("The APOGEE gang connector is not at the cart.")
 
+        # Check that IEB FBI are off.
+        try:
+            cmd = await self.send_command("jaeger", "ieb status")
+            fbi_led1, fbi_led2, *_ = cmd.replies.get("fbi_led")
+            if float(fbi_led1) > 0.1 or float(fbi_led2) > 0.1:
+                raise MacroError("FBI LEDs are not off.")
+        except (MacroError, KeyError):
+            self.command.warning("Failed getting FBI levels but moving on.")
+
         # Check lamps. They must be turned off manually (but maybe add a parameter?)
         lamp_status = [lamp[0] for lamp in self.helpers.lamps.list_status().values()]
         if any(lamp_status):
