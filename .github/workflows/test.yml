@@ -60,7 +60,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          poetry pip install --upgrade wheel pip setuptools
+          poetry run pip install --upgrade wheel pip setuptools
           poetry install
 
       - name: Lint with flake8
