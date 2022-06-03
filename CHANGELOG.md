@@ -11,6 +11,7 @@
 * [COS-68](https://jira.sdss.org/browse/COS-68) Better handling of lamps during go to field macro. Reduce warm up time for HgCd lamp to 108 seconds to account for BOSS flushing.
 * [COS-71](https://jira.sdss.org/browse/COS-71) Update evening/morning calibration scripts with dithered version.
 * [#6](https://github.com/sdss/HAL/pull/6) Update the `goto-field` macro to execute the FVC loop at a fixed rotator angle.
+* [#7](https://github.com/sdss/HAL/pull/7) Check FBI LED levels before exposing.
 * Improved FPI shutter handling.
 * Mote `goto-field` improvements:
   * Go to field: add a `cherno stop` during the `prepare` stage.
