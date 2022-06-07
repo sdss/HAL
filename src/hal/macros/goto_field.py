@@ -144,23 +144,31 @@ class GotoFieldMacro(Macro):
         az = self.config["fvc_az"]
         rot = self.config["fvc_rot"]
 
-        if self.config["fixed_altaz"]:
-            self.command.info("Slewing to field with fixed rotator angle.")
-            track_command = f"track {az}, {alt} mount /rota={rot} /rottype=mount"
-
+        if self.config["fixed_rot"] is False:
+            self.command.info("Slewing to field RA/Dec/PA.")
+            await self.actor.helpers.tcc.goto_position(
+                self.command,
+                {"ra": ra, "dec": dec, "rot": pa},
+                rotwrap="nearest",
+            )
         else:
-            self.command.info("Slewing to field with fixed alt/az/rot position.")
-            track_command = f"track {ra}, {dec} icrs /rota={rot} /rottype=mount"
+            if self.config["fixed_altaz"]:
+                self.command.info("Slewing to field with fixed rotator angle.")
+                track_command = f"track {az}, {alt} mount /rota={rot} /rottype=mount"
 
-        slew_result = await self.actor.helpers.tcc.do_slew(
-            self.command,
-            track_command=track_command,
-        )
+            else:
+                self.command.info("Slewing to field with fixed alt/az/rot position.")
+                track_command = f"track {ra}, {dec} icrs /rota={rot} /rottype=mount"
 
-        if slew_result is False:
-            raise HALError("Failed slewing to position.")
+            slew_result = await self.actor.helpers.tcc.do_slew(
+                self.command,
+                track_command=track_command,
+            )
 
-        self.command.info(text="Position reached.")
+            if slew_result is False:
+                raise HALError("Failed slewing to position.")
+
+            self.command.info(text="Position reached.")
 
         self.command.info("Halting the rotator.")
         await self.helpers.tcc.axis_stop(self.command, axis="rot")

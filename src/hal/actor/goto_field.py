@@ -37,8 +37,13 @@ __all__ = ["goto_field"]
     help="Exposure time for guiding/acquisition.",
 )
 @click.option(
-    "--fixed-altaz",
-    is_flag=True,
+    "--fixed-rot/--no-fixed-rot",
+    default=True,
+    help="Slews to a fixed rot position for the FVC loop. If --no-fixed-rot then "
+    "--fixed-altaz is ignored.",
+)
+@click.option(
+    "--fixed-altaz/--no-fixed-altaz",
     default=False,
     help="Slews to a fixed alt/az position for the FVC loop.",
 )
@@ -64,6 +69,7 @@ async def goto_field(
     macro: Macro,
     stages: list[StageType],
     guider_time: float,
+    fixed_rot: bool = True,
     fixed_altaz: bool = False,
     alt: float | None = None,
     az: float | None = None,
@@ -75,6 +81,7 @@ async def goto_field(
         command,
         stages,
         guider_time=guider_time,
+        fixed_rot=fixed_rot,
         fixed_altaz=fixed_altaz,
         fvc_alt=alt,
         fvc_az=az,
