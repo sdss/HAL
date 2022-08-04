@@ -38,7 +38,7 @@ __all__ = ["goto_field"]
 )
 @click.option(
     "--fixed-rot/--no-fixed-rot",
-    default=True,
+    default=False,
     help="Slews to a fixed rot position for the FVC loop. If --no-fixed-rot then "
     "--fixed-altaz is ignored.",
 )
@@ -69,7 +69,7 @@ async def goto_field(
     macro: Macro,
     stages: list[StageType],
     guider_time: float,
-    fixed_rot: bool = True,
+    fixed_rot: bool = False,
     fixed_altaz: bool = False,
     alt: float | None = None,
     az: float | None = None,
