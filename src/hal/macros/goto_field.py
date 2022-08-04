@@ -14,6 +14,7 @@ from time import time
 
 from hal import config
 from hal.exceptions import HALError, MacroError
+from hal.helpers.lamps import LampsHelper
 from hal.macros import Macro
 
 
@@ -45,7 +46,9 @@ class GotoFieldMacro(Macro):
 
         self._lamps_task = None
 
-        if "reconfigure" in self._flat_stages:
+        stages = self._flat_stages
+
+        if "reconfigure" in stages:
             configuration_loaded = self.actor.models["jaeger"]["configuration_loaded"]
             last_seen = configuration_loaded.last_seen
 
@@ -73,29 +76,29 @@ class GotoFieldMacro(Macro):
 
         # If lamps are needed, turn them on now but do not wait for them to warm up.
         # Do not turn lamps if we are going to take an FVC image.
-        if "fvc" not in self._flat_stages:
-            if "boss_flat" in self._flat_stages:
-                self._lamps_task = asyncio.create_task(
-                    self.helpers.lamps.turn_lamp(
-                        self.command,
-                        ["ff"],
-                        True,
-                        turn_off_others=True,
-                    )
+        if "boss_flat" in stages and "fvc" not in stages:
+            self._lamps_task = asyncio.create_task(
+                self.helpers.lamps.turn_lamp(
+                    self.command,
+                    ["ff"],
+                    True,
+                    turn_off_others=True,
                 )
-            elif (
-                "boss_hartmann" in self._flat_stages or "boss_arcs" in self._flat_stages
-            ):
-                self._lamps_task = asyncio.create_task(
-                    self.helpers.lamps.turn_lamp(
-                        self.command,
-                        ["HgCd", "Ne"],
-                        True,
-                        turn_off_others=True,
-                    )
-                )
+            )
+        elif "boss_hartmann" in stages or "boss_arcs" in stages:
+            if "fvc" in stages:
+                lamps = ["HgCd"]
             else:
-                await self._all_lamps_off()
+                lamps = ["HgCd", "Ne"]
+
+            self._lamps_task = asyncio.create_task(
+                self.helpers.lamps.turn_lamp(
+                    self.command,
+                    lamps,
+                    True,
+                    turn_off_others=True,
+                )
+            )
         else:
             await self._all_lamps_off()
 
@@ -204,24 +207,26 @@ class GotoFieldMacro(Macro):
         # First check that the FFS are closed and lamps on. We don't care for how long.
         await self._close_ffs()
 
-        # Check lamps. Use HgCd since if it's on Ne should also be.
+        # Check lamps. Depending on the other stages HgCd may be on but Ne not. Loop
+        # over each on of the lamps and if it's not on, turn it on. If any of them is
+        # not on wait for 10 seconds, which is enough for the Hartmanns.
         lamp_status = self.helpers.lamps.list_status()
 
-        if lamp_status["HgCd"][3] is False:
-            if self._lamps_task is not None:
-                # Lamps have been commanded on but are not warmed up yet.
-                pass
-            else:
-                self.command.warning("Arc lamps are not on. Turning them on.")
-                self._lamps_task = asyncio.create_task(
+        wait: bool = False
+        for lamp in ["HgCd", "Ne"]:
+            if lamp_status[lamp][0] is False:
+                self.command.warning(f"Turning {lamp} on.")
+                asyncio.create_task(
                     self.helpers.lamps.turn_lamp(
                         self.command,
-                        ["HgCd", "Ne"],
+                        [lamp],
                         True,
-                        turn_off_others=True,
+                        turn_off_others=False,
                     )
                 )
+                wait = True
 
+        if wait:
             self.command.info("Waiting 10 seconds for the lamps to warm-up.")
             await asyncio.sleep(10)
 
@@ -249,35 +254,38 @@ class GotoFieldMacro(Macro):
 
         await self._close_ffs()
 
-        # Check lamps. Use HgCd since if it's on Ne should also be.
+        # Check lamps. Depending on the other stages HgCd may be on. Loop over each
+        # lamp and make sure they are turned on. If they are on but not fully warmed,
+        # wait until they are.
         lamp_status = self.helpers.lamps.list_status()
 
         pretasks = []
 
-        if lamp_status["HgCd"][3] is False:
-            if self._lamps_task is not None and not self._lamps_task.done():
-                # Lamps have been commanded on but are not warmed up yet.
-                # Note that if boss_flat is selected but there's no FVC then
-                # self._lamps_task will be the task that turns on the ff, but
-                # that task will be done by now so it won't trigger this.
-                self.command.info("Waiting for lamps to warm up.")
-                pretasks.append(self._lamps_task)
-            else:
-                self.command.warning("Arc lamps are not on. Turning them on.")
+        wait: float = 0.0
+        for lamp in ["HgCd", "Ne"]:
+            if lamp_status[lamp][0] is False:
+                self.command.warning(f"Turning {lamp} on.")
                 pretasks.append(
                     self.helpers.lamps.turn_lamp(
                         self.command,
-                        ["HgCd", "Ne"],
+                        [lamp],
                         True,
-                        turn_off_others=True,
+                        turn_off_others=False,
                     )
                 )
+                if lamp == "HgCd":
+                    # Only wait for HgCd. Ne only needs 20 seconds to warm up and
+                    # that mostly happens during CCD flushing.
+                    wait = LampsHelper.WARMUP["HgCd"]
+            elif lamp_status[lamp][3] is False and lamp == "HgCd":
+                elapsed = lamp_status[lamp][2]
+                wait = LampsHelper.WARMUP["HgCd"] - elapsed
 
         if self.helpers.boss.readout_pending:
             pretasks.append(self.helpers.boss.readout(self.command))
 
-        if len(pretasks) > 0:
-            await asyncio.gather(*pretasks)
+        if wait > 0:
+            await asyncio.sleep(wait)
 
         self.command.info("Taking BOSS arc.")
 
