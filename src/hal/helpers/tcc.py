@@ -8,11 +8,16 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from hal import config
-from hal.actor import HALCommandType
 from hal.exceptions import HALError
 
 from . import HALHelper
+
+
+if TYPE_CHECKING:
+    from hal.actor import HALCommandType
 
 
 __all__ = ["TCCHelper"]

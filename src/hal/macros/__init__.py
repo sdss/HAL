@@ -42,6 +42,7 @@ for f_ in files:
                 locals().update({objname: obj})
 
     except Exception as ee:
+        raise
         warnings.warn(f"cannot import file {f_}: {ee}", HALUserWarning)
 
 os.chdir(cwd)
