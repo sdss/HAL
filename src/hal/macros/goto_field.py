@@ -124,7 +124,6 @@ class GotoFieldMacro(Macro):
             if ls[1] is not False:
                 self.command.warning(f"Lamp {name} is on, will turn off.")
                 command_off = True
-                break
 
         if command_off:
             await self.helpers.lamps.all_off(self.command)
@@ -212,7 +211,7 @@ class GotoFieldMacro(Macro):
         # not on wait for 10 seconds, which is enough for the Hartmanns.
         lamp_status = self.helpers.lamps.list_status()
 
-        wait: bool = False
+        wait: int = 0
         for lamp in ["HgCd", "Ne"]:
             if lamp_status[lamp][0] is False:
                 self.command.warning(f"Turning {lamp} on.")
@@ -224,11 +223,15 @@ class GotoFieldMacro(Macro):
                         turn_off_others=False,
                     )
                 )
-                wait = True
 
-        if wait:
-            self.command.info("Waiting 10 seconds for the lamps to warm-up.")
-            await asyncio.sleep(10)
+                if lamp == "HgCd":
+                    wait = 10 if wait < 10 else wait
+                else:
+                    wait = 5 if wait < 5 else wait
+
+        if wait > 0:
+            self.command.info(f"Waiting {wait} seconds for the lamps to warm-up.")
+            await asyncio.sleep(wait)
 
         if self.helpers.boss.readout_pending:  # Potential readout from the flat.
             await self.helpers.boss.readout(self.command)
@@ -248,6 +251,9 @@ class GotoFieldMacro(Macro):
                 "Please adjust the blue ring and run goto-field again. "
                 "The collimator has been adjusted."
             )
+
+        if "boss_arcs" not in self._flat_stages:
+            await self._all_lamps_off()
 
     async def boss_arcs(self):
         """Takes BOSS arcs."""
@@ -273,18 +279,19 @@ class GotoFieldMacro(Macro):
                         turn_off_others=False,
                     )
                 )
-                if lamp == "HgCd":
-                    # Only wait for HgCd. Ne only needs 20 seconds to warm up and
-                    # that mostly happens during CCD flushing.
-                    wait = LampsHelper.WARMUP["HgCd"]
-            elif lamp_status[lamp][3] is False and lamp == "HgCd":
+                if LampsHelper.WARMUP[lamp] > wait:
+                    wait = LampsHelper.WARMUP[lamp]
+            elif lamp_status[lamp][3] is False:
                 elapsed = lamp_status[lamp][2]
-                wait = LampsHelper.WARMUP["HgCd"] - elapsed
+                wait_lamp = LampsHelper.WARMUP["HgCd"] - elapsed
+                if wait < wait_lamp:
+                    wait = wait_lamp
 
         if self.helpers.boss.readout_pending:
             pretasks.append(self.helpers.boss.readout(self.command))
 
         if wait > 0:
+            self.command.info(f"Waiting {wait} seconds for the lamps to warm-up.")
             await asyncio.sleep(wait)
 
         self.command.info("Taking BOSS arc.")
@@ -340,7 +347,7 @@ class GotoFieldMacro(Macro):
     async def fvc(self):
         """Run the FVC loop."""
 
-        if "slew" not in self._flat_stages:
+        if "slew" in self._flat_stages:
             self.command.info("Halting the rotator.")
             await self.helpers.tcc.axis_stop(self.command, axis="rot")
 
@@ -352,7 +359,6 @@ class GotoFieldMacro(Macro):
             raise_on_fail=False,
         )
 
-        # fvc loop should never fail unless an uncaught exception.
         if fvc_command.status.did_fail:
             raise MacroError("FVC loop failed.")
 
