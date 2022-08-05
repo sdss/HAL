@@ -12,14 +12,14 @@ import asyncio
 
 from typing import TYPE_CHECKING
 
-from hal import HALCommandType, config
+from hal import config
 from hal.exceptions import HALError
 
 from . import HALHelper
 
 
 if TYPE_CHECKING:
-    from hal.actor import HALActor
+    from hal.actor import HALActor, HALCommandType
 
 
 __all__ = ["BOSSHelper"]

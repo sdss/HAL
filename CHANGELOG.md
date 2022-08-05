@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🏷️ Changed
+
+* [#8](https://github.com/sdss/HAL/pull/8) Go to field turns on HgCd during prepare if arcs or Hartmanns are going to be taken, even if the `fvc` stage is selected. If `fvc` is not selected both HgCd and Ne are turned on. The telescope now slews to the field rotator angle.
+
+
 ## 0.2.0 - June 1, 2022
 
 ### 🚀 New

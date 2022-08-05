@@ -10,11 +10,16 @@ from __future__ import annotations
 
 import enum
 
+from typing import TYPE_CHECKING
+
 from hal import config
-from hal.actor import HALActor, HALCommandType
 from hal.exceptions import HALError
 
 from . import HALHelper
+
+
+if TYPE_CHECKING:
+    from hal.actor import HALActor, HALCommandType
 
 
 __all__ = ["APOGEEHelper"]
