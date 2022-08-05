@@ -72,11 +72,11 @@ jobs:
           pip install isort
           isort -c src/hal
 
-      - name: Run type checking
-        continue-on-error: true
-        run: |
-          npm install -g pyright
-          pyright
+      # - name: Run type checking
+      #   continue-on-error: true
+      #   run: |
+      #     npm install -g pyright
+      #     pyright
 
       - name: Test with pytest
         run: |
