@@ -344,8 +344,6 @@ class GotoFieldMacro(Macro):
             self.command.info("Halting the rotator.")
             await self.helpers.tcc.axis_stop(self.command, axis="rot")
 
-        await self._all_lamps_off()
-
         self.command.info("Running FVC loop.")
         fvc_command = await self.send_command(
             "jaeger",
