@@ -74,9 +74,13 @@ class GotoFieldMacro(Macro):
             shutter="apogee",
         )
 
+        do_fvc = "fvc" in stages
+        do_flat = "boss_flat" in stages
+        do_arcs = "boss_hartmann" in stages or "boss_arcs" in stages
+
         # If lamps are needed, turn them on now but do not wait for them to warm up.
         # Do not turn lamps if we are going to take an FVC image.
-        if "boss_flat" in stages and "fvc" not in stages:
+        if do_flat and not do_fvc:
             self._lamps_task = asyncio.create_task(
                 self.helpers.lamps.turn_lamp(
                     self.command,
@@ -85,8 +89,8 @@ class GotoFieldMacro(Macro):
                     turn_off_others=True,
                 )
             )
-        elif "boss_hartmann" in stages or "boss_arcs" in stages:
-            if "fvc" in stages:
+        elif not do_flat and do_arcs:
+            if do_fvc:
                 lamps = ["HgCd"]
             else:
                 lamps = ["HgCd", "Ne"]
@@ -265,13 +269,11 @@ class GotoFieldMacro(Macro):
         # wait until they are.
         lamp_status = self.helpers.lamps.list_status()
 
-        pretasks = []
-
         wait: float = 0.0
         for lamp in ["HgCd", "Ne"]:
             if lamp_status[lamp][0] is False:
                 self.command.warning(f"Turning {lamp} on.")
-                pretasks.append(
+                asyncio.create_task(
                     self.helpers.lamps.turn_lamp(
                         self.command,
                         [lamp],
@@ -287,12 +289,13 @@ class GotoFieldMacro(Macro):
                 if wait < wait_lamp:
                     wait = wait_lamp
 
-        if self.helpers.boss.readout_pending:
-            pretasks.append(self.helpers.boss.readout(self.command))
-
         if wait > 0:
             self.command.info(f"Waiting {wait} seconds for the lamps to warm-up.")
             await asyncio.sleep(wait)
+
+        if self.helpers.boss.readout_pending:
+            self.command.info("Waiting for BOSS to read out.")
+            await self.helpers.boss.readout(self.command)
 
         self.command.info("Taking BOSS arc.")
 
