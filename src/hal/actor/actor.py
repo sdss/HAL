@@ -55,6 +55,9 @@ class ActorHelpers:
         )
         from hal.macros import all_macros
 
+        self.actor = actor
+        self.observatory = actor.observatory
+
         self.apogee = APOGEEHelper(actor)
         self.boss = BOSSHelper(actor)
         self.ffs = FFSHelper(actor)
@@ -69,6 +72,6 @@ class ActorHelpers:
             if helper.name is not None
         ]
 
-        self.scripts = Scripts(actor, actor.config["scripts"])
+        self.scripts = Scripts(actor, actor.config["scripts"][self.observatory])
 
         self.macros = {macro.name: macro for macro in all_macros}

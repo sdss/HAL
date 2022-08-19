@@ -84,4 +84,6 @@ goto:
 
 bypasses: []
 
-scripts: etc/scripts/
+scripts:
+  APO: etc/scripts/apo
+  LCO: etc/scripts/lco
