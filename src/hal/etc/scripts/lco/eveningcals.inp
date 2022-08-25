@@ -9,14 +9,14 @@ apogeecal SourceOn source=Quartz
 apogeecal SourceOff source=Quartz
 apogee dither namedpos=B
 apogeecal SourceOn source=ThAr
-130.0 apogee expose nreads=20 ; object=ArcLamp
+220.0 apogee expose nreads=20 ; object=ArcLamp
 apogeecal SourceOff source=ThAr
 apogeecal SourceOn source=UNe
 440.0 apogee expose nreads=40 ; object=ArcLamp
 apogeecal SourceOff source=UNe
 apogee dither namedpos=A
 apogeecal SourceOn source=ThAr
-130.0 apogee expose nreads=20 ; object=ArcLamp
+220.0 apogee expose nreads=20 ; object=ArcLamp
 apogeecal SourceOff source=ThAr
 apogeecal SourceOn source=UNe
 440.0 apogee expose nreads=40 ; object=ArcLamp
