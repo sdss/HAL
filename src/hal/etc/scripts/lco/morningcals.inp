@@ -7,20 +7,20 @@ apogeefpi close
 650.0 apogee expose nreads=60 ; object=Dark
 10.0 apogeecal shutterOpen
 apogeecal SourceOn source=Quartz
-110.0 apogee expose nreads=10 ; object=QuartzFlat
-110.0 apogee expose nreads=10 ; object=QuartzFlat
-110.0 apogee expose nreads=10 ; object=QuartzFlat
+110.0 apogee expose nreads=3 ; object=QuartzFlat
+110.0 apogee expose nreads=3 ; object=QuartzFlat
+110.0 apogee expose nreads=3 ; object=QuartzFlat
 apogeecal SourceOff source=Quartz
 apogee dither namedpos=B
 apogeecal SourceOn source=ThAr
-130.0 apogee expose nreads=12 ; object=ArcLamp
+130.0 apogee expose nreads=20 ; object=ArcLamp
 apogeecal SourceOff source=ThAr
 apogeecal SourceOn source=UNe
 440.0 apogee expose nreads=40 ; object=ArcLamp
 apogeecal SourceOff source=UNe
 apogee dither namedpos=A
 apogeecal SourceOn source=ThAr
-130.0 apogee expose nreads=12 ; object=ArcLamp
+130.0 apogee expose nreads=20 ; object=ArcLamp
 apogeecal SourceOff source=ThAr
 apogeecal SourceOn source=UNe
 440.0 apogee expose nreads=40 ; object=ArcLamp
