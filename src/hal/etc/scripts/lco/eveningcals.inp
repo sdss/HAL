@@ -1,0 +1,31 @@
+# eveningcals: takes evening calibration sequence:
+10.0 apogeecal allOff
+10.0 apogeecal shutterClose
+apogeefpi close
+650.0 apogee expose nreads=60 ; object=Dark
+10.0 apogeecal shutterOpen
+apogeecal SourceOn source=Quartz
+110.0 apogee expose nreads=3 ; object=QuartzFlat
+apogeecal SourceOff source=Quartz
+apogee dither namedpos=B
+apogeecal SourceOn source=ThAr
+220.0 apogee expose nreads=20 ; object=ArcLamp
+apogeecal SourceOff source=ThAr
+apogeecal SourceOn source=UNe
+440.0 apogee expose nreads=40 ; object=ArcLamp
+apogeecal SourceOff source=UNe
+apogee dither namedpos=A
+apogeecal SourceOn source=ThAr
+220.0 apogee expose nreads=20 ; object=ArcLamp
+apogeecal SourceOff source=ThAr
+apogeecal SourceOn source=UNe
+440.0 apogee expose nreads=40 ; object=ArcLamp
+apogeecal SourceOff source=UNe
+10.0 apogeecal shutterClose
+10.0 apogeecal allOff
+650.0 apogee expose nreads=60 ; object=Dark
+10.0 apogeecal shutterOpen
+apogeefpi open
+apogee expose nreads=30; object=ArcLamp; comment="FPI"
+apogeefpi close
+10.0 apogeecal shutterClose
