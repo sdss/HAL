@@ -2,6 +2,10 @@
 
 ## Next version
 
+### 🚀 Added
+
+* [#9](https://github.com/sdss/HAL/pull/9) Some changes for LCO. Splits the script into APO and LCO version.
+
 ### 🏷️ Changed
 
 * [#8](https://github.com/sdss/HAL/pull/8) Go to field turns on HgCd during prepare if arcs or Hartmanns are going to be taken, even if the `fvc` stage is selected. If `fvc` is not selected both HgCd and Ne are turned on. The telescope now slews to the field rotator angle.
