@@ -149,6 +149,7 @@ class GotoFieldMacro(Macro):
         alt = self.config["fvc_alt"]
         az = self.config["fvc_az"]
         rot = self.config["fvc_rot"]
+        keep_offsets = self.config["keep_offsets"]
 
         if self.config["fixed_rot"] is False:
             self.command.info("Slewing to field RA/Dec/PA.")
@@ -156,6 +157,7 @@ class GotoFieldMacro(Macro):
                 self.command,
                 {"ra": ra, "dec": dec, "rot": pa},
                 rotwrap="nearest",
+                keep_offsets=keep_offsets,
             )
         else:
             if self.config["fixed_altaz"]:
@@ -169,6 +171,7 @@ class GotoFieldMacro(Macro):
             slew_result = await self.actor.helpers.tcc.do_slew(
                 self.command,
                 track_command=track_command,
+                keep_offsets=keep_offsets,
             )
 
             if slew_result is False:
@@ -194,6 +197,7 @@ class GotoFieldMacro(Macro):
             self.command,
             {"ra": ra, "dec": dec, "rot": pa},
             rotwrap="nearest",
+            keep_offsets=self.config["keep_offsets"],
         )
 
     async def reconfigure(self):

@@ -75,7 +75,7 @@ class TCCHelper(HALHelper):
             raise HALError("Some axes are not clear. Cannot continue.")
 
         # Now do the actual slewing.
-        slew_result = await self.do_slew(command, where)
+        slew_result = await self.do_slew(command, where, **kwargs)
         if slew_result is False:
             raise HALError(f"Failed going to position {where}.")
 
@@ -239,7 +239,7 @@ class TCCHelper(HALHelper):
         command,
         coords: dict[str, float] | None = None,
         track_command: str | None = None,
-        keep_offsets: bool = False,
+        keep_offsets: bool = True,
         offset: bool = False,
         rotwrap: str | None = None,
     ) -> bool:

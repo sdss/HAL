@@ -50,6 +50,10 @@ macros:
     fvc_az: 121
     fvc_alt: 70
     fvc_rot: 190
+    keep_offsets: true
+    fixed_rot: false
+    fixed_altaz: false
+
   expose:
     boss_exposure_time: 900.
     apogee_exposure_time: null

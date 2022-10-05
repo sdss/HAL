@@ -64,6 +64,12 @@ __all__ = ["goto_field"]
     type=float,
     help="The fixed rotator angle to which to slew for the FVC loop.",
 )
+@click.option(
+    "--keep-offsets/--no-keep-offsets",
+    is_flag=True,
+    default=True,
+    help="Keep the guider offsets from the previous field.",
+)
 async def goto_field(
     command: HALCommandType,
     macro: Macro,
@@ -74,6 +80,7 @@ async def goto_field(
     alt: float | None = None,
     az: float | None = None,
     rot: float | None = None,
+    keep_offsets: bool = True,
 ):
     """Execute the go-to-field macro."""
 
@@ -86,6 +93,7 @@ async def goto_field(
         fvc_alt=alt,
         fvc_az=az,
         fvc_rot=rot,
+        keep_offsets=keep_offsets,
     )
     result = await macro.run()
 
