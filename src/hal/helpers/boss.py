@@ -54,16 +54,31 @@ class BOSSHelper(HALHelper):
     def is_exposing(self):
         """Returns `True` if the BOSS spectrograph is currently exposing."""
 
-        exposure_state = self.actor.models["boss"]["exposureState"]
+        if self.actor.observatory == "APO":
+            exposure_state = self.actor.models["boss"]["exposureState"]
 
-        if exposure_state is None or None in exposure_state.value:
-            raise ValueError("Unknown BOSS exposure state.")
+            if exposure_state is None or None in exposure_state.value:
+                raise ValueError("Unknown BOSS exposure state.")
 
-        state = exposure_state.value[0].lower()
-        if state in ["idle", "aborted"]:
-            return False
+            state = exposure_state.value[0].lower()
+            if state in ["idle", "aborted"]:
+                return False
+            else:
+                return True
+
         else:
-            return True
+            exposure_state = self.actor.models["yao"]["sp2_status_names"]
+
+            if exposure_state is None or None in exposure_state.value:
+                raise ValueError("Unknown BOSS exposure state.")
+
+            if (
+                "IDLE" in exposure_state.value
+                and "READOUT_PENDING" not in exposure_state.value
+            ):
+                return False
+            else:
+                return True
 
     async def expose(
         self,
@@ -80,10 +95,37 @@ class BOSSHelper(HALHelper):
                 "Cannot expose. The camera is exposing or a readout is pending."
             )
 
+        if self.actor.observatory == "APO":
+            await self._expose_boss_icc(
+                command,
+                exp_time=exp_time,
+                exp_type=exp_type,
+                readout=readout,
+                read_async=read_async,
+            )
+        else:
+            await self._expose_yao(
+                command,
+                exp_time=exp_time,
+                exp_type=exp_type,
+                readout=readout,
+                read_async=read_async,
+            )
+
+    async def _expose_boss_icc(
+        self,
+        command: HALCommandType,
+        exp_time: float = 0.0,
+        exp_type: str = "science",
+        readout: bool = True,
+        read_async: bool = False,
+    ):
+        """Expose using ``bossICC``."""
+
         timeout = (
             exp_time
             + config["timeouts"]["expose"]
-            + config["timeouts"]["boss_flushing"]
+            + config["timeouts"]["boss_icc_flushing"]
         )
 
         command_parts = [f"exposure {exp_type}"]
@@ -94,7 +136,7 @@ class BOSSHelper(HALHelper):
         if readout is False or read_async is True:
             command_parts.append("noreadout")
         else:
-            timeout += config["timeouts"]["boss_readout"]
+            timeout += config["timeouts"]["boss_icc_readout"]
 
         command_string = " ".join(command_parts)
 
@@ -109,7 +151,52 @@ class BOSSHelper(HALHelper):
                     command,
                     "boss",
                     "exposure readout",
-                    time_limit=25.0 + config["timeouts"]["boss_readout"],
+                    time_limit=25.0 + config["timeouts"]["boss_icc_readout"],
+                )
+            )
+            return
+
+        self.__readout_pending = not readout
+
+    async def _expose_yao(
+        self,
+        command: HALCommandType,
+        exp_time: float = 0.0,
+        exp_type: str = "science",
+        readout: bool = True,
+        read_async: bool = False,
+    ):
+        """Expose using ``yao``."""
+
+        timeout = exp_time + config["timeouts"]["expose"]
+
+        if exp_type == "science":
+            exp_type = "object"
+
+        command_parts = [f"expose --{exp_type}"]
+
+        if exp_type != "bias":
+            command_parts.append(f"{round(exp_time, 1)}")
+
+        if readout is False or read_async is True:
+            command_parts.append("--no-readout")
+        else:
+            timeout += config["timeouts"]["boss_yao_readout"]
+
+        command_string = " ".join(command_parts)
+
+        await self._send_command(command, "yao", command_string, time_limit=timeout)
+
+        self.__readout_pending = True
+
+        if readout is True and read_async is True:
+            # We use a _send_command because readout cannot await on itself.
+            self.__readout_task = asyncio.create_task(
+                self._send_command(
+                    command,
+                    "yao",
+                    "read",
+                    time_limit=25.0 + config["timeouts"]["boss_yao_readout"],
                 )
             )
             return

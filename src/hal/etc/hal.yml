@@ -15,6 +15,7 @@ actor:
     - cherno
     - boss
     - hartmann
+    - yao
   log_dir: /data/logs/actors/hal
 
 durations:
@@ -27,8 +28,9 @@ timeouts:
   lamps: 30.0
   apogee_shutter: 15.0
   apogee_dither: 30.0
-  boss_flushing: 25.0
-  boss_readout: 82.0
+  boss_icc_flushing: 25.0
+  boss_icc_readout: 82.0
+  boss_yao_readout: 35.0
   expose: 25.0
   slew: 180.0
   hartmann: 260.
