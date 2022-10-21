@@ -275,7 +275,7 @@ class TCCHelper(HALHelper):
 
         # NOTE: TBD: We should limit which offsets are kept.
         keep_args = "/keep=(obj,arc,gcorr,calib,bore)" if keep_offsets else ""
-        rotwrap = "/rotwrap={rotwrap}" if rotwrap else ""
+        rotwrap = f"/rotwrap={rotwrap}" if rotwrap else ""
 
         slew_cmd = None
         if track_command:
@@ -307,7 +307,7 @@ class TCCHelper(HALHelper):
                     slew_cmd = self._send_command(
                         command,
                         "tcc",
-                        f"track {ra}, {dec} icrs /rottype=object/rotang={rot:g}"
+                        f"track {ra}, {dec} icrs /rottype=object/rotang={rot:g} "
                         f"{rotwrap} {keep_args}",
                         time_limit=config["timeouts"]["slew"],
                         raise_on_fail=False,
