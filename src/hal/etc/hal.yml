@@ -55,6 +55,22 @@ macros:
     keep_offsets: true
     fixed_rot: false
     fixed_altaz: false
+    cloned_stages: []
+    new_field_stages:
+      ['slew', reconfigure", 'fvc', 'reslew', 'boss_arc', 'acquire', 'guide']
+    repeat_field_stages:
+      ['slew', reconfigure", 'fvc', 'reslew', 'acquire', 'guide']
+    rm_field_stages:
+      [
+        'slew',
+        reconfigure",
+        'fvc',
+        'reslew',
+        'boss_arc',
+        'flat_arc',
+        'acquire',
+        'guide'
+      ]
 
   expose:
     boss_exposure_time: 900.
