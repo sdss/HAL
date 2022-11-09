@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🏷️ Changed
+
+* If `expose` is called with `--without-fpi`, the FPI shutter is left where it is.
+
+
 ## 0.3.0 - September 11, 2022
 
 ### 🚀 Added
