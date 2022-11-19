@@ -274,7 +274,7 @@ class TCCHelper(HALHelper):
             raise HALError("Some axes are not clear. Cannot continue.")
 
         # NOTE: TBD: We should limit which offsets are kept.
-        keep_args = "/keep=(obj,arc,gcorr,calib,bore)" if keep_offsets else ""
+        keep_args = "/keep=(arc,gcorr,calib,bore)" if keep_offsets else ""
         rotwrap = f"/rotwrap={rotwrap}" if rotwrap else ""
 
         slew_cmd = None
