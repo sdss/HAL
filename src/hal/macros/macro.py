@@ -87,7 +87,7 @@ class Macro:
         if len(self.stages) != len(set(self.stages)):
             raise MacroError("Duplicate stages found.")
 
-        self.stage_status: dict[str, StageStatus] = {}
+        self.stage_status = {st: StageStatus.WAITING for st in flatten(self.stages)}
 
         self._base_config = config["macros"].get(self.name, {}).copy()
         self.config: defaultdict[str, Any] = defaultdict(
