@@ -95,7 +95,7 @@ async def goto_field(
     elif auto is True:
         field_queue = command.actor.field_queue
         if len(field_queue) == 0:
-            stages = config["macros"]["goto_field"]["new_field_stages"]
+            return command.fail("No configurations loaded. Auto mode cannot be used.")
         elif field_queue[-1][1] is True:  # Check is_cloned
             stages = config["macros"]["goto_field"]["cloned_stages"]
         elif len(field_queue) == 2 and field_queue[-1][0] == field_queue[-2][0]:
@@ -104,6 +104,10 @@ async def goto_field(
             stages = config["macros"]["goto_field"]["rm_field_stages"]
         else:
             stages = config["macros"]["goto_field"]["new_field_stages"]
+
+    print(stages)
+    if stages is not None and len(stages) == 0:
+        return command.finish("No stages to run.")
 
     macro.reset(
         command,
