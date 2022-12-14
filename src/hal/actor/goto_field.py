@@ -75,6 +75,11 @@ __all__ = ["goto_field"]
     default=True,
     help="Keep the guider offsets from the previous field.",
 )
+@click.option(
+    "--with-hartmann",
+    is_flag=True,
+    help="Ensures the boss_hartmann stage is selected. Mostly relevant with --auto.",
+)
 async def goto_field(
     command: HALCommandType,
     macro: Macro,
@@ -87,8 +92,11 @@ async def goto_field(
     az: float | None = None,
     rot: float | None = None,
     keep_offsets: bool = True,
+    with_hartmann: bool = False,
 ):
     """Execute the go-to-field macro."""
+
+    assert command.actor
 
     if stages is not None and auto is True:
         return command.fail("--auto cannot be used with custom stages.")
@@ -107,6 +115,10 @@ async def goto_field(
 
     if stages is not None and len(stages) == 0:
         return command.finish("No stages to run.")
+
+    if with_hartmann and stages is not None and "boss_hartmann" not in stages:
+        # Can be added at the end. Macro.reset() will order it.
+        stages.append("boss_hartmann")
 
     macro.reset(
         command,
