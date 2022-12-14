@@ -30,6 +30,11 @@ __all__ = ["goto_field"]
 @hal_command_parser.command(name="goto-field", cancellable=True)
 @stages("goto_field", reset=False)
 @click.option(
+    "--auto",
+    is_flag=True,
+    help="Selects the stages based on the latest design loaded.",
+)
+@click.option(
     "--guider-time",
     type=float,
     default=config["macros"]["goto_field"]["guider_time"],
@@ -70,19 +75,50 @@ __all__ = ["goto_field"]
     default=True,
     help="Keep the guider offsets from the previous field.",
 )
+@click.option(
+    "--with-hartmann",
+    is_flag=True,
+    help="Ensures the boss_hartmann stage is selected. Mostly relevant with --auto.",
+)
 async def goto_field(
     command: HALCommandType,
     macro: Macro,
     stages: list[StageType],
     guider_time: float,
+    auto: bool = False,
     fixed_rot: bool = False,
     fixed_altaz: bool = False,
     alt: float | None = None,
     az: float | None = None,
     rot: float | None = None,
     keep_offsets: bool = True,
+    with_hartmann: bool = False,
 ):
     """Execute the go-to-field macro."""
+
+    assert command.actor
+
+    if stages is not None and auto is True:
+        return command.fail("--auto cannot be used with custom stages.")
+    elif auto is True:
+        field_queue = command.actor.field_queue
+        if len(field_queue) == 0:
+            return command.fail("No configurations loaded. Auto mode cannot be used.")
+        elif field_queue[-1][1] is True:  # Check is_cloned
+            stages = config["macros"]["goto_field"]["cloned_stages"]
+        elif len(field_queue) == 2 and field_queue[-1][0] == field_queue[-2][0]:
+            stages = config["macros"]["goto_field"]["repeat_field_stages"]
+        elif field_queue[-1][2] is True:  # Check is RM/AQMES
+            stages = config["macros"]["goto_field"]["rm_field_stages"]
+        else:
+            stages = config["macros"]["goto_field"]["new_field_stages"]
+
+    if stages is not None and len(stages) == 0:
+        return command.finish("No stages to run.")
+
+    if with_hartmann and stages is not None and "boss_hartmann" not in stages:
+        # Can be added at the end. Macro.reset() will order it.
+        stages.append("boss_hartmann")
 
     macro.reset(
         command,

@@ -2,6 +2,10 @@
 
 ## Next version
 
+### 🚀 Added
+
+* [COS-88](https://jira.sdss.org/browse/COS-88) ([#11](https://github.com/sdss/HAL/pull/11)): `hal goto-field` now accepts an `--auto` flag that selects the stages depending on the design loaded.
+
 ### 🏷️ Changed
 
 * If `expose` is called with `--without-fpi`, the FPI shutter is left where it is.
