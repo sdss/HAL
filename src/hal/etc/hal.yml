@@ -67,9 +67,9 @@ macros:
         'fvc',
         'reslew',
         'boss_arc',
-        'flat_arc',
+        'boss_flat',
         'acquire',
-        'guide'
+        'guide',
       ]
 
   expose:
