@@ -79,8 +79,6 @@ class HALActor(LegacyActor):
 
         self.field_queue.append((field_id, is_cloned, False))
 
-        print(self.field_queue)
-
 
 class ActorHelpers:
     """State helpers."""

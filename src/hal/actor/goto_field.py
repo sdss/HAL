@@ -105,7 +105,6 @@ async def goto_field(
         else:
             stages = config["macros"]["goto_field"]["new_field_stages"]
 
-    print(stages)
     if stages is not None and len(stages) == 0:
         return command.finish("No stages to run.")
 
