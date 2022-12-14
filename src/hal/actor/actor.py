@@ -63,7 +63,7 @@ class HALActor(LegacyActor):
             self.write("w", {"error": "Cannot connect to database."})
         else:
             design_mode_label = (
-                targetdb.Design(targetdb.Design.design_mode_label)
+                targetdb.Design.select(targetdb.Design.design_mode)
                 .where(targetdb.Design.design_id == design_id)
                 .scalar()
             )
