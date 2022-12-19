@@ -54,30 +54,41 @@ class HALActor(LegacyActor):
         design_id = key.value[1]
         field_id = key.value[2]
         is_cloned = key.value[9]
+        is_rm = False
 
         if design_id is None or design_id < 0 or field_id is None or field_id < 0:
             self.field_queue.append((field_id, is_cloned, False))
             return
 
         if targetdb.database.connected is False:
-            self.write("w", {"error": "Cannot connect to database."})
-        else:
-            design_mode_label = (
-                targetdb.Design.select(targetdb.Design.design_mode)
-                .where(targetdb.Design.design_id == design_id)
-                .scalar()
-            )
-            if design_mode_label is None:
-                self.write(
-                    "w",
-                    {"error": f"Cannot find design_mode_label for design {design_id}"},
-                )
-            else:
-                if design_mode_label in ["dark_monit", "dark_rm"]:
-                    self.field_queue.append((field_id, is_cloned, True))
-                    return
+            self.write("w", {"error": "Database is disconnected. Trying to reconnect."})
+            if not targetdb.database.connect():
+                self.write("w", {"error": "Cannot connect to database."})
+                return
 
-        self.field_queue.append((field_id, is_cloned, False))
+        design_mode_label = (
+            targetdb.Design.select(targetdb.Design.design_mode)
+            .where(targetdb.Design.design_id == design_id)
+            .scalar()
+        )
+        if design_mode_label is None:
+            self.write(
+                "w",
+                {"error": f"Cannot find design_mode_label for design {design_id}"},
+            )
+            return
+        elif design_mode_label in ["dark_monit", "dark_rm"]:
+            is_rm = True
+
+        self.write(
+            "d",
+            {
+                "text": f"Detected new configuration with design_id={design_id} "
+                f"and field_id={field_id}."
+            },
+        )
+
+        self.field_queue.append((field_id, is_cloned, is_rm))
 
 
 class ActorHelpers:
