@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* Several performance improvements to `goto-field`. FFS are only closed if we are taking BOSS calibrations; when turning off lamps, we don't wait until they are really off, just send the command; the APOGEE shutter is closed at the beginning of the goto-field, but we don't wait for it to fully close before moving to the reconfiguration.
+
+
 ## 0.4.0 - December 21, 2022
 
 ### 🚀 Added
