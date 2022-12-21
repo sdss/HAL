@@ -108,7 +108,7 @@ class GotoFieldMacro(Macro):
                 )
             )
         else:
-            await self._all_lamps_off()
+            await self._all_lamps_off(wait=False)
 
     async def _close_ffs(self, wait: bool = True):
         """Closes the FFS."""
@@ -122,7 +122,7 @@ class GotoFieldMacro(Macro):
             else:
                 asyncio.create_task(task)
 
-    async def _all_lamps_off(self):
+    async def _all_lamps_off(self, wait: bool = True):
         """Turns all the lamps off after checking them."""
 
         # Check lamp status.
@@ -134,7 +134,9 @@ class GotoFieldMacro(Macro):
                 command_off = True
 
         if command_off:
-            await self.helpers.lamps.all_off(self.command)
+            task = asyncio.create_task(self.helpers.lamps.all_off(self.command))
+            if wait:
+                await task
 
     async def slew(self):
         """Slew to field but keep the rotator at a fixed position."""
@@ -265,7 +267,7 @@ class GotoFieldMacro(Macro):
             )
 
         if "boss_arcs" not in self._flat_stages:
-            await self._all_lamps_off()
+            await self._all_lamps_off(wait=False)
 
     async def boss_arcs(self):
         """Takes BOSS arcs."""
@@ -317,7 +319,7 @@ class GotoFieldMacro(Macro):
             read_async=True,
         )
 
-        await self._all_lamps_off()
+        await self._all_lamps_off(wait=False)
 
     async def boss_flat(self):
         """Takes the BOSS flat."""
@@ -353,7 +355,7 @@ class GotoFieldMacro(Macro):
             read_async=True,
         )
 
-        await self._all_lamps_off()
+        await self._all_lamps_off(wait=False)
 
     async def fvc(self):
         """Run the FVC loop."""
