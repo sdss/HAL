@@ -67,11 +67,13 @@ class GotoFieldMacro(Macro):
 
         await self.helpers.tcc.axis_stop(self.command)
 
-        # Ensure the APOGEE shutter is closed.
-        await self.helpers.apogee.shutter(
-            self.command,
-            open=False,
-            shutter="apogee",
+        # Ensure the APOGEE shutter is closed but don't wait for it.
+        asyncio.create_task(
+            self.helpers.apogee.shutter(
+                self.command,
+                open=False,
+                shutter="apogee",
+            )
         )
 
         do_fvc = "fvc" in stages
