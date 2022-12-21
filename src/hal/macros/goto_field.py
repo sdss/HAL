@@ -57,9 +57,6 @@ class GotoFieldMacro(Macro):
             elif time() - last_seen > 3600:  # One hour
                 raise MacroError("Configuration is too old. Load a new configuration.")
 
-        # Start closing the FFS if they are open but do not block.
-        await self._close_ffs(wait=False)
-
         # Stop the guider.
         # TODO: create a Cherno helper to group these commands and monitor if the
         #       guider is running.
@@ -79,6 +76,11 @@ class GotoFieldMacro(Macro):
         do_fvc = "fvc" in stages
         do_flat = "boss_flat" in stages
         do_arcs = "boss_hartmann" in stages or "boss_arcs" in stages
+
+        # Start closing the FFS if they are open but do not block. Only close the FFS
+        # if we're going to do BOSS cals, otherwise it's about 20 seconds of lost time.
+        if do_flat or do_arcs:
+            await self._close_ffs(wait=False)
 
         # If lamps are needed, turn them on now but do not wait for them to warm up.
         # Do not turn lamps if we are going to take an FVC image.
