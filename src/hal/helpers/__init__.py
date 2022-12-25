@@ -63,6 +63,7 @@ class HALHelper:
 from .apogee import *
 from .boss import *
 from .ffs import *
+from .jaeger import *
 from .lamps import *
 from .scripts import *
 from .tcc import *

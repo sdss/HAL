@@ -98,17 +98,27 @@ async def goto_field(
 
     assert command.actor
 
+    jaeger_helper = command.actor.helpers.jaeger
+
     if stages is not None and auto is True:
         return command.fail("--auto cannot be used with custom stages.")
     elif auto is True:
-        field_queue = command.actor.field_queue
-        if len(field_queue) == 0:
+        configuration = jaeger_helper.configuration
+
+        # The jaeger helper marks if a configuration is a new field or not but
+        # only if the previous configuration has been observed, which only works
+        # in full HAL auto mode. For goto-field auto mode, we can only check if the
+        # previous configuration has the same field_id, regardless of whether it
+        # was observed or not.
+        previous = jaeger_helper._previous[-1] if jaeger_helper._previous else None
+
+        if configuration is None:
             return command.fail("No configurations loaded. Auto mode cannot be used.")
-        elif field_queue[-1][1] is True:  # Check is_cloned
+        elif configuration.cloned is True:
             stages = config["macros"]["goto_field"]["cloned_stages"]
-        elif len(field_queue) == 2 and field_queue[-1][0] == field_queue[-2][0]:
+        elif previous and previous.field_id == configuration.field_id:
             stages = config["macros"]["goto_field"]["repeat_field_stages"]
-        elif field_queue[-1][2] is True:  # Check is RM/AQMES
+        elif configuration.is_rm_field is True:
             stages = config["macros"]["goto_field"]["rm_field_stages"]
         else:
             stages = config["macros"]["goto_field"]["new_field_stages"]
