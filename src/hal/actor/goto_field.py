@@ -113,7 +113,7 @@ async def goto_field(
         previous = jaeger_helper._previous[-1] if jaeger_helper._previous else None
 
         if configuration is None:
-            return command.fail("No configurations loaded. Auto mode cannot be used.")
+            return command.fail("No configuration loaded. Auto mode cannot be used.")
         elif configuration.cloned is True:
             stages = config["macros"]["goto_field"]["cloned_stages"]
         elif previous and previous.field_id == configuration.field_id:
