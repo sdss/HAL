@@ -49,6 +49,7 @@ macros:
     flat_time: 25
     guider_time: 15.
     target_rms: 1.0
+    max_iterations: 5
     fvc_az: 121
     fvc_alt: 70
     fvc_rot: 190

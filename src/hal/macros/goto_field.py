@@ -396,12 +396,14 @@ class GotoFieldMacro(Macro):
 
         guider_time = self.config["guider_time"]
         target_rms = self.config["target_rms"]
+        max_iterations = self.config["max_iterations"]
 
         self.command.info("Acquiring field.")
         await self.helpers.cherno.acquire(
             self.command,
             exposure_time=guider_time,
             target_rms=target_rms,
+            max_iterations=max_iterations,
         )
 
     async def guide(self):

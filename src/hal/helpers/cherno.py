@@ -67,6 +67,7 @@ class ChernoHelper(HALHelper):
         exposure_time: float = 15,
         target_rms: float | None = None,
         wait: bool | None = None,
+        max_iterations: int | None = None,
     ):
         """Runs the acquisition command.
 
@@ -82,6 +83,8 @@ class ChernoHelper(HALHelper):
         wait
             Whether to wait for the acquisition to be complete. If `None`, it will
             block only if ``target_rms`` has been defined.
+        max_iterations
+            Maximum number of iterations before failing.
 
         """
 
@@ -89,6 +92,9 @@ class ChernoHelper(HALHelper):
 
         command_str = "acquire -c" if target_rms is None else f"acquire -r {target_rms}"
         command_str += f" -t {exposure_time}"
+
+        if max_iterations:
+            command_str += f" -x {max_iterations}"
 
         if block:
             await self._send_command(command, "cherno", command_str)
