@@ -9,7 +9,6 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import suppress
 from time import time
 
 from hal import config
