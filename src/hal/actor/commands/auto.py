@@ -21,16 +21,27 @@ if TYPE_CHECKING:
 __all__ = ["auto"]
 
 
-@hal_command_parser.command(name="auto", cancellable=True)
+@hal_command_parser.command(name="auto")
 async def auto(command: HALCommandType):
     """Starts the auto mode."""
 
     assert command.actor
 
     macro = command.actor.helpers.macros["auto"]
-    macro.reset(command)
 
-    result = await macro.run()
+    result: bool = True
+
+    while True:
+        # Run the auto loop until the command is cancelled.
+
+        macro.reset(command)
+        if not await macro.run():
+            result = False
+            break
+
+        if macro.cancelled:
+            # Cancelled macros return result=True
+            break
 
     if result is False:
         return command.fail()
