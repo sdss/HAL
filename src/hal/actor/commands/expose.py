@@ -21,7 +21,7 @@ from . import hal_command_parser, stages
 if TYPE_CHECKING:
     from hal.macros import Macro
 
-    from . import HALCommandType
+    from .. import HALCommandType
 
 
 __all__ = ["expose"]
