@@ -85,6 +85,10 @@ macros:
     initial_apogee_dither: null
     with_fpi: true
 
+  auto:
+    guider_time: 15
+    n_exposures: 1
+
 goto:
   stow:
     alt: 30

@@ -69,6 +69,7 @@
         { "title": "timestamp", "type": "number" }
       ]
     },
+    "auto_mode_message": { "type": "string" },
     "additionalProperties": false
   }
 }
