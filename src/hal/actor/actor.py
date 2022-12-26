@@ -63,6 +63,7 @@ class ActorHelpers:
         from hal.helpers import (
             APOGEEHelper,
             BOSSHelper,
+            ChernoHelper,
             FFSHelper,
             HALHelper,
             JaegerHelper,
@@ -77,6 +78,7 @@ class ActorHelpers:
 
         self.apogee = APOGEEHelper(actor)
         self.boss = BOSSHelper(actor)
+        self.cherno = ChernoHelper(actor)
         self.ffs = FFSHelper(actor)
         self.jaeger = JaegerHelper(actor)
         self.lamps = LampsHelper(actor)

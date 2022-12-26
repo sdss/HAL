@@ -57,10 +57,7 @@ class GotoFieldMacro(Macro):
             elif time() - last_seen > 3600:  # One hour
                 raise MacroError("Configuration is too old. Load a new configuration.")
 
-        # Stop the guider.
-        # TODO: create a Cherno helper to group these commands and monitor if the
-        #       guider is running.
-        await self.send_command("cherno", "stop")
+        await self.helpers.cherno.stop_guiding(self.command)
 
         await self.helpers.tcc.axis_stop(self.command)
 
@@ -375,15 +372,6 @@ class GotoFieldMacro(Macro):
         if fvc_command.status.did_fail:
             raise MacroError("FVC loop failed.")
 
-    async def _set_guider_offset(self):
-        """Sets the guider offset."""
-
-        offset = self.config["guider_offset"]
-        if offset is not None:
-            offset = " ".join(map(str, offset))
-            self.command.info(f"Setting guide offset to {offset}.")
-            await self.send_command("cherno", f"offset {offset}")
-
     async def acquire(self):
         """Acquires the field."""
 
@@ -407,12 +395,13 @@ class GotoFieldMacro(Macro):
             raise MacroError("Axes must be tracking for acquisition.")
 
         guider_time = self.config["guider_time"]
-        n_acquisition = self.config["n_acquisition"]
+        target_rms = self.config["target_rms"]
 
         self.command.info("Acquiring field.")
-        await self.send_command(
-            "cherno",
-            f"acquire -t {guider_time} --count {n_acquisition} --full",
+        await self.helpers.cherno.acquire(
+            self.command,
+            exposure_time=guider_time,
+            target_rms=target_rms,
         )
 
     async def guide(self):
@@ -432,9 +421,11 @@ class GotoFieldMacro(Macro):
         guider_time = self.config["guider_time"]
 
         self.command.info("Starting guide loop.")
-
-        with suppress(Exception):
-            asyncio.shield(self.send_command("cherno", f"acquire -c -t {guider_time}"))
+        await self.helpers.cherno.guide(
+            self.command,
+            exposure_time=guider_time,
+            wait=False,
+        )
 
     async def cleanup(self):
         """Turns off all lamps."""
