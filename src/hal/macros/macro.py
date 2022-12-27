@@ -399,6 +399,10 @@ class Macro:
 
             try:
                 await current_task
+                self.set_stage_status(stage, StageStatus.FINISHED)
+
+                if self.has_status(stage, StageStatus.CANCELLING):
+                    raise asyncio.CancelledError()
 
             except asyncio.CancelledError:
                 with suppress(asyncio.CancelledError):
@@ -436,15 +440,34 @@ class Macro:
                 await self.fail_macro(err, stage=stage)
                 return
 
-            self.set_stage_status(stage, StageStatus.FINISHED)
+    def get_active_stages(self):
+        """Returns a list of running stages."""
 
-    def cancel(self):
+        return [
+            stage
+            for stage in self.stage_status
+            if self.stage_status[stage] == StageStatus.ACTIVE
+        ]
+
+    def has_status(self, stages: StageType, status: StageStatus):
+        """Determines if any of the stages has that status."""
+
+        if isinstance(stages, str):
+            return self.stage_status[stages] == status
+
+        return any([self.stage_status[stage] == status for stage in stages])
+
+    def cancel(self, now: bool = True):
         """Cancels the execution ot the macro."""
 
         if not self.running or not self._running_task:
             raise MacroError("The macro is not running.")
 
-        self._running_task.cancel()
+        if now:
+            self._running_task.cancel()
+        else:
+            active_stages = self.get_active_stages()
+            self.set_stage_status(active_stages, StageStatus.CANCELLING)
 
     async def send_command(
         self,
