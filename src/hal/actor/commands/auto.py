@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import click
+
 from . import hal_command_parser
 
 
@@ -22,12 +24,38 @@ __all__ = ["auto"]
 
 
 @hal_command_parser.command(name="auto")
-async def auto(command: HALCommandType):
+@click.option(
+    "--stop",
+    is_flag=True,
+    help="Stops the auto mode loop after the next stage completes. "
+    "For an immediate stop use with --now.",
+)
+@click.option(
+    "--now",
+    is_flag=True,
+    help="Along with --stop, cancels the auto mode loop immediately.",
+)
+async def auto(command: HALCommandType, stop: bool = False, now: bool = False):
     """Starts the auto mode."""
 
     assert command.actor
 
     macro = command.actor.helpers.macros["auto"]
+
+    if macro.running and stop is False:
+        return command.fail("Auto mode is already running.")
+
+    if stop is True:
+        if macro.running is False:
+            return command.finish("Auto mode is not running.")
+        elif now is True:
+            command.warning(text="Cancelling auto mode NOW.")
+            macro.cancel(now=True)
+        else:
+            command.warning(text="Cancelling auto mode after stage completes.")
+            macro.cancel(now=False)
+
+        return command.finish()
 
     result: bool = True
 
