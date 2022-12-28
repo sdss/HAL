@@ -114,34 +114,6 @@ class GotoFieldMacro(Macro):
         else:
             await self._all_lamps_off(wait=False)
 
-    async def _close_ffs(self, wait: bool = True):
-        """Closes the FFS."""
-
-        if not self.helpers.ffs.all_closed():
-            self.command.info("Closing FFS")
-            task = self.helpers.ffs.close(self.command)
-
-            if wait:
-                await task
-            else:
-                asyncio.create_task(task)
-
-    async def _all_lamps_off(self, wait: bool = True):
-        """Turns all the lamps off after checking them."""
-
-        # Check lamp status.
-        command_off: bool = False
-        lamp_status = self.helpers.lamps.list_status()
-        for name, ls in lamp_status.items():
-            if ls[1] is not False:
-                self.command.warning(f"Lamp {name} is on, will turn off.")
-                command_off = True
-
-        if command_off:
-            task = asyncio.create_task(self.helpers.lamps.all_off(self.command))
-            if wait:
-                await task
-
     async def slew(self):
         """Slew to field but keep the rotator at a fixed position."""
 
@@ -200,6 +172,24 @@ class GotoFieldMacro(Macro):
         await self.send_command("jaeger", "configuration reverse")
         await self.send_command("jaeger", "configuration execute")
 
+    async def fvc(self):
+        """Run the FVC loop."""
+
+        if "slew" in self._flat_stages:
+            self.command.info("Halting the rotator.")
+            await self.helpers.tcc.axis_stop(self.command, axis="rot")
+
+        self.command.info("Running FVC loop.")
+        fvc_command = await self.send_command(
+            "jaeger",
+            "fvc loop",
+            time_limit=config["timeouts"]["fvc"],
+            raise_on_fail=False,
+        )
+
+        if fvc_command.status.did_fail:
+            raise MacroError("FVC loop failed.")
+
     async def reslew(self):
         """Re-slew to field."""
 
@@ -236,6 +226,174 @@ class GotoFieldMacro(Macro):
             mode = "arcs"
 
         await self._ensure_lamps(mode)
+
+    async def boss_flat(self):
+        """Takes the BOSS flat."""
+
+        self.command.info("Taking BOSS flat.")
+
+        if "lamps" not in self._flat_stages:
+            await self._ensure_lamps(mode="flat")
+
+        # Now take the flat. Do not read it yet.
+        flat_time = self.config["flat_time"]
+
+        self.command.debug("Starting BOSS flat exposure.")
+
+        await self.helpers.boss.expose(
+            self.command,
+            flat_time,
+            exp_type="flat",
+            readout=True,
+            read_async=True,
+        )
+
+        await self._all_lamps_off(wait=False)
+
+    async def boss_hartmann(self):
+        """Takes the hartmann sequence."""
+
+        if "lamps" not in self._flat_stages:
+            await self._ensure_lamps(mode="hartmann")
+
+        if self.helpers.boss.readout_pending:  # Potential readout from the flat.
+            self.command.info("Waiting for BOSS to read out.")
+            await self.helpers.boss.readout(self.command)
+
+        # Run hartmann and adjust the collimator but ignore residuals.
+        self.command.info("Running hartmann collimate.")
+        await self.send_command(
+            "hartmann",
+            "collimate ignoreResiduals",
+            time_limit=config["timeouts"]["hartmann"],
+        )
+
+        # Now check if there are residuals that require modifying the blue ring.
+        sp1Residuals = self.actor.models["hartmann"]["sp1Residuals"][2]
+        if sp1Residuals != "OK":
+            raise MacroError(
+                "Please adjust the blue ring and run goto-field again. "
+                "The collimator has been adjusted."
+            )
+
+        if "boss_arcs" not in self._flat_stages:
+            await self._all_lamps_off(wait=False)
+
+    async def boss_arcs(self):
+        """Takes BOSS arcs."""
+
+        if "lamps" not in self._flat_stages:
+            await self._ensure_lamps(mode="arcs")
+
+        if self.helpers.boss.readout_pending:
+            self.command.info("Waiting for BOSS to read out.")
+            await self.helpers.boss.readout(self.command)
+
+        self.command.info("Taking BOSS arc.")
+
+        arc_time = self.config["arc_time"]
+
+        await self.helpers.boss.expose(
+            self.command,
+            arc_time,
+            exp_type="arc",
+            readout=True,
+            read_async=True,
+        )
+
+        await self._all_lamps_off(wait=False)
+
+    async def acquire(self):
+        """Acquires the field."""
+
+        pretasks = []
+
+        if "lamps" not in self._flat_stages:
+            self.command.info("Re-slewing to field.")
+            pretasks.append(self.reslew())
+
+        if not self.helpers.ffs.all_open():
+            self.command.info("Opening FFS")
+            pretasks.append(self.helpers.ffs.open(self.command))
+
+        # Open FFS and re-slew at the same time.
+        await asyncio.gather(*pretasks)
+
+        # A bit of delay to make sure the axis status keyword is updated.
+        await asyncio.sleep(1)
+
+        if not self.helpers.tcc.check_axes_status("Tracking"):
+            raise MacroError("Axes must be tracking for acquisition.")
+
+        guider_time = self.config["guider_time"]
+        n_acquisition = self.config["n_acquisition"]
+
+        self.command.info("Acquiring field.")
+        await self.send_command(
+            "cherno",
+            f"acquire -t {guider_time} --count {n_acquisition} --full",
+        )
+
+    async def guide(self):
+        """Starts the guide loop."""
+
+        if "acquire" not in self._flat_stages:
+            self.command.info("Re-slewing to field.")
+            await self.reslew()
+
+        if not self.helpers.tcc.check_axes_status("Tracking"):
+            raise MacroError("Axes must be tracking for guiding.")
+
+        if not self.helpers.ffs.all_open():
+            self.command.info("Opening FFS")
+            await self.helpers.ffs.open(self.command)
+
+        guider_time = self.config["guider_time"]
+
+        self.command.info("Starting guide loop.")
+
+        with suppress(Exception):
+            asyncio.shield(self.send_command("cherno", f"acquire -c -t {guider_time}"))
+
+    async def cleanup(self):
+        """Turns off all lamps."""
+
+        if self._lamps_task is not None and not self._lamps_task.done():
+            self._lamps_task.cancel()
+
+        await self.helpers.lamps.all_off(self.command, force=True)
+
+        # Read any pending BOSS exposure.
+        if self.helpers.boss.readout_pending:
+            await self.helpers.boss.readout(self.command)
+
+    async def _close_ffs(self, wait: bool = True):
+        """Closes the FFS."""
+
+        if not self.helpers.ffs.all_closed():
+            self.command.info("Closing FFS")
+            task = self.helpers.ffs.close(self.command)
+
+            if wait:
+                await task
+            else:
+                asyncio.create_task(task)
+
+    async def _all_lamps_off(self, wait: bool = True):
+        """Turns all the lamps off after checking them."""
+
+        # Check lamp status.
+        command_off: bool = False
+        lamp_status = self.helpers.lamps.list_status()
+        for name, ls in lamp_status.items():
+            if ls[1] is not False:
+                self.command.warning(f"Lamp {name} is on, will turn off.")
+                command_off = True
+
+        if command_off:
+            task = asyncio.create_task(self.helpers.lamps.all_off(self.command))
+            if wait:
+                await task
 
     async def _ensure_lamps(self, mode: str):
         """Ensures the lamps for flats/arcs/hartmann are on."""
@@ -301,100 +459,6 @@ class GotoFieldMacro(Macro):
         # Ensure FFS have fully closed.
         await close_ffs
 
-    async def boss_hartmann(self):
-        """Takes the hartmann sequence."""
-
-        if "lamps" not in self._flat_stages:
-            await self._ensure_lamps(mode="hartmann")
-
-        if self.helpers.boss.readout_pending:  # Potential readout from the flat.
-            self.command.info("Waiting for BOSS to read out.")
-            await self.helpers.boss.readout(self.command)
-
-        # Run hartmann and adjust the collimator but ignore residuals.
-        self.command.info("Running hartmann collimate.")
-        await self.send_command(
-            "hartmann",
-            "collimate ignoreResiduals",
-            time_limit=config["timeouts"]["hartmann"],
-        )
-
-        # Now check if there are residuals that require modifying the blue ring.
-        sp1Residuals = self.actor.models["hartmann"]["sp1Residuals"][2]
-        if sp1Residuals != "OK":
-            raise MacroError(
-                "Please adjust the blue ring and run goto-field again. "
-                "The collimator has been adjusted."
-            )
-
-        if "boss_arcs" not in self._flat_stages:
-            await self._all_lamps_off(wait=False)
-
-    async def boss_arcs(self):
-        """Takes BOSS arcs."""
-
-        if "lamps" not in self._flat_stages:
-            await self._ensure_lamps(mode="arcs")
-
-        if self.helpers.boss.readout_pending:
-            self.command.info("Waiting for BOSS to read out.")
-            await self.helpers.boss.readout(self.command)
-
-        self.command.info("Taking BOSS arc.")
-
-        arc_time = self.config["arc_time"]
-
-        await self.helpers.boss.expose(
-            self.command,
-            arc_time,
-            exp_type="arc",
-            readout=True,
-            read_async=True,
-        )
-
-        await self._all_lamps_off(wait=False)
-
-    async def boss_flat(self):
-        """Takes the BOSS flat."""
-
-        self.command.info("Taking BOSS flat.")
-
-        if "lamps" not in self._flat_stages:
-            await self._ensure_lamps(mode="flat")
-
-        # Now take the flat. Do not read it yet.
-        flat_time = self.config["flat_time"]
-
-        self.command.debug("Starting BOSS flat exposure.")
-
-        await self.helpers.boss.expose(
-            self.command,
-            flat_time,
-            exp_type="flat",
-            readout=True,
-            read_async=True,
-        )
-
-        await self._all_lamps_off(wait=False)
-
-    async def fvc(self):
-        """Run the FVC loop."""
-
-        if "slew" in self._flat_stages:
-            self.command.info("Halting the rotator.")
-            await self.helpers.tcc.axis_stop(self.command, axis="rot")
-
-        self.command.info("Running FVC loop.")
-        fvc_command = await self.send_command(
-            "jaeger",
-            "fvc loop",
-            time_limit=config["timeouts"]["fvc"],
-            raise_on_fail=False,
-        )
-
-        if fvc_command.status.did_fail:
-            raise MacroError("FVC loop failed.")
-
     async def _set_guider_offset(self):
         """Sets the guider offset."""
 
@@ -403,67 +467,3 @@ class GotoFieldMacro(Macro):
             offset = " ".join(map(str, offset))
             self.command.info(f"Setting guide offset to {offset}.")
             await self.send_command("cherno", f"offset {offset}")
-
-    async def acquire(self):
-        """Acquires the field."""
-
-        pretasks = []
-
-        if "lamps" not in self._flat_stages:
-            self.command.info("Re-slewing to field.")
-            pretasks.append(self.reslew())
-
-        if not self.helpers.ffs.all_open():
-            self.command.info("Opening FFS")
-            pretasks.append(self.helpers.ffs.open(self.command))
-
-        # Open FFS and re-slew at the same time.
-        await asyncio.gather(*pretasks)
-
-        # A bit of delay to make sure the axis status keyword is updated.
-        await asyncio.sleep(1)
-
-        if not self.helpers.tcc.check_axes_status("Tracking"):
-            raise MacroError("Axes must be tracking for acquisition.")
-
-        guider_time = self.config["guider_time"]
-        n_acquisition = self.config["n_acquisition"]
-
-        self.command.info("Acquiring field.")
-        await self.send_command(
-            "cherno",
-            f"acquire -t {guider_time} --count {n_acquisition} --full",
-        )
-
-    async def guide(self):
-        """Starts the guide loop."""
-
-        if "acquire" not in self._flat_stages:
-            self.command.info("Re-slewing to field.")
-            await self.reslew()
-
-        if not self.helpers.tcc.check_axes_status("Tracking"):
-            raise MacroError("Axes must be tracking for guiding.")
-
-        if not self.helpers.ffs.all_open():
-            self.command.info("Opening FFS")
-            await self.helpers.ffs.open(self.command)
-
-        guider_time = self.config["guider_time"]
-
-        self.command.info("Starting guide loop.")
-
-        with suppress(Exception):
-            asyncio.shield(self.send_command("cherno", f"acquire -c -t {guider_time}"))
-
-    async def cleanup(self):
-        """Turns off all lamps."""
-
-        if self._lamps_task is not None and not self._lamps_task.done():
-            self._lamps_task.cancel()
-
-        await self.helpers.lamps.all_off(self.command, force=True)
-
-        # Read any pending BOSS exposure.
-        if self.helpers.boss.readout_pending:
-            await self.helpers.boss.readout(self.command)
