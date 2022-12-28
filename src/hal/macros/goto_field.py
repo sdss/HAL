@@ -169,7 +169,9 @@ class GotoFieldMacro(Macro):
 
         self.command.info("Reconfiguring FPS array.")
 
+        # This is always safe. If it's already folded jaeger will return immediately.
         await self.send_command("jaeger", "configuration reverse")
+
         await self.send_command("jaeger", "configuration execute")
 
     async def fvc(self):
@@ -398,7 +400,7 @@ class GotoFieldMacro(Macro):
     async def _ensure_lamps(self, mode: str):
         """Ensures the lamps for flats/arcs/hartmann are on."""
 
-        # First check that the FFS are closed and lamps on. We don't care for how long.
+        # Make sure FFS are closed.
         close_ffs = asyncio.create_task(self._close_ffs())
 
         # Check lamps. Depending on the other stages HgCd may be on but Ne not. Loop
@@ -413,7 +415,7 @@ class GotoFieldMacro(Macro):
                     # Lamps have been commanded on but are not warmed up yet.
                     await self._lamps_task
                 else:
-                    self.command.debug("Preparing FF lamps.")
+                    self.command.warning("Turning FF lamp on.")
                     await self.helpers.lamps.turn_lamp(
                         self.command,
                         ["ff"],
@@ -425,7 +427,7 @@ class GotoFieldMacro(Macro):
             wait: float = 0
             for lamp in ["HgCd", "Ne"]:
                 if lamp_status[lamp][0] is False:
-                    self.command.warning(f"Turning {lamp} on.")
+                    self.command.warning(f"Turning {lamp} lamp on.")
                     asyncio.create_task(
                         self.helpers.lamps.turn_lamp(
                             self.command,
@@ -453,6 +455,9 @@ class GotoFieldMacro(Macro):
                         wait = wait_lamp
 
             if wait > 0:
+                # TODO: maybe here we should confirm that the lamps are turning on.
+                # We don't want to await the tasks though, because in some cases we
+                # are waiting less time than the full warm up time.
                 self.command.info(f"Waiting {wait} seconds for the lamps to warm-up.")
                 await asyncio.sleep(wait)
 
