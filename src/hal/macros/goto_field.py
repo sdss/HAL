@@ -83,7 +83,9 @@ class GotoFieldMacro(Macro):
             await self._close_ffs(wait=False)
 
         # If lamps are needed, turn them on now but do not wait for them to warm up.
-        # Do not turn lamps if we are going to take an FVC image.
+        # Do not turn lamps if we are going to take an FVC image. We add a delay
+        # since the APOGEE shutter is closing and we don't want to start turning on
+        # the lamps until it's fully closed.
         if do_flat and not do_fvc:
             self._lamps_task = asyncio.create_task(
                 self.helpers.lamps.turn_lamp(
@@ -91,6 +93,7 @@ class GotoFieldMacro(Macro):
                     ["ff"],
                     True,
                     turn_off_others=True,
+                    delay=10,
                 )
             )
         elif not do_flat and do_arcs:
@@ -105,6 +108,7 @@ class GotoFieldMacro(Macro):
                     lamps,
                     True,
                     turn_off_others=True,
+                    delay=10,
                 )
             )
         else:

@@ -103,6 +103,7 @@ class LampsHelper(HALHelper):
         lamps: str | list[str],
         state: bool,
         turn_off_others: bool = False,
+        delay: float = 0.0,
         force: bool = False,
     ):
         """Turns a lamp on or off.
@@ -114,10 +115,14 @@ class LampsHelper(HALHelper):
         ----------
         command
             The command that issues the lamp switching.
-        lamp
+        lamps
             Name of the lamp(s) to turn on or off.
+        state
+            Whether to turn lamp on or off.
         turn_off_others
             Turn off all other lamps.
+        delay
+            Wait this amount of seconds before actually commanding the lamps.
         force
             If `True`, send the on/off command regardless of status.
 
@@ -129,6 +134,8 @@ class LampsHelper(HALHelper):
         for lamp in lamps:
             if lamp not in self.LAMPS:
                 raise HALError(f"Invalid lamp {lamp}.")
+
+        await asyncio.sleep(delay)
 
         status = self.list_status()
 
