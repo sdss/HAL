@@ -86,10 +86,8 @@ class LampsHelper(HALHelper):
                 last_seen = lamp_state.last_seen
                 if sum(lamp_state.value) == 4:
                     lamp_state = True
-                elif sum(lamp_state.value) == 0:
+                else:  # Sometimes when a lamp is turning on we'll have, e.g., 1,0,0,1.
                     lamp_state = False
-                else:
-                    raise HALError(f"Failed determining state for lamp {lamp}.")
 
                 elapsed = time.time() - last_seen
                 warmed = (elapsed >= self.WARMUP[lamp]) if bool(commanded_on) else False
