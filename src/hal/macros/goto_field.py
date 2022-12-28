@@ -234,8 +234,7 @@ class GotoFieldMacro(Macro):
 
         self.command.info("Taking BOSS flat.")
 
-        if "lamps" not in self._flat_stages:
-            await self._ensure_lamps(mode="flat")
+        await self._ensure_lamps(mode="flat")
 
         # Now take the flat. Do not read it yet.
         flat_time = self.config["flat_time"]
@@ -255,8 +254,7 @@ class GotoFieldMacro(Macro):
     async def boss_hartmann(self):
         """Takes the hartmann sequence."""
 
-        if "lamps" not in self._flat_stages:
-            await self._ensure_lamps(mode="hartmann")
+        await self._ensure_lamps(mode="hartmann")
 
         if self.helpers.boss.readout_pending:  # Potential readout from the flat.
             self.command.info("Waiting for BOSS to read out.")
@@ -284,8 +282,7 @@ class GotoFieldMacro(Macro):
     async def boss_arcs(self):
         """Takes BOSS arcs."""
 
-        if "lamps" not in self._flat_stages:
-            await self._ensure_lamps(mode="arcs")
+        await self._ensure_lamps(mode="arcs")
 
         if self.helpers.boss.readout_pending:
             self.command.info("Waiting for BOSS to read out.")
