@@ -214,6 +214,13 @@ class TCCHelper(HALHelper):
     def axes_are_clear(self, axes=("az", "alt", "rot")) -> bool:
         """Checks that no bits are set in any axis status field."""
 
+        if "tcc" in self.actor.helpers.bypasses:
+            self.actor.write(
+                "w",
+                text="Saying all axes are clear because TCC is bypassed.",
+            )
+            return True
+
         axes = [ax for ax in axes if ax != "alt" or self.below_alt_limit() is False]
         try:
             tcc_model = self.actor.models["tcc"]
@@ -291,7 +298,6 @@ class TCCHelper(HALHelper):
                 raise HALError("coords needed if track_command is None.")
 
             if not offset:
-
                 if "ra" in coords and "dec" in coords and "rot" in coords:
                     ra = coords["ra"]
                     dec = coords["dec"]
@@ -333,11 +339,9 @@ class TCCHelper(HALHelper):
                     )
 
                 else:
-
                     raise HALError("Not enough coordinates information provided.")
 
             else:
-
                 if "alt" not in coords or "az" not in coords:
                     raise HALError("No alt/az offsets provided.")
 
