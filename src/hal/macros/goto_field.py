@@ -250,7 +250,7 @@ class GotoFieldMacro(Macro):
             read_async=True,
         )
 
-        await self._all_lamps_off(wait=False)
+        asyncio.create_task(self.helpers.lamps.turn_lamp(self.command, "ff", False))
 
     async def boss_hartmann(self):
         """Takes the hartmann sequence."""
