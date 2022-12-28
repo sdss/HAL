@@ -160,13 +160,18 @@ class LampsHelper(HALHelper):
 
         n_iter = 0
         while True:
-
             if all(done_lamps):
                 if state is False:
-                    command.info(f"Lamp(s) {','.join(lamps)} are off.")
+                    if len(lamps) > 0:
+                        command.info(f"Lamps {','.join(lamps)} are off.")
+                    else:
+                        command.info(f"Lamp {','.join(lamps)} is off.")
                     return
                 elif all(warmed):
-                    command.info(f"Lamp(s) {','.join(lamps)} are on and warmed up.")
+                    if len(lamps) > 0:
+                        command.info(f"Lamps {','.join(lamps)} are on and warmed up.")
+                    else:
+                        command.info(f"Lamp {','.join(lamps)} is on and warmed up.")
                     return
 
             new_status = self.list_status()
