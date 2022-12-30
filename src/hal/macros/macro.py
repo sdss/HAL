@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Coroutine, Optional, Union
 
 from clu import Command, CommandStatus
 
-from hal import config, log
+from hal import config
 from hal.exceptions import HALUserWarning, MacroError
 
 
@@ -301,9 +301,7 @@ class Macro:
         """Fails the macros and informs the actor."""
 
         self.command.error(error=error)
-
-        if not isinstance(error, MacroError):
-            log.exception(error)
+        self.command.actor.log.exception(f"Macro {self.name} failed with error:")
 
         self.failed = True
 
