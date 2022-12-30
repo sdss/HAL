@@ -307,7 +307,7 @@ class GotoFieldMacro(Macro):
 
         pretasks = []
 
-        if "lamps" not in self._flat_stages:
+        if "reslew" not in self._flat_stages:
             self.command.info("Re-slewing to field.")
             pretasks.append(self.reslew())
 
