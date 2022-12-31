@@ -21,7 +21,7 @@ from hal.macros.macro import StageType, flatten
 
 hal_command_parser = command_parser
 
-HALCommandType = Command[HALActor]
+HALCommandType = Command["HALActor"]
 
 
 def stages(macro_name: str, reset: bool = True):
