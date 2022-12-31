@@ -64,7 +64,6 @@ class ExposeHelper:
     """Track exposure status, add/remove exposures, etc."""
 
     def __init__(self, macro: ExposeMacro, opts: dict[str, Any]):
-
         self.macro = macro
         self.params = self._update_params(opts)
 

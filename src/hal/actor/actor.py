@@ -30,7 +30,6 @@ class HALActor(LegacyActor):
     """HAL actor."""
 
     def __init__(self, *args, **kwargs):
-
         schema = kwargs.pop("schema", None)
         schema = schema or os.path.join(os.path.dirname(__file__), "../etc/schema.json")
 
@@ -95,7 +94,6 @@ class ActorHelpers:
     """State helpers."""
 
     def __init__(self, actor: HALActor):
-
         from hal.helpers import (
             APOGEEHelper,
             BOSSHelper,

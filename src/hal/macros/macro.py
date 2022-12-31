@@ -65,7 +65,6 @@ class Macro:
     __CLEANUP__: list[StageType] = []
 
     def __init__(self, name: Optional[str] = None):
-
         if name is None and not hasattr(self, "name"):
             raise MacroError("The macro does not have a name attribute.")
         self.name = name or self.name
@@ -368,7 +367,6 @@ class Macro:
         return StageStatus.FAILED not in self.stage_status.values()
 
     def _get_coros(self, stage: StageType) -> list[Coroutine]:
-
         if isinstance(stage, str):
             stage_method = getattr(self, stage)
 
