@@ -153,10 +153,7 @@ class ExposeHelper:
         count = self.params.count_boss
         exptime = self.params.boss_exptime
 
-        if exptime is None:
-            return
-
-        if count is None or count == 0 or count == len(self.boss_exps):
+        if exptime is None or count is None or count == 0:
             return
 
         # We don't allow to reduce the number of exposures
@@ -167,17 +164,25 @@ class ExposeHelper:
         flushing = config["durations"]["boss"][self.observatory]["flushing"]
         readout = config["durations"]["boss"][self.observatory]["readout"]
 
-        if count > len(self.boss_exps):
-            # Add exposures. Do not touch exposures already completed or
-            # in process. Set actual_exptime to zero for now. We'll set it next.
-            for ii in range(self.n_boss + 1, count + 1):
-                new = BossExposure(n=ii, exptime=exptime, actual_exptime=0.0)
-                self.boss_exps.append(new)
-        else:
+        if count < len(self.boss_exps):
             # Pop any exposures beyond the count number. Count cannot be
             # smaller than the current exposure.
-            while len(self.boss_exps) > count:
+            while len(self.boss_exps) > count and len(self.boss_exps) >= self.n_boss:
                 self.boss_exps.pop()
+
+        # Replace/append exposures, but only for those that have not been executed
+        # or are not being executed.
+        # Minimum exposure index that we can modify.
+        min_exp_idx = 0 if self.n_boss == 0 else self.n_boss
+        for ii in range(min_exp_idx, count):
+            # Set actual_exptime to zero for now. We'll set it next.
+            new = BossExposure(n=ii + 1, exptime=exptime, actual_exptime=0.0)
+
+            # Replace existing exposures, or append if extending.
+            if len(self.boss_exps) >= ii + 1:
+                self.boss_exps[ii] = new
+            else:
+                self.boss_exps.append(new)
 
         # Reset the actual time an exposure will take. This is fine to do
         # at any point (I think). For the last exposure, we do not read the
@@ -197,7 +202,7 @@ class ExposeHelper:
         pairs = self.params.pairs
         count = self.params.count_apogee
 
-        if count is None or count == 0 or count == len(self.apogee_exps):
+        if count is None or count == 0:
             return
 
         # We consider count the number of actual exposures, not dither pairs.
@@ -276,26 +281,33 @@ class ExposeHelper:
                     dither_sequence += dither_sequence[-1]
 
         if count < len(self.apogee_exps):
+            n_apogee = self.n_apogee
             # Pop any exposures beyond the count number. Count cannot be
             # smaller than the current exposure.
-            while len(self.boss_exps) > count:
-                self.boss_exps.pop()
+            while len(self.apogee_exps) > count and len(self.apogee_exps) >= n_apogee:
+                self.apogee_exps.pop()
 
-            return
+        # Replace/append exposures, but only for those that have not been executed
+        # or are not being executed.
 
-        # Add exposures. Do not touch exposures already completed or in process.
-        # Minimum exposure we can modify.
-        min_exp = self.n_apogee + 1
-        if pairs:
-            min_exp = self.n_apogee + self.n_apogee % 2 + 1
+        # Minimum exposure index that we can modify. Preserve full dither sets.
+        if pairs is False:
+            min_exp_idx = 0 if self.n_apogee == 0 else self.n_apogee
+        else:
+            min_exp_idx = 0 if self.n_apogee == 0 else self.n_apogee + self.n_apogee % 2
 
-        for ii in range(min_exp, count + 1):
+        for ii in range(min_exp_idx, count):
             new = ApogeeExposure(
-                n=ii,
-                exptime=exposure_times[ii - 1],
-                dither_position=dither_sequence[ii - 1],
+                n=ii + 1,
+                exptime=exposure_times[ii],
+                dither_position=dither_sequence[ii],
             )
-            self.apogee_exps.append(new)
+
+            # Replace existing exposures, or append if extending.
+            if len(self.apogee_exps) >= ii + 1:
+                self.apogee_exps[ii] = new
+            else:
+                self.apogee_exps.append(new)
 
     def yield_apogee(self):
         """Returns an iterator of APOGEE exposures."""
