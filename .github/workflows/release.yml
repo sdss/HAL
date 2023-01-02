@@ -18,6 +18,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: HAL ${{ github.ref_name }}
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
