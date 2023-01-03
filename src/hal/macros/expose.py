@@ -65,13 +65,6 @@ class ExposeHelper:
 
     def __init__(self, macro: ExposeMacro, opts: dict[str, Any]):
         self.macro = macro
-        self.params = self._update_params(opts)
-
-        if "expose_boss" not in macro._flat_stages:
-            self.params.count_boss = None
-            self.params.readout_matching = False
-        elif "expose_apogee" not in macro._flat_stages:
-            self.params.count_apogee = None
 
         self.observatory = os.environ.get("OBSERVATORY", "APO").upper()
 
@@ -88,12 +81,18 @@ class ExposeHelper:
         self.interval: float = 10
         self._monitor_task: asyncio.Task | None = None
 
+        self.params: ExposeParameters
+        self.update_params(opts)
+
         self.refresh()
 
-    def _update_params(self, opts: dict[str, Any]):
+    def update_params(self, opts: dict[str, Any]):
         """Update parameters from the macro config."""
 
-        return ExposeParameters(
+        if self.running:
+            opts["initial_apogee_dither"] = self.params.initial_apogee_dither
+
+        params = ExposeParameters(
             boss_exptime=opts["boss_exptime"],
             apogee_exptime=opts["apogee_exptime"],
             count_apogee=opts["count_apogee"],
@@ -103,6 +102,16 @@ class ExposeHelper:
             initial_apogee_dither=opts["initial_apogee_dither"],
             readout_matching=opts["readout_matching"],
         )
+
+        if "expose_boss" not in self.macro._flat_stages:
+            params.count_boss = None
+            params.readout_matching = False
+        elif "expose_apogee" not in self.macro._flat_stages:
+            params.count_apogee = None
+
+        self.params = params
+
+        return params
 
     async def start(self):
         """Indicate that exposures are starting. Output states on a timer."""
@@ -534,9 +543,6 @@ class ExposeMacro(Macro):
                 open=False,
                 shutter="apogee",
             )
-
-        if not self.failed:
-            return
 
         if self.helpers.apogee.is_exposing():
             self.command.warning("APOGEE exposure is running. Not cancelling it.")

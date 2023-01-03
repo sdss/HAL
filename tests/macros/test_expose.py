@@ -8,6 +8,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from typing import TYPE_CHECKING
 
 import pytest
@@ -176,3 +178,42 @@ async def test_expose_with_run(actor: HALActor, mocker):
 
     assert helpers.boss.expose.call_count == 2
     assert helpers.apogee.expose.call_count == 4
+
+
+async def test_expose_modify(actor: HALActor, mocker):
+    async def sleep(*args, **kwargs):
+        await asyncio.sleep(0.2)
+
+    helpers = actor.helpers
+
+    expose_macro = helpers.macros["expose"]
+    assert isinstance(expose_macro, ExposeMacro)
+
+    helpers.apogee = mocker.AsyncMock(autospec=APOGEEHelper)
+    helpers.apogee.is_exposing = mocker.MagicMock(return_value=False)
+    helpers.apogee.get_dither_position = mocker.MagicMock(return_value="A")
+    helpers.apogee.expose = mocker.AsyncMock(side_effect=sleep)
+
+    helpers.boss = mocker.AsyncMock(autospec=BOSSHelper)
+    helpers.boss.is_exposing = mocker.MagicMock(return_value=False)
+    helpers.boss.expose = mocker.AsyncMock(side_effect=sleep)
+
+    helpers.lamps.list_status = mocker.MagicMock(return_value={})
+
+    asyncio.get_running_loop().call_later(
+        0.2,
+        actor.invoke_mock_command,
+        "expose -m -c 2",
+    )
+
+    cmd = actor.invoke_mock_command("expose")
+    await asyncio.sleep(0.1)
+
+    assert len(expose_macro.expose_helper.boss_exps) == 1
+    assert len(expose_macro.expose_helper.apogee_exps) == 2
+
+    await cmd
+    assert cmd.status.did_succeed
+
+    assert len(expose_macro.expose_helper.boss_exps) == 2
+    assert len(expose_macro.expose_helper.apogee_exps) == 4

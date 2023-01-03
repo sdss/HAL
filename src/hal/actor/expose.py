@@ -13,13 +13,14 @@ from typing import TYPE_CHECKING, cast
 import click
 
 from hal import config
+from hal.macros.expose import ExposeParameters
 from hal.macros.macro import StageType, flatten
 
 from . import hal_command_parser, stages
 
 
 if TYPE_CHECKING:
-    from hal.macros import Macro
+    from hal.macros.expose import ExposeMacro
 
     from . import HALCommandType
 
@@ -27,8 +28,14 @@ if TYPE_CHECKING:
 __all__ = ["expose"]
 
 
-@hal_command_parser.command(cancellable=True)
+@hal_command_parser.command()
 @stages("expose", reset=False)
+@click.option(
+    "--modify",
+    "-m",
+    is_flag=True,
+    help="Modify a running expose macro.",
+)
 @click.option(
     "--count",
     "-c",
@@ -114,8 +121,9 @@ __all__ = ["expose"]
 )
 async def expose(
     command: HALCommandType,
-    macro: Macro,
+    macro: ExposeMacro,
     stages: list[StageType] | None,
+    modify: bool = False,
     count: int = 1,
     count_apogee: int | None = None,
     count_boss: int | None = None,
@@ -191,18 +199,33 @@ async def expose(
         or "A"
     )
 
-    macro.reset(
-        command,
-        selected_stages,
+    params = dict(
         count_apogee=count_apogee,
         count_boss=count_boss,
         pairs=pairs,
         dither=not disable_dithering,
         boss_exptime=boss_exposure_time,
         apogee_exptime=apogee_exposure_time,
+        readout_matching=not disable_readout_matching,
+    )
+
+    # Handle macro modification.
+    if modify:
+        if not macro.running:
+            return command.fail("No expose macro currently running.")
+
+        command.warning("Modifying running expose macro.")
+        macro.expose_helper.update_params(params)
+        macro.expose_helper.refresh()
+
+        return command.finish()
+
+    macro.reset(
+        command,
+        selected_stages,
         initial_apogee_dither=initial_apogee_dither,
         with_fpi=with_fpi,
-        readout_matching=not disable_readout_matching,
+        **params,
     )
 
     result = await macro.run()
