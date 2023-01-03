@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🚀 New
+
+* [COS-66](https://jira.sdss.org/browse/COS-6) ([#13](https://github.com/sdss/HAL/issues/13)) The parameters for an ongoing `expose` macro can be modified by issuing a new `hal expose` command with the `--modify` flag. Exposure information is handled by a new `ExposureHelper` class that calculates the exposures for each instrument and ensures readout time matching. The behaviour for the user should be mostly unchanged.
+
+
 ## 0.5.0 - January 2, 2023
 
 ### 🚀 New
