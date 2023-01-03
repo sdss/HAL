@@ -63,7 +63,7 @@ sphinx-autobuild = ">=2021.3.14"
 
 [tool.black]
 line-length = 88
-target-version = ['py39']
+target-version = ['py310']
 fast = true
 
 [tool.isort]
@@ -90,6 +90,8 @@ omit = [
 
 [tool.coverage.report]
 exclude_lines = [
+    "if TYPE_CHECKING:",
+    "# pragma: no cover"
 ]
 
 [build-system]

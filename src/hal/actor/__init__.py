@@ -21,7 +21,7 @@ from hal.macros.macro import StageType, flatten
 
 hal_command_parser = command_parser
 
-HALCommandType = Command[HALActor]
+HALCommandType = Command["HALActor"]
 
 
 def stages(macro_name: str, reset: bool = True):
@@ -36,7 +36,6 @@ def stages(macro_name: str, reset: bool = True):
     """
 
     def _split_stages(ctx, param, values):
-
         if values is None:
             return None
 
@@ -66,7 +65,6 @@ def stages(macro_name: str, reset: bool = True):
             stages: list[StageType] | None = None,
             **kwargs,
         ):
-
             if macro_name not in command.actor.helpers.macros:
                 raise click.BadArgumentUsage(f"Invalid macro {macro_name}")
 

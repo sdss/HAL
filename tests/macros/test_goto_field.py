@@ -16,7 +16,6 @@ pytestmark = [pytest.mark.asyncio]
 
 @pytest.fixture()
 async def goto_field_macro(actor, command, mocker):
-
     macro = actor.helpers.macros["goto_field"]
     macro.reset(command=command)
 
@@ -44,7 +43,6 @@ async def goto_field_macro(actor, command, mocker):
 
 
 async def test_goto_field_fails_tcc(goto_field_macro):
-
     await goto_field_macro.run()
 
     # Macros don't finish commands.
