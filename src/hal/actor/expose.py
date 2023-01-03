@@ -33,7 +33,8 @@ __all__ = ["expose"]
     "--modify",
     "-m",
     is_flag=True,
-    help="Modify a running expose macro.",
+    help="Modify a running expose macro. The parameters of the previous expose command "
+    "are NOT remembered; all flags must be passed again.",
 )
 @click.option(
     "--count",
