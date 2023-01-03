@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING, cast
 import click
 
 from hal import config
-from hal.macros.expose import ExposeParameters
 from hal.macros.macro import StageType, flatten
 
 from . import hal_command_parser, stages
