@@ -41,7 +41,6 @@ class Configuration:
     observed: bool = False
 
     def __post_init__(self):
-
         if self.design_id is None or self.design_id < 0:
             return
 
