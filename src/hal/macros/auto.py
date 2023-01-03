@@ -18,7 +18,7 @@ from hal.macros.macro import Macro
 class AutoModeMacro(Macro):
     """A macro that runs one iteration of the auto mode."""
 
-    name = "expose"
+    name = "auto"
 
     __PRECONDITIONS__ = ["prepare"]
     __STAGES__ = ["load", "goto_field", ("guide", "expose")]
