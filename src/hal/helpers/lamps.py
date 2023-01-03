@@ -86,10 +86,8 @@ class LampsHelper(HALHelper):
                 last_seen = lamp_state.last_seen
                 if sum(lamp_state.value) == 4:
                     lamp_state = True
-                elif sum(lamp_state.value) == 0:
+                else:  # Sometimes when a lamp is turning on we'll have, e.g., 1,0,0,1.
                     lamp_state = False
-                else:
-                    raise HALError(f"Failed determining state for lamp {lamp}.")
 
                 elapsed = time.time() - last_seen
                 warmed = (elapsed >= self.WARMUP[lamp]) if bool(commanded_on) else False
@@ -103,6 +101,7 @@ class LampsHelper(HALHelper):
         lamps: str | list[str],
         state: bool,
         turn_off_others: bool = False,
+        delay: float = 0.0,
         force: bool = False,
     ):
         """Turns a lamp on or off.
@@ -114,10 +113,14 @@ class LampsHelper(HALHelper):
         ----------
         command
             The command that issues the lamp switching.
-        lamp
+        lamps
             Name of the lamp(s) to turn on or off.
+        state
+            Whether to turn lamp on or off.
         turn_off_others
             Turn off all other lamps.
+        delay
+            Wait this amount of seconds before actually commanding the lamps.
         force
             If `True`, send the on/off command regardless of status.
 
@@ -129,6 +132,8 @@ class LampsHelper(HALHelper):
         for lamp in lamps:
             if lamp not in self.LAMPS:
                 raise HALError(f"Invalid lamp {lamp}.")
+
+        await asyncio.sleep(delay)
 
         status = self.list_status()
 
@@ -155,13 +160,18 @@ class LampsHelper(HALHelper):
 
         n_iter = 0
         while True:
-
             if all(done_lamps):
                 if state is False:
-                    command.info(f"Lamp(s) {','.join(lamps)} are off.")
+                    if len(lamps) > 0:
+                        command.info(f"Lamps {','.join(lamps)} are off.")
+                    else:
+                        command.info(f"Lamp {','.join(lamps)} is off.")
                     return
                 elif all(warmed):
-                    command.info(f"Lamp(s) {','.join(lamps)} are on and warmed up.")
+                    if len(lamps) > 0:
+                        command.info(f"Lamps {','.join(lamps)} are on and warmed up.")
+                    else:
+                        command.info(f"Lamp {','.join(lamps)} is on and warmed up.")
                     return
 
             new_status = self.list_status()

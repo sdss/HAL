@@ -22,14 +22,12 @@ pytestmark = [pytest.mark.asyncio]
 
 
 async def test_macro(actor, macro: Macro):
-
     await macro.run()
 
     assert len(actor.mock_replies) == 10
 
 
 async def test_macro_stage_fails(actor, macro: Macro, mocker):
-
     stage2 = mocker.patch.object(macro, "stage2", side_effect=MacroError)
     cleanup = mocker.patch.object(macro, "cleanup")
 

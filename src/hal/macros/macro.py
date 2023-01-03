@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Coroutine, Optional, Union
 
 from clu import Command, CommandStatus
 
-from hal import config, log
+from hal import config
 from hal.exceptions import HALUserWarning, MacroError
 
 
@@ -65,7 +65,6 @@ class Macro:
     __CLEANUP__: list[StageType] = []
 
     def __init__(self, name: Optional[str] = None):
-
         if name is None and not hasattr(self, "name"):
             raise MacroError("The macro does not have a name attribute.")
         self.name = name or self.name
@@ -74,6 +73,7 @@ class Macro:
             raise MacroError("Must override __STAGES__.")
 
         self.stages = self.__PRECONDITIONS__ + self.__STAGES__ + self.__CLEANUP__
+
         self._flat_stages = flatten(self.stages)
 
         for stage in self.__PRECONDITIONS__ + self.__CLEANUP__:
@@ -135,8 +135,6 @@ class Macro:
         if command is None:
             raise MacroError("A new command must be passed to reset.")
 
-        self._reset_internal(**opts)
-
         if reset_stages is None:
             self.stages = self.__PRECONDITIONS__ + self.__STAGES__ + self.__CLEANUP__
         else:
@@ -187,6 +185,8 @@ class Macro:
         for st in self.stage_status:
             if getattr(self, st, None) is None:
                 raise MacroError(f"Cannot find method for stage {st!r}.")
+
+        self._reset_internal(**opts)
 
         self.running = False
         self._running_task = None
@@ -301,9 +301,7 @@ class Macro:
         """Fails the macros and informs the actor."""
 
         self.command.error(error=error)
-
-        if not isinstance(error, MacroError):
-            log.exception(error)
+        self.command.actor.log.exception(f"Macro {self.name} failed with error:")
 
         self.failed = True
 
@@ -370,7 +368,6 @@ class Macro:
         return StageStatus.FAILED not in self.stage_status.values()
 
     def _get_coros(self, stage: StageType) -> list[Coroutine]:
-
         if isinstance(stage, str):
             stage_method = getattr(self, stage)
 

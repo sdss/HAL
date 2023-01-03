@@ -15,7 +15,6 @@ pytestmark = [pytest.mark.asyncio]
 
 
 async def test_apogee_dome_flat_gang_not_at_cart(actor, command):
-
     macro = actor.helpers.macros["apogee_dome_flat"]
     macro.reset(command=command)
 
@@ -30,7 +29,6 @@ async def test_apogee_dome_flat_gang_not_at_cart(actor, command):
 
 
 async def test_apogee_dome_flat_succeeds(actor, command, mocker):
-
     mocker.patch.object(
         actor.helpers.apogee.gang_helper,
         "at_cartridge",

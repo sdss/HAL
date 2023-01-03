@@ -25,7 +25,6 @@ class HALHelper:
     name: str | None = None
 
     def __init__(self, actor: HALActor):
-
         self.actor = actor
 
     async def _send_command(

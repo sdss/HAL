@@ -25,7 +25,6 @@ config_path = os.path.join(os.path.dirname(hal.__file__), "etc/hal.yml")
 
 @pytest.fixture(autouse=True)
 def mock_send_command(mocker):
-
     command = Command()
     command.set_status("done")
 
@@ -35,7 +34,6 @@ def mock_send_command(mocker):
 
 @pytest.fixture
 async def actor():
-
     config = read_yaml_file(config_path)
 
     hal_actor = HALActor.from_config(config)
@@ -49,14 +47,12 @@ async def actor():
 
 @pytest.fixture
 def command(actor):
-
     yield Command(actor=actor)
 
 
 @pytest.fixture
 def macro(actor: HALActor, command: Command[HALActor]):
     class MacroTest(Macro):
-
         name = "macro_test"
 
         __STAGES__ = ["stage1", "stage2"]
