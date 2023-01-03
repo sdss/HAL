@@ -15,6 +15,7 @@ from typing import ClassVar, TypeVar
 from clu.legacy import LegacyActor
 
 from hal import __version__
+from hal.actor.commands import hal_command_parser
 
 
 __all__ = ["HALActor", "ActorHelpers"]
@@ -27,6 +28,7 @@ class HALActor(LegacyActor):
     """HAL actor."""
 
     _instance: ClassVar[HALActor | None] = None
+    parser = hal_command_parser
 
     def __init__(self, *args, **kwargs):
         schema = kwargs.pop("schema", None)

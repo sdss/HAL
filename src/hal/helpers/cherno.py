@@ -15,12 +15,11 @@ from typing import TYPE_CHECKING
 
 from clu.legacy.tron import TronKey
 
-from hal.actor import HALActor
 from hal.helpers import HALHelper
 
 
 if TYPE_CHECKING:
-    from hal.actor import HALCommandType
+    from hal.actor import HALActor, HALCommandType
 
 
 __all__ = ["ChernoHelper", "GuiderStatus"]

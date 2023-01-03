@@ -16,12 +16,11 @@ from typing import TYPE_CHECKING
 
 from sdssdb.peewee.sdss5db import targetdb
 
-from hal.actor import HALActor
 from hal.helpers import HALHelper
 
 
 if TYPE_CHECKING:
-    from hal.actor import HALCommandType
+    from hal.actor import HALActor, HALCommandType
 
 
 __all__ = ["JaegerHelper"]

@@ -8,9 +8,15 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import click
 
-from . import HALCommandType, hal_command_parser
+from . import hal_command_parser
+
+
+if TYPE_CHECKING:
+    from . import HALCommandType
 
 
 __all__ = ["script"]

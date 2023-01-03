@@ -10,13 +10,18 @@ from __future__ import annotations
 
 import functools
 
+from typing import TYPE_CHECKING
+
 import click
 
 from clu import Command
 from clu.parsers.click import command_parser, coro_helper
 
-from hal.actor.actor import HALActor
 from hal.macros.macro import StageType, flatten
+
+
+if TYPE_CHECKING:
+    from hal.actor.actor import HALActor
 
 
 hal_command_parser = command_parser
