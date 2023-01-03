@@ -30,6 +30,11 @@ __all__ = ["expose"]
 @hal_command_parser.command()
 @stages("expose", reset=False)
 @click.option(
+    "--stop",
+    is_flag=True,
+    help="Cancels an ongoing expose macro. Does not abort the ongoing exposures.",
+)
+@click.option(
     "--modify",
     "-m",
     is_flag=True,
@@ -123,6 +128,7 @@ async def expose(
     command: HALCommandType,
     macro: ExposeMacro,
     stages: list[StageType] | None,
+    stop: bool = False,
     modify: bool = False,
     count: int = 1,
     count_apogee: int | None = None,
@@ -140,6 +146,14 @@ async def expose(
     disable_readout_matching: bool = False,
 ):
     """Take science exposures."""
+
+    # Handle stop
+    if (stop or modify) and not macro.running:
+        return command.fail("No expose macro currently running.")
+
+    if stop:
+        macro.cancel()
+        return command.finish("Expose macro has been cancelled")
 
     # Check incompatible options.
     if exposure_time and (boss_exposure_time or apogee_exposure_time or reads):

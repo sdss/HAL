@@ -40,6 +40,22 @@ def macro(mock_expose_macro, actor: HALActor):
     yield actor.helpers.macros["expose"]
 
 
+@pytest.fixture
+def mock_run(actor: HALActor, mocker):
+    helpers = actor.helpers
+
+    helpers.apogee = mocker.AsyncMock(autospec=APOGEEHelper)
+    helpers.apogee.is_exposing = mocker.MagicMock(return_value=False)
+    helpers.apogee.get_dither_position = mocker.MagicMock(return_value="A")
+
+    helpers.boss = mocker.AsyncMock(autospec=BOSSHelper)
+    helpers.boss.is_exposing = mocker.MagicMock(return_value=False)
+
+    helpers.lamps.list_status = mocker.MagicMock(return_value={})
+
+    yield
+
+
 async def test_expose_command(actor: HALActor, macro):
     cmd = actor.invoke_mock_command("expose")
     await cmd
@@ -155,20 +171,11 @@ async def test_expose_command_no_apogee(actor: HALActor, macro):
     assert macro.expose_helper.params.readout_matching is False
 
 
-async def test_expose_with_run(actor: HALActor, mocker):
+async def test_expose_with_run(actor: HALActor, mock_run):
     helpers = actor.helpers
+
     expose_macro = helpers.macros["expose"]
-
     assert isinstance(expose_macro, ExposeMacro)
-
-    helpers.apogee = mocker.AsyncMock(autospec=APOGEEHelper)
-    helpers.apogee.is_exposing = mocker.MagicMock(return_value=False)
-    helpers.apogee.get_dither_position = mocker.MagicMock(return_value="A")
-
-    helpers.boss = mocker.AsyncMock(autospec=BOSSHelper)
-    helpers.boss.is_exposing = mocker.MagicMock(return_value=False)
-
-    helpers.lamps.list_status = mocker.MagicMock(return_value={})
 
     cmd = actor.invoke_mock_command("expose -c 2")
     await cmd
@@ -180,7 +187,7 @@ async def test_expose_with_run(actor: HALActor, mocker):
     assert helpers.apogee.expose.call_count == 4
 
 
-async def test_expose_modify(actor: HALActor, mocker):
+async def test_expose_modify(actor: HALActor, mock_run, mocker):
     async def sleep(*args, **kwargs):
         await asyncio.sleep(0.2)
 
@@ -189,16 +196,8 @@ async def test_expose_modify(actor: HALActor, mocker):
     expose_macro = helpers.macros["expose"]
     assert isinstance(expose_macro, ExposeMacro)
 
-    helpers.apogee = mocker.AsyncMock(autospec=APOGEEHelper)
-    helpers.apogee.is_exposing = mocker.MagicMock(return_value=False)
-    helpers.apogee.get_dither_position = mocker.MagicMock(return_value="A")
     helpers.apogee.expose = mocker.AsyncMock(side_effect=sleep)
-
-    helpers.boss = mocker.AsyncMock(autospec=BOSSHelper)
-    helpers.boss.is_exposing = mocker.MagicMock(return_value=False)
     helpers.boss.expose = mocker.AsyncMock(side_effect=sleep)
-
-    helpers.lamps.list_status = mocker.MagicMock(return_value={})
 
     asyncio.get_running_loop().call_later(
         0.2,
