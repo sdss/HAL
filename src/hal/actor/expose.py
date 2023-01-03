@@ -69,7 +69,7 @@ __all__ = ["expose"]
     "-b",
     "--boss-exposure-time",
     type=float,
-    help="BOSS exposure time in seconds. Disables readout matching.",
+    help="BOSS exposure time in seconds.",
 )
 @click.option(
     "-a",
@@ -157,14 +157,19 @@ async def expose(
         disable_readout_matching = True
 
     # If nothing has been defined explicitely, revert to the defaults.
-    if not exposure_time and not boss_exposure_time and not apogee_exposure_time:
-        exposure_time = config["macros"]["expose"]["fallback"]["exptime"]
+    if not exposure_time:
+        if not boss_exposure_time and not apogee_exposure_time:
+            exposure_time = config["macros"]["expose"]["fallback"]["exptime"]
+        elif apogee_exposure_time and not boss_exposure_time:
+            boss_exposure_time = apogee_exposure_time
+            disable_readout_matching = True
+
     if not count and not count_boss and not count_apogee:
         count = config["macros"]["expose"]["fallback"]["count"]
 
     if exposure_time:
         boss_exposure_time = exposure_time
-        apogee_exposure_time = None
+        apogee_exposure_time = exposure_time
 
     if count:
         count_apogee = count_boss = count
@@ -176,6 +181,9 @@ async def expose(
 
     if apogee is False and "expose_apogee" in selected_stages:
         selected_stages.remove("expose_apogee")
+
+    if "expose_apogee" not in selected_stages or "expose_boss" not in selected_stages:
+        disable_readout_matching = True
 
     initial_apogee_dither = (
         initial_apogee_dither

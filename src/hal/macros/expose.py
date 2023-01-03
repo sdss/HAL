@@ -200,23 +200,22 @@ class ExposeHelper:
 
         initial_dither = self.params.initial_apogee_dither
         pairs = self.params.pairs
-        count = self.params.count_apogee
+        n_exp = self.params.count_apogee
 
-        if count is None or count == 0:
+        if n_exp is None or n_exp == 0:
             return
 
-        # We consider count the number of actual exposures, not dither pairs.
+        # We consider n_exp the number of actual exposures, not dither pairs.
         if pairs:
-            count *= 2
+            n_exp *= 2
 
         # We don't allow to reduce the number of exposures below the one
         # already being taken. If doing dither pairs, we require completing them.
-        if count < self.n_apogee:
+        if n_exp < self.n_apogee:
             if pairs:
-                self.params.count_apogee = self.n_apogee + self.n_apogee % 2
+                n_exp = self.n_apogee + self.n_apogee % 2
             else:
-                self.params.count_apogee = self.n_apogee
-            count = self.params.count_apogee
+                n_exp = self.n_apogee
 
         exposure_times: list[float] = []
 
@@ -237,7 +236,7 @@ class ExposeHelper:
             if pairs:
                 apogee_exptime /= 2.0
 
-            exposure_times = [apogee_exptime] * count
+            exposure_times = [apogee_exptime] * n_exp
 
             # The last exposure (or two exposures if doing pairs) must be one BOSS
             # readout shorter. If pairs, we distribute that between the two dither
@@ -256,7 +255,7 @@ class ExposeHelper:
             if apogee_exptime is None or apogee_exptime == 0:
                 return
 
-            exposure_times = [apogee_exptime] * count
+            exposure_times = [apogee_exptime] * n_exp
 
         # Round up exposure times.
         exposure_times = list(numpy.ceil(exposure_times))
@@ -264,14 +263,14 @@ class ExposeHelper:
         dither_sequence = ""
         if self.params.dither is False:
             # If disable_dithering, just keep using the current dither position.
-            dither_sequence = initial_dither * count
+            dither_sequence = initial_dither * n_exp
         else:
             # If we are dithering, the sequence starts on the current position
             # and changes every two dithers to minimise how much we move the
             # mechanism, e.g., ABBAABBA.
             current_dither_position = initial_dither
             dither_sequence = current_dither_position
-            for i in range(1, count):
+            for i in range(1, n_exp):
                 if i % 2 != 0:
                     if dither_sequence[-1] == "A":
                         dither_sequence += "B"
@@ -280,11 +279,11 @@ class ExposeHelper:
                 else:
                     dither_sequence += dither_sequence[-1]
 
-        if count < len(self.apogee_exps):
+        if n_exp < len(self.apogee_exps):
             n_apogee = self.n_apogee
-            # Pop any exposures beyond the count number. Count cannot be
+            # Pop any exposures beyond n_exp. n_exp cannot be
             # smaller than the current exposure.
-            while len(self.apogee_exps) > count and len(self.apogee_exps) >= n_apogee:
+            while len(self.apogee_exps) > n_exp and len(self.apogee_exps) >= n_apogee:
                 self.apogee_exps.pop()
 
         # Replace/append exposures, but only for those that have not been executed
@@ -296,7 +295,7 @@ class ExposeHelper:
         else:
             min_exp_idx = 0 if self.n_apogee == 0 else self.n_apogee + self.n_apogee % 2
 
-        for ii in range(min_exp_idx, count):
+        for ii in range(min_exp_idx, n_exp):
             new = ApogeeExposure(
                 n=ii + 1,
                 exptime=exposure_times[ii],
