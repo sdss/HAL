@@ -1,10 +1,23 @@
 # Changelog
 
-## Next version
+## 0.5.0 - January 2, 2023
+
+### 🚀 New
+
+* Added a new `goto-field` stage, `lamps`, that runs concurrently with `reslew` and turn on BOSS calibrations lamps (if needed) at that point. This saves a few seconds if we are taking a single BOSS arc. The stage is not required, and the lamps will be turned on at the calibration stage if `lamps` is omitted.
 
 ### ✨ Improved
 
 * Several performance improvements to `goto-field`. FFS are only closed if we are taking BOSS calibrations; when turning off lamps, we don't wait until they are really off, just send the command; the APOGEE shutter is closed at the beginning of the goto-field, but we don't wait for it to fully close before moving to the reconfiguration.
+* After the BOSS FF stage, only the FF lamp is turned off.
+
+### 🔧 Fixed
+
+* Fixed a case in which lamp status reporting could fail if the lamps were caught at an intermediate state in which only some of the lamps were on.
+
+### ⚙️ Engineering
+
+* Macro exceptions are logged to the file log with full traceback.
 
 
 ## 0.4.0 - December 21, 2022
