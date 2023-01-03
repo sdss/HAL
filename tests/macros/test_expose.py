@@ -12,6 +12,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from hal.helpers.apogee import APOGEEHelper
+from hal.helpers.boss import BOSSHelper
+from hal.macros.expose import ExposeMacro
+
 
 if TYPE_CHECKING:
     from hal.actor.actor import HALActor
@@ -147,3 +151,28 @@ async def test_expose_command_no_apogee(actor: HALActor, macro):
 
     assert "expose_apogee" not in macro._flat_stages
     assert macro.expose_helper.params.readout_matching is False
+
+
+async def test_expose_with_run(actor: HALActor, mocker):
+    helpers = actor.helpers
+    expose_macro = helpers.macros["expose"]
+
+    assert isinstance(expose_macro, ExposeMacro)
+
+    helpers.apogee = mocker.AsyncMock(autospec=APOGEEHelper)
+    helpers.apogee.is_exposing = mocker.MagicMock(return_value=False)
+    helpers.apogee.get_dither_position = mocker.MagicMock(return_value="A")
+
+    helpers.boss = mocker.AsyncMock(autospec=BOSSHelper)
+    helpers.boss.is_exposing = mocker.MagicMock(return_value=False)
+
+    helpers.lamps.list_status = mocker.MagicMock(return_value={})
+
+    cmd = actor.invoke_mock_command("expose -c 2")
+    await cmd
+
+    assert cmd.status.did_succeed
+    assert expose_macro.expose_helper.running is False
+
+    assert helpers.boss.expose.call_count == 2
+    assert helpers.apogee.expose.call_count == 4

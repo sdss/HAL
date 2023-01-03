@@ -73,6 +73,7 @@ class Macro:
             raise MacroError("Must override __STAGES__.")
 
         self.stages = self.__PRECONDITIONS__ + self.__STAGES__ + self.__CLEANUP__
+
         self._flat_stages = flatten(self.stages)
 
         for stage in self.__PRECONDITIONS__ + self.__CLEANUP__:
@@ -134,8 +135,6 @@ class Macro:
         if command is None:
             raise MacroError("A new command must be passed to reset.")
 
-        self._reset_internal(**opts)
-
         if reset_stages is None:
             self.stages = self.__PRECONDITIONS__ + self.__STAGES__ + self.__CLEANUP__
         else:
@@ -186,6 +185,8 @@ class Macro:
         for st in self.stage_status:
             if getattr(self, st, None) is None:
                 raise MacroError(f"Cannot find method for stage {st!r}.")
+
+        self._reset_internal(**opts)
 
         self.running = False
         self._running_task = None
