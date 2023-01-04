@@ -101,6 +101,8 @@ class Macro:
         self.cancelled: bool = False
 
         self._running_task: asyncio.Task | None = None
+        self._running_event = asyncio.Event()
+        self._running_event.set()  # Won't unset until the macro is actually running.
 
     def __repr__(self):
         stages = flatten(self.stages)
@@ -191,6 +193,9 @@ class Macro:
         self.running = False
         self._running_task = None
 
+        if not self._running_event.is_set():
+            self._running_event.set()
+
         if command:
             self.command = command
 
@@ -228,6 +233,13 @@ class Macro:
             Macro.__RUNNING__.remove(self.name)
 
         self.command.debug(running_macros=Macro.__RUNNING__)
+
+        if is_running:
+            if not self._running_event.is_set():
+                self._running_event.set()
+            self._running_event.clear()
+        else:
+            self._running_event.set()
 
     def set_stage_status(
         self,
@@ -500,3 +512,10 @@ class Macro:
                 raise MacroError(f"Command {target} {command_string} failed.")
 
         return command
+
+    async def wait_until_complete(self):
+        """Asynchronously blocks until the macros is done, cancelled, or failed."""
+
+        await self._running_event.wait()
+
+        return not self.failed
