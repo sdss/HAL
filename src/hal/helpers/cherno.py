@@ -34,9 +34,10 @@ class GuiderStatus(Flag):
     CORRECTING = 1 << 3
     STOPPING = 1 << 4
     FAILED = 1 << 5
+    WAITING = 1 << 6
     UNKNOWN = 1 << 10
 
-    NON_IDLE = EXPOSING | PROCESSING | CORRECTING | STOPPING | UNKNOWN
+    NON_IDLE = EXPOSING | PROCESSING | CORRECTING | STOPPING | WAITING | UNKNOWN
 
 
 class ChernoHelper(HALHelper):
@@ -59,6 +60,11 @@ class ChernoHelper(HALHelper):
 
         if self.status.value == 0:
             self.status = GuiderStatus.UNKNOWN
+
+    def is_guiding(self):
+        """Returns `True` if the guider is not idle."""
+
+        return bool(self.status & GuiderStatus.NON_IDLE)
 
     async def acquire(
         self,

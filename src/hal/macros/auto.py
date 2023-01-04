@@ -75,7 +75,7 @@ class AutoModeMacro(Macro):
 
         if goto.running:
             self.command.warning("goto-field is running. Waiting for it to complete.")
-            result = await self.wait_until_complete()
+            result = await goto.wait_until_complete()
             if not result:
                 raise MacroError("Background goto-field failed. Cancelling auto mode.")
             # Skip goto-field since it's already been done.
@@ -111,6 +111,10 @@ class AutoModeMacro(Macro):
     async def guide(self):
         """Start the guide loop."""
 
+        if self.helpers.cherno.is_guiding():
+            self.command.info("Already guiding.")
+            return
+
         if not self.helpers.tcc.check_axes_status("Tracking"):
             raise MacroError("Axes must be tracking for guiding.")
 
@@ -130,6 +134,17 @@ class AutoModeMacro(Macro):
     async def expose(self):
         """Exposes the camera and schedules next design."""
 
+        expose_macro = self.helpers.macros["expose"]
+
+        if expose_macro.running:
+            self.command.warning("expose is running. Waiting for it to complete.")
+            result = await expose_macro.wait_until_complete()
+            if not result:
+                raise MacroError("Background expose failed. Cancelling auto mode.")
+            # Skip expose since it's already been done.
+            # TODO: this will not load a new design.
+            return
+
         n_exposures = self.config["n_exposures"]
 
         total_time = 900 * n_exposures
@@ -139,7 +154,6 @@ class AutoModeMacro(Macro):
         await self._preload_design(wait_design_load)
 
         self.message("Exposing cameras.")
-        expose_macro = self.helpers.macros["expose"]
         expose_macro.reset(self.command, count_boss=n_exposures)
         if not await expose_macro.run():
             raise MacroError("Expose failed during auto mode.")

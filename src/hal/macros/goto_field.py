@@ -303,6 +303,10 @@ class GotoFieldMacro(Macro):
     async def acquire(self):
         """Acquires the field."""
 
+        if self.helpers.cherno.is_guiding():
+            self.command.info("Already guiding.")
+            return
+
         pretasks = []
 
         if "reslew" not in self._flat_stages:
@@ -336,6 +340,10 @@ class GotoFieldMacro(Macro):
 
     async def guide(self):
         """Starts the guide loop."""
+
+        if self.helpers.cherno.is_guiding():
+            self.command.info("Already guiding.")
+            return
 
         if "acquire" not in self._flat_stages:
             self.command.info("Re-slewing to field.")
