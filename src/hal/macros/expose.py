@@ -15,8 +15,6 @@ from contextlib import suppress
 from dataclasses import dataclass
 from time import time
 
-from typing import Any
-
 import numpy
 
 from hal import config
