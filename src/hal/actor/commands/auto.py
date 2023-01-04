@@ -60,7 +60,6 @@ async def auto(command: HALCommandType, stop: bool = False, now: bool = False):
 
     while True:
         # Run the auto loop until the command is cancelled.
-
         macro.reset(command)
         if not await macro.run():
             result = False

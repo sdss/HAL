@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 
 from hal import config
 from hal.exceptions import MacroError
@@ -27,13 +28,10 @@ class AutoModeMacro(Macro):
     def __init__(self, name: str | None = None):
         super().__init__(name)
 
-        self._load_design: asyncio.Task | None = None
+        self._preload_design_task: asyncio.Task | None = None
 
     async def prepare(self):
         """Prepare stage."""
-
-        # TODO: if auto is called while an exposure is in process or a goto is running,
-        # here we will decide how much to wait and what stages to skip.
 
         pass
 
@@ -74,6 +72,14 @@ class AutoModeMacro(Macro):
         """Runs the goto-field macro with the appropriate stages."""
 
         goto = self.helpers.macros["goto_field"]
+
+        if goto.running:
+            self.command.warning("goto-field is running. Waiting for it to complete.")
+            result = await self.wait_until_complete()
+            if not result:
+                raise MacroError("Background goto-field failed. Cancelling auto mode.")
+            # Skip goto-field since it's already been done.
+            return
 
         configuration = self.helpers.jaeger.configuration
 
@@ -130,7 +136,7 @@ class AutoModeMacro(Macro):
 
         self.message("Starting guide loop.")
         wait_design_load = total_time - 180
-        self._load_design = asyncio.create_task(self._preload_design(wait_design_load))
+        await self._preload_design(wait_design_load)
 
         self.message("Exposing cameras.")
         expose_macro = self.helpers.macros["expose"]
@@ -141,10 +147,25 @@ class AutoModeMacro(Macro):
     async def cleanup(self):
         """Cleanup stage."""
 
-        pass
+        if self.cancelled:
+            await self._cancel_preload_task()
 
     async def _preload_design(self, delay: float):
         """Preloads the next design after a delay."""
 
-        await asyncio.sleep(delay)
-        await self.helpers.jaeger.load_from_queue(self.command, preload=True)
+        async def _preload_executor(delay: float):
+            await asyncio.sleep(delay)
+            await self.helpers.jaeger.load_from_queue(self.command, preload=True)
+
+        await self._cancel_preload_task()
+        self._preload_design_task = asyncio.create_task(_preload_executor(delay))
+
+    async def _cancel_preload_task(self):
+        """Cancels an existing preload task."""
+
+        if self._preload_design_task and not self._preload_design_task.done():
+            self._preload_design_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await self._preload_design_task
+
+        self._preload_design_task = None
