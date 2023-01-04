@@ -81,7 +81,7 @@ class ExposeHelper:
         self.interval: float = 10
         self._monitor_task: asyncio.Task | None = None
 
-        self.params: ExposeParameters
+        self.params: ExposeParameters = ExposeParameters()
         self.update_params(opts)
 
         self.refresh()
@@ -99,17 +99,15 @@ class ExposeHelper:
         if self.running:
             valid_opts["initial_apogee_dither"] = self.params.initial_apogee_dither
 
-        params = ExposeParameters(**valid_opts)
+        self.params.__dict__.update(**valid_opts)
 
         if "expose_boss" not in self.macro._flat_stages:
-            params.count_boss = None
-            params.readout_matching = False
+            self.params.count_boss = None
+            self.params.readout_matching = False
         elif "expose_apogee" not in self.macro._flat_stages:
-            params.count_apogee = None
+            self.params.count_apogee = None
 
-        self.params = params
-
-        return params
+        return self.params
 
     async def start(self):
         """Indicate that exposures are starting. Output states on a timer."""
