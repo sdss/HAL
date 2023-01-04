@@ -31,14 +31,14 @@ __all__ = ["ExposeMacro"]
 class ExposeParameters:
     """Expose macro parameters."""
 
-    boss_exptime: float | None
-    apogee_exptime: float | None
-    count_apogee: int | None
-    count_boss: int | None
-    pairs: bool
-    dither: bool
-    initial_apogee_dither: str
-    readout_matching: bool
+    boss_exptime: float | None = config["macros"]["expose"]["fallback"]["exptime"]
+    apogee_exptime: float | None = None
+    count_apogee: int | None = 1
+    count_boss: int | None = 1
+    pairs: bool = True
+    dither: bool = True
+    initial_apogee_dither: str = "A"
+    readout_matching: bool = True
 
 
 @dataclass
@@ -89,19 +89,17 @@ class ExposeHelper:
     def update_params(self, opts: dict[str, Any]):
         """Update parameters from the macro config."""
 
-        if self.running:
-            opts["initial_apogee_dither"] = self.params.initial_apogee_dither
+        # Exclude options that are not in the dataclass.
+        valid_opts = {
+            opt: opts[opt]
+            for opt in opts
+            if opt in ExposeParameters.__dataclass_fields__
+        }
 
-        params = ExposeParameters(
-            boss_exptime=opts["boss_exptime"],
-            apogee_exptime=opts["apogee_exptime"],
-            count_apogee=opts["count_apogee"],
-            count_boss=opts["count_boss"],
-            dither=opts["dither"],
-            pairs=opts["pairs"],
-            initial_apogee_dither=opts["initial_apogee_dither"],
-            readout_matching=opts["readout_matching"],
-        )
+        if self.running:
+            valid_opts["initial_apogee_dither"] = self.params.initial_apogee_dither
+
+        params = ExposeParameters(**valid_opts)
 
         if "expose_boss" not in self.macro._flat_stages:
             params.count_boss = None
