@@ -130,20 +130,19 @@ class AutoModeMacro(Macro):
             except asyncio.TimeoutError:
                 raise MacroError("Timed out waiting for guider to converge.")
 
-        n_exposures = self.config["n_exposures"]
-
         # Calculate expose time and schedule preloading a design.
+        count = self.config["count"]
         exptime = config["macros"]["expose"]["fallback"]["exptime"]
         flushing = config["durations"]["boss"][self.actor.observatory]["flushing"]
         readout = config["durations"]["boss"][self.actor.observatory]["readout"]
-        total_time = (exptime + flushing + readout) * n_exposures - readout
+        total_time = (exptime + flushing + readout) * count - readout
 
         wait_design_load = int(total_time - 180)
         self.command.debug(f"Scheduling next design preload in {wait_design_load} s.")
         await self._preload_design(wait_design_load)
 
         self.message("Exposing cameras.")
-        expose_macro.reset(self.command, count_boss=n_exposures)
+        expose_macro.reset(self.command, count_boss=count)
         if not await expose_macro.run():
             raise MacroError("Expose failed during auto mode.")
 

@@ -63,7 +63,7 @@ class ApogeeExposure:
 class ExposeHelper:
     """Track exposure status, add/remove exposures, etc."""
 
-    def __init__(self, macro: ExposeMacro, opts: dict[str, Any]):
+    def __init__(self, macro: ExposeMacro, **opts):
         self.macro = macro
 
         self.observatory = os.environ.get("OBSERVATORY", "APO").upper()
@@ -82,11 +82,11 @@ class ExposeHelper:
         self._monitor_task: asyncio.Task | None = None
 
         self.params: ExposeParameters = ExposeParameters()
-        self.update_params(opts)
+        self.update_params(**opts)
 
         self.refresh()
 
-    def update_params(self, opts: dict[str, Any]):
+    def update_params(self, **opts):
         """Update parameters from the macro config."""
 
         # Exclude options that are not in the dataclass.
@@ -414,7 +414,7 @@ class ExposeMacro(Macro):
     def _reset_internal(self, **opts):
         """Reset the exposure status."""
 
-        self.expose_helper = ExposeHelper(self, opts)
+        self.expose_helper = ExposeHelper(self, **opts)
 
     async def prepare(self):
         """Prepare for exposures and run checks."""
