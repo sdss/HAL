@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.1 - January 4, 2023
+
+### 🔧 Fixed
+
+* Do not stop the guide look in `goto-field` if we are not taking BOSS calibrations or halting the axes.
+
+
 ## 0.5.0 - January 2, 2023
 
 ### 🚀 New
