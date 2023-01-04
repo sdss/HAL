@@ -56,9 +56,15 @@ class GotoFieldMacro(Macro):
             elif time() - last_seen > 3600:  # One hour
                 raise MacroError("Configuration is too old. Load a new configuration.")
 
-        await self.helpers.cherno.stop_guiding(self.command)
+        do_fvc = "fvc" in stages
+        do_flat = "boss_flat" in stages
+        do_arcs = "boss_hartmann" in stages or "boss_arcs" in stages
 
-        await self.helpers.tcc.axis_stop(self.command)
+        # Stop the guider.
+        # TODO: this will probably be different at LCO.
+        if do_fvc or do_flat or do_arcs:
+            await self.helpers.cherno.stop_guiding(self.command)
+            await self.helpers.tcc.axis_stop(self.command)
 
         # Ensure the APOGEE shutter is closed but don't wait for it.
         asyncio.create_task(
@@ -68,10 +74,6 @@ class GotoFieldMacro(Macro):
                 shutter="apogee",
             )
         )
-
-        do_fvc = "fvc" in stages
-        do_flat = "boss_flat" in stages
-        do_arcs = "boss_hartmann" in stages or "boss_arcs" in stages
 
         # Start closing the FFS if they are open but do not block. Only close the FFS
         # if we're going to do BOSS cals, otherwise it's about 20 seconds of lost time.
