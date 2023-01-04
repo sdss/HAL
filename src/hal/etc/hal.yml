@@ -104,6 +104,7 @@ macros:
 
   auto:
     guider_time: 15
+    target_rms: 1.0
     n_exposures: 1
 
 goto:

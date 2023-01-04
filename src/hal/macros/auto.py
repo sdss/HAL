@@ -22,7 +22,7 @@ class AutoModeMacro(Macro):
     name = "auto"
 
     __PRECONDITIONS__ = ["prepare"]
-    __STAGES__ = ["load", "goto_field", ("guide", "expose")]
+    __STAGES__ = ["load", "goto_field", "expose"]
     __CLEANUP__ = ["cleanup"]
 
     def __init__(self, name: str | None = None):
@@ -94,10 +94,6 @@ class AutoModeMacro(Macro):
         else:
             stages = config["macros"]["goto_field"]["new_field_stages"]
 
-        # Acquire but do not guide.
-        if "guide" in stages:
-            stages.remove("guide")
-
         if len(stages) == 0:  # For cloned designs.
             self.message("Skipping goto-field.")
             return
@@ -107,29 +103,6 @@ class AutoModeMacro(Macro):
         goto.reset(self.command, stages)
         if not await goto.run():
             raise MacroError("Goto field failed during auto mode.")
-
-    async def guide(self):
-        """Start the guide loop."""
-
-        if self.helpers.cherno.is_guiding():
-            self.command.info("Already guiding.")
-            return
-
-        if not self.helpers.tcc.check_axes_status("Tracking"):
-            raise MacroError("Axes must be tracking for guiding.")
-
-        if not self.helpers.ffs.all_open():
-            self.command.info("Opening FFS")
-            await self.helpers.ffs.open(self.command)
-
-        guider_time = self.config["guider_time"]
-
-        self.command.info("Starting guide loop.")
-        await self.helpers.cherno.guide(
-            self.command,
-            exposure_time=guider_time,
-            wait=False,
-        )
 
     async def expose(self):
         """Exposes the camera and schedules next design."""
@@ -145,12 +118,28 @@ class AutoModeMacro(Macro):
             # TODO: this will not load a new design.
             return
 
+        # Make sure guiding is good enough to start exposing.
+        if not self.helpers.cherno.is_guiding():
+            raise MacroError("Guider is not running. Cannot expose.")
+
+        target_rms = self.config["target_rms"]
+        if not self.helpers.cherno.guiding_at_rms(target_rms):
+            self.command.info("RMS not reched yet. Waiting for guider to converge.")
+            try:
+                await self.helpers.cherno.wait_for_rms(target_rms, max_wait=180)
+            except asyncio.TimeoutError:
+                raise MacroError("Timed out waiting for guider to converge.")
+
         n_exposures = self.config["n_exposures"]
 
-        total_time = 900 * n_exposures
+        # Calculate expose time and schedule preloading a design.
+        exptime = config["macros"]["expose"]["fallback"]["exptime"]
+        flushing = config["durations"]["boss"][self.actor.observatory]["flushing"]
+        readout = config["durations"]["boss"][self.actor.observatory]["readout"]
+        total_time = (exptime + flushing + readout) * n_exposures - readout
 
-        self.message("Starting guide loop.")
-        wait_design_load = total_time - 180
+        wait_design_load = int(total_time - 180)
+        self.command.debug(f"Scheduling next design preload in {wait_design_load} s.")
         await self._preload_design(wait_design_load)
 
         self.message("Exposing cameras.")

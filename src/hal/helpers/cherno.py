@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 from enum import Flag
+from time import time
 
 from typing import TYPE_CHECKING
 
@@ -65,6 +66,36 @@ class ChernoHelper(HALHelper):
         """Returns `True` if the guider is not idle."""
 
         return bool(self.status & GuiderStatus.NON_IDLE)
+
+    def guiding_at_rms(self, rms: float, max_age: float = 120):
+        """Checks that the guider has reached a given RMS."""
+
+        if not self.is_guiding():
+            return False
+
+        guide_rms = self.model["guide_rms"]
+
+        if guide_rms and guide_rms.value and guide_rms.value[3]:
+            last_seen = guide_rms.last_seen
+            age = time() - last_seen
+            if age > max_age:
+                return False
+
+            return guide_rms.value[3] <= rms
+        else:
+            return False
+
+    async def wait_for_rms(self, rms: float, max_wait: float | None = None):
+        """Blocks until a given RMS is reached."""
+
+        elapsed = 0.0
+        while True:
+            if self.guiding_at_rms(rms):
+                return True
+            await asyncio.sleep(5)
+            elapsed += 5
+            if max_wait and elapsed > max_wait:
+                raise asyncio.TimeoutError()
 
     async def acquire(
         self,
