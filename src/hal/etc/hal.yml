@@ -59,24 +59,24 @@ macros:
     new_field_stages:
       [
         'slew',
-        reconfigure",
+        'reconfigure',
         'fvc',
         'reslew',
         'lamps',
-        'boss_arc',
+        'boss_arcs',
         'acquire',
         'guide',
       ]
     repeat_field_stages:
-      ['slew', reconfigure", 'fvc', 'reslew', 'lamps', 'acquire', 'guide']
+      ['slew', 'reconfigure', 'fvc', 'reslew', 'lamps', 'acquire', 'guide']
     rm_field_stages:
       [
         'slew',
-        reconfigure",
+        'reconfigure',
         'fvc',
         'reslew',
         'lamps',
-        'boss_arc',
+        'boss_arcs',
         'boss_flat',
         'acquire',
         'guide',
