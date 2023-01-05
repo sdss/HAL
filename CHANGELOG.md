@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.2 - January 5, 2023
+
+* Fix several typos in the lists of stages for `goto-field --auto`.
+
+
 ## 0.5.1 - January 4, 2023
 
 ### 🔧 Fixed
