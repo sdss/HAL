@@ -135,6 +135,8 @@ class Macro:
         if command is None:
             raise MacroError("A new command must be passed to reset.")
 
+        self.command = command
+
         if reset_stages is None:
             self.stages = self.__PRECONDITIONS__ + self.__STAGES__ + self.__CLEANUP__
         else:
@@ -190,9 +192,6 @@ class Macro:
 
         self.running = False
         self._running_task = None
-
-        if command:
-            self.command = command
 
         self.list_stages()
 
