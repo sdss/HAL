@@ -51,8 +51,8 @@ class BOSSHelper(HALHelper):
 
         self.__readout_pending = False
 
-    def is_exposing(self):
-        """Returns `True` if the BOSS spectrograph is currently exposing."""
+    def get_exposure_state(self):
+        """Returns the exposure state."""
 
         if self.actor.observatory == "APO":
             exposure_state = self.actor.models["boss"]["exposureState"]
@@ -60,11 +60,7 @@ class BOSSHelper(HALHelper):
             if exposure_state is None or None in exposure_state.value:
                 raise ValueError("Unknown BOSS exposure state.")
 
-            state = exposure_state.value[0].lower()
-            if state in ["idle", "aborted"]:
-                return False
-            else:
-                return True
+            return exposure_state.value[0].lower()
 
         else:
             exposure_state = self.actor.models["yao"]["sp2_status_names"]
@@ -72,13 +68,35 @@ class BOSSHelper(HALHelper):
             if exposure_state is None or None in exposure_state.value:
                 raise ValueError("Unknown BOSS exposure state.")
 
-            if (
-                "IDLE" in exposure_state.value
-                and "READOUT_PENDING" not in exposure_state.value
-            ):
+            return exposure_state
+
+    def is_exposing(self):
+        """Returns `True` if the BOSS spectrograph is currently exposing."""
+
+        state = self.get_exposure_state()
+
+        if self.actor.observatory == "APO":
+            if state in ["idle", "aborted"]:
                 return False
-            else:
+        else:
+            if "IDLE" in state.value and "READOUT_PENDING" not in state.value:
+                return False
+
+        return True
+
+    def is_reading(self):
+        """Returns `True` if the camera is reading."""
+
+        state = self.get_exposure_state()
+
+        if self.actor.observatory == "APO":
+            if state in ["reading", "prereading"]:
                 return True
+        else:
+            if "READING" in state.value or "READOUT_PENDING" not in state.value:
+                return True
+
+        return False
 
     async def expose(
         self,
