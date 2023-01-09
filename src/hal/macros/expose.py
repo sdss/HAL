@@ -542,4 +542,7 @@ class ExposeMacro(Macro):
             self.command.warning("APOGEE exposure is running. Not cancelling it.")
 
         if self.helpers.boss.is_exposing():
-            self.command.warning("BOSS exposure is running. Not cancelling it.")
+            if self.helpers.boss.is_reading():
+                self.command.info("BOSS is reading.")
+            else:
+                self.command.warning("BOSS exposure is running. Not cancelling it.")
