@@ -79,7 +79,7 @@ class AutoModeMacro(Macro):
             return
 
         if goto.running:
-            self.command.warning("goto-field is running. Waiting for it to complete.")
+            self.message("goto-field is running. Waiting for it to complete.", "w")
             result = await goto.wait_until_complete()
             if not result:
                 raise MacroError("Background goto-field failed. Cancelling auto mode.")
@@ -115,7 +115,7 @@ class AutoModeMacro(Macro):
         expose_macro = self.helpers.macros["expose"]
 
         if expose_macro.running:
-            self.command.warning("expose is running. Waiting for it to complete.")
+            self.message("expose is running. Waiting for it to complete.", "w")
             result = await expose_macro.wait_until_complete()
             if not result:
                 raise MacroError("Background expose failed. Cancelling auto mode.")
@@ -129,7 +129,7 @@ class AutoModeMacro(Macro):
 
         target_rms = self.config["target_rms"]
         if not self.helpers.cherno.guiding_at_rms(target_rms):
-            self.command.info("RMS not reched yet. Waiting for guider to converge.")
+            self.message("RMS not reched yet. Waiting for guider to converge.")
             try:
                 await self.helpers.cherno.wait_for_rms(target_rms, max_wait=180)
             except asyncio.TimeoutError:
@@ -143,7 +143,7 @@ class AutoModeMacro(Macro):
         total_time = (exptime + flushing + readout) * count - readout
 
         wait_design_load = int(total_time - 180)
-        self.command.debug(f"Scheduling next design preload in {wait_design_load} s.")
+        self.message(f"Scheduling next design preload in {wait_design_load} s.", "d")
         await self._preload_design(wait_design_load)
 
         self.message("Exposing cameras.")
@@ -162,6 +162,7 @@ class AutoModeMacro(Macro):
 
         async def _preload_executor(delay: float):
             await asyncio.sleep(delay)
+            self.message("Preloading design from the queue.")
             await self.helpers.jaeger.load_from_queue(self.command, preload=True)
 
         await self._cancel_preload_task()

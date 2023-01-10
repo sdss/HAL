@@ -69,10 +69,10 @@ async def auto(
         if macro.running is False:
             return command.finish("Auto mode is not running.")
         elif now is True:
-            command.warning(text="Cancelling auto mode NOW.")
+            command.warning(auto_mode_message="Cancelling auto mode NOW.")
             macro.cancel(now=True)
         else:
-            command.warning(text="Cancelling auto mode after stage completes.")
+            command.warning(auto_mode_message="Cancelling auto after stage completes.")
             macro.cancel(now=False)
 
         return command.finish()
