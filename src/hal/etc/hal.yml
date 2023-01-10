@@ -19,8 +19,13 @@ actor:
   log_dir: /data/logs/actors/hal
 
 durations:
-  boss_flushing: 17
-  boss_readout: 63
+  boss:
+    APO:
+      flushing: 17
+      readout: 63
+    LCO:
+      flushing: 4
+      readout: 32
   apogee_read: 10.6
 
 timeouts:
@@ -48,7 +53,8 @@ macros:
     arc_time: 4
     flat_time: 25
     guider_time: 15.
-    n_acquisition: 5
+    target_rms: 1.0
+    max_iterations: 5
     fvc_az: 121
     fvc_alt: 70
     fvc_rot: 190
@@ -59,41 +65,47 @@ macros:
     new_field_stages:
       [
         'slew',
-        reconfigure",
+        'reconfigure',
         'fvc',
         'reslew',
         'lamps',
-        'boss_arc',
+        'boss_arcs',
         'acquire',
         'guide',
       ]
     repeat_field_stages:
-      ['slew', reconfigure", 'fvc', 'reslew', 'lamps', 'acquire', 'guide']
+      ['slew', 'reconfigure', 'fvc', 'reslew', 'lamps', 'acquire', 'guide']
     rm_field_stages:
       [
         'slew',
-        reconfigure",
+        'reconfigure',
         'fvc',
         'reslew',
         'lamps',
-        'boss_arc',
+        'boss_arcs',
         'boss_flat',
         'acquire',
         'guide',
       ]
 
   expose:
-    boss_exposure_time: 900.
-    apogee_exposure_time: null
-    count: 1
+    boss_exptime: null
+    apogee_exptime: null
     count_apogee: null
     count_boss: null
-    apogee: true
-    boss: true
     pairs: true
-    disable_dithering: false
+    dither: true
     initial_apogee_dither: null
     with_fpi: true
+    readout_matching: true
+    fallback:
+      count: 1
+      exptime: 900.0
+
+  auto:
+    guider_time: 15
+    target_rms: 1.0
+    count: 1
 
 goto:
   stow:

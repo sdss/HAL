@@ -28,12 +28,10 @@ __all__ = ["Scripts"]
 
 @dataclass
 class Scripts:
-
     actor: HALActor
     path: pathlib.Path
 
     def __post_init__(self):
-
         self.path = pathlib.Path(self.path)
         if not self.path.is_absolute():
             self.path = pathlib.Path(hal.__file__).parent / self.path

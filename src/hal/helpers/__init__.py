@@ -25,7 +25,6 @@ class HALHelper:
     name: str | None = None
 
     def __init__(self, actor: HALActor):
-
         self.actor = actor
 
     async def _send_command(
@@ -62,7 +61,9 @@ class HALHelper:
 
 from .apogee import *
 from .boss import *
+from .cherno import *
 from .ffs import *
+from .jaeger import *
 from .lamps import *
 from .scripts import *
 from .tcc import *

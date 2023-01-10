@@ -1,10 +1,43 @@
 # Changelog
 
-## Next version
+## 0.6.0b1 - January 10, 2023
+
+### 🚀 New
+
+* [COS-89](https://jira.sdss.org/browse/COS-89) ([#12](https://github.com/sdss/HAL/issues/12) Added an auto-mode macro. When active, the auto macro will run the `goto-field` and `expose` macros continuously. A few minutes before the end of the `expose` macro completes, a new design is preloaded from the queue. The `goto-field` logic for selecting stages is similar to `goto-field --auto`. The auto macro can be cancelled with `hal auto --stop` which will complete the current stage and then quit, or `hal auto --stop --now` that immediately aborts (ongoing exposures are never aborted). The auto mode should be able to take over from any current state; for example if the auto mode is enabled during an `expose` macro, it will skip the `goto-field` stage, wait until `expose` is done, and then start the loop (note tha this case a new design will not be preloaded during the ongoing `expose`). The count of exposures to take can me modified with `hal auto --modify --count X` which behaves similarly to the `hal expose --modify` command. Requires `cherno` 0.5.0 or above.
+* [COS-66](https://jira.sdss.org/browse/COS-66) ([#13](https://github.com/sdss/HAL/issues/13) The parameters for an ongoing `expose` macro can be modified by issuing a new `hal expose` command with the `--modify` flag. Exposure information is handled by a new `ExposureHelper` class that calculates the exposures for each instrument and ensures readout time matching. The behaviour for the user should be mostly unchanged.
+
+
+## 0.5.2 - January 5, 2023
+
+* Fix several typos in the lists of stages for `goto-field --auto`.
+
+
+## 0.5.1 - January 4, 2023
+
+### 🔧 Fixed
+
+* Do not stop the guide look in `goto-field` if we are not taking BOSS calibrations or halting the axes.
+
+
+## 0.5.0 - January 2, 2023
+
+### 🚀 New
+
+* Added a new `goto-field` stage, `lamps`, that runs concurrently with `reslew` and turn on BOSS calibrations lamps (if needed) at that point. This saves a few seconds if we are taking a single BOSS arc. The stage is not required, and the lamps will be turned on at the calibration stage if `lamps` is omitted.
 
 ### ✨ Improved
 
 * Several performance improvements to `goto-field`. FFS are only closed if we are taking BOSS calibrations; when turning off lamps, we don't wait until they are really off, just send the command; the APOGEE shutter is closed at the beginning of the goto-field, but we don't wait for it to fully close before moving to the reconfiguration.
+* After the BOSS FF stage, only the FF lamp is turned off.
+
+### 🔧 Fixed
+
+* Fixed a case in which lamp status reporting could fail if the lamps were caught at an intermediate state in which only some of the lamps were on.
+
+### ⚙️ Engineering
+
+* Macro exceptions are logged to the file log with full traceback.
 
 
 ## 0.4.0 - December 21, 2022

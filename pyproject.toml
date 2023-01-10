@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sdss-hal"
-version = "0.4.1a0"
+version = "0.6.0b2"
 description = "High-level observing tool for SDSS-V (replaces SOP)"
 authors = ["José Sánchez-Gallego <gallegoj@uw.edu>"]
 license = "BSD-3-Clause"
@@ -63,7 +63,7 @@ sphinx-autobuild = ">=2021.3.14"
 
 [tool.black]
 line-length = 88
-target-version = ['py39']
+target-version = ['py310']
 fast = true
 
 [tool.isort]
@@ -76,7 +76,7 @@ known_sdss = ["sdsstools", "clu"]
 lines_after_imports = 2
 
 [tool.pytest.ini_options]
-addopts = "--cov hal --cov-report xml --cov-report html --cov-report term"
+addopts = "--cov hal --cov-report xml --cov-report html --cov-report term -W ignore"
 asyncio_mode = "auto"
 
 [tool.coverage.run]
@@ -90,6 +90,8 @@ omit = [
 
 [tool.coverage.report]
 exclude_lines = [
+    "if TYPE_CHECKING:",
+    "# pragma: no cover"
 ]
 
 [build-system]

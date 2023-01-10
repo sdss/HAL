@@ -15,7 +15,6 @@ pytestmark = [pytest.mark.asyncio]
 
 
 async def test_version(actor):
-
     await actor.invoke_mock_command("version")
 
     assert len(actor.mock_replies) == 2

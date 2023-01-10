@@ -18,8 +18,7 @@ from . import hal_command_parser
 
 
 if TYPE_CHECKING:
-
-    from . import HALCommandType
+    from .. import HALCommandType
 
 
 __all__ = ["bypass"]

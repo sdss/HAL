@@ -31,7 +31,6 @@ class APOGEEHelper(HALHelper):
     name = "apogee"
 
     def __init__(self, actor: HALActor):
-
         super().__init__(actor)
 
         self.gang_helper = APOGEEGangHelper(actor)
@@ -296,7 +295,6 @@ class APOGEEGangHelper:
     """Helper for the APOGEE gang connector."""
 
     def __init__(self, actor: HALActor):
-
         self.actor = actor
         self.flag: APOGEEGang = APOGEEGang.UNKNWON
 
