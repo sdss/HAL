@@ -74,7 +74,7 @@ class Macro:
 
         self.stages = self.__PRECONDITIONS__ + self.__STAGES__ + self.__CLEANUP__
 
-        self._flat_stages = flatten(self.stages)
+        self.flat_stages = flatten(self.stages)
 
         for stage in self.__PRECONDITIONS__ + self.__CLEANUP__:
             if not isinstance(stage, str):
@@ -101,6 +101,8 @@ class Macro:
         self.cancelled: bool = False
 
         self._running_task: asyncio.Task | None = None
+        self._running_event = asyncio.Event()
+        self._running_event.set()  # Won't unset until the macro is actually running.
 
     def __repr__(self):
         stages = flatten(self.stages)
@@ -171,7 +173,7 @@ class Macro:
         if len(self.stages) == 0:
             raise MacroError("No stages found.")
 
-        self._flat_stages = flatten(self.stages)
+        self.flat_stages = flatten(self.stages)
 
         # Reload the config and update it with custom options for this run.
         self.config = defaultdict(lambda: None, self._base_config.copy())
@@ -192,6 +194,9 @@ class Macro:
 
         self.running = False
         self._running_task = None
+
+        if not self._running_event.is_set():
+            self._running_event.set()
 
         self.list_stages()
 
@@ -227,6 +232,13 @@ class Macro:
             Macro.__RUNNING__.remove(self.name)
 
         self.command.debug(running_macros=Macro.__RUNNING__)
+
+        if is_running:
+            if not self._running_event.is_set():
+                self._running_event.set()
+            self._running_event.clear()
+        else:
+            self._running_event.set()
 
     def set_stage_status(
         self,
@@ -294,13 +306,16 @@ class Macro:
 
     async def fail_macro(
         self,
-        error: Exception,
+        error_or_message: Exception | str,
         stage: Optional[StageType] = None,
     ):
         """Fails the macros and informs the actor."""
 
-        self.command.error(error=error)
-        self.command.actor.log.exception(f"Macro {self.name} failed with error:")
+        if isinstance(error_or_message, Exception):
+            self.command.error(error=error_or_message)
+            self.command.actor.log.exception(f"Macro {self.name} failed with error:")
+        else:
+            self.command.info(text=error_or_message)
 
         self.failed = True
 
@@ -396,6 +411,15 @@ class Macro:
             try:
                 await current_task
 
+                was_cancelling = self.has_status(stage, StageStatus.CANCELLING)
+
+                # Regardless of whether it was cancelling, this stage finished.
+                self.set_stage_status(stage, StageStatus.FINISHED)
+
+                # But now abort the macro.
+                if was_cancelling:
+                    raise asyncio.CancelledError()
+
             except asyncio.CancelledError:
                 with suppress(asyncio.CancelledError):
                     current_task.cancel()
@@ -414,7 +438,10 @@ class Macro:
                     output=False,
                 )
                 self.cancelled = True
-                await self.fail_macro(MacroError("The macro was cancelled"))
+
+                # Not really failing the macro since this was a user
+                # requested cancellation.
+                await self.fail_macro("The macro was cancelled")
                 return
 
             except Exception as err:
@@ -432,15 +459,39 @@ class Macro:
                 await self.fail_macro(err, stage=stage)
                 return
 
-            self.set_stage_status(stage, StageStatus.FINISHED)
+    def get_active_stages(self):
+        """Returns a list of running stages."""
 
-    def cancel(self):
+        return [
+            stage
+            for stage in self.stage_status
+            if self.stage_status[stage] == StageStatus.ACTIVE
+        ]
+
+    def is_stage_done(self, stage: str):
+        """Returns `True` if a stage is finished."""
+
+        return self.has_status(stage, StageStatus.FINISHED)
+
+    def has_status(self, stages: StageType, status: StageStatus):
+        """Determines if any of the stages has that status."""
+
+        if isinstance(stages, str):
+            return self.stage_status[stages] == status
+
+        return any([self.stage_status[stage] == status for stage in stages])
+
+    def cancel(self, now: bool = True):
         """Cancels the execution ot the macro."""
 
         if not self.running or not self._running_task:
             raise MacroError("The macro is not running.")
 
-        self._running_task.cancel()
+        if now:
+            self._running_task.cancel()
+        else:
+            active_stages = self.get_active_stages()
+            self.set_stage_status(active_stages, StageStatus.CANCELLING)
 
     async def send_command(
         self,
@@ -476,3 +527,10 @@ class Macro:
                 raise MacroError(f"Command {target} {command_string} failed.")
 
         return command
+
+    async def wait_until_complete(self):
+        """Asynchronously blocks until the macros is done, cancelled, or failed."""
+
+        await self._running_event.wait()
+
+        return not self.failed

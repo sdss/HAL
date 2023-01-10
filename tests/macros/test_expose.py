@@ -156,7 +156,7 @@ async def test_expose_command_no_boss(actor: HALActor, macro):
     assert cmd.status.did_succeed
     macro.run.assert_called()
 
-    assert "expose_boss" not in macro._flat_stages
+    assert "expose_boss" not in macro.flat_stages
     assert macro.expose_helper.params.readout_matching is False
 
 
@@ -167,7 +167,7 @@ async def test_expose_command_no_apogee(actor: HALActor, macro):
     assert cmd.status.did_succeed
     macro.run.assert_called()
 
-    assert "expose_apogee" not in macro._flat_stages
+    assert "expose_apogee" not in macro.flat_stages
     assert macro.expose_helper.params.readout_matching is False
 
 

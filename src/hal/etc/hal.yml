@@ -53,7 +53,8 @@ macros:
     arc_time: 4
     flat_time: 25
     guider_time: 15.
-    n_acquisition: 5
+    target_rms: 1.0
+    max_iterations: 5
     fvc_az: 121
     fvc_alt: 70
     fvc_rot: 190
@@ -100,6 +101,11 @@ macros:
     fallback:
       count: 1
       exptime: 900.0
+
+  auto:
+    guider_time: 15
+    target_rms: 1.0
+    count: 1
 
 goto:
   stow:

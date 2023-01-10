@@ -76,7 +76,7 @@ known_sdss = ["sdsstools", "clu"]
 lines_after_imports = 2
 
 [tool.pytest.ini_options]
-addopts = "--cov hal --cov-report xml --cov-report html --cov-report term"
+addopts = "--cov hal --cov-report xml --cov-report html --cov-report term -W ignore"
 asyncio_mode = "auto"
 
 [tool.coverage.run]

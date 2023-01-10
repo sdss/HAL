@@ -15,8 +15,6 @@ from contextlib import suppress
 from dataclasses import dataclass
 from time import time
 
-from typing import Any
-
 import numpy
 
 from hal import config
@@ -31,14 +29,14 @@ __all__ = ["ExposeMacro"]
 class ExposeParameters:
     """Expose macro parameters."""
 
-    boss_exptime: float | None
-    apogee_exptime: float | None
-    count_apogee: int | None
-    count_boss: int | None
-    pairs: bool
-    dither: bool
-    initial_apogee_dither: str
-    readout_matching: bool
+    boss_exptime: float | None = config["macros"]["expose"]["fallback"]["exptime"]
+    apogee_exptime: float | None = None
+    count_apogee: int | None = 1
+    count_boss: int | None = 1
+    pairs: bool = True
+    dither: bool = True
+    initial_apogee_dither: str = "A"
+    readout_matching: bool = True
 
 
 @dataclass
@@ -63,7 +61,7 @@ class ApogeeExposure:
 class ExposeHelper:
     """Track exposure status, add/remove exposures, etc."""
 
-    def __init__(self, macro: ExposeMacro, opts: dict[str, Any]):
+    def __init__(self, macro: ExposeMacro, **opts):
         self.macro = macro
 
         self.observatory = os.environ.get("OBSERVATORY", "APO").upper()
@@ -81,37 +79,33 @@ class ExposeHelper:
         self.interval: float = 10
         self._monitor_task: asyncio.Task | None = None
 
-        self.params: ExposeParameters
-        self.update_params(opts)
+        self.params: ExposeParameters = ExposeParameters()
+        self.update_params(**opts)
 
         self.refresh()
 
-    def update_params(self, opts: dict[str, Any]):
+    def update_params(self, **opts):
         """Update parameters from the macro config."""
 
+        # Exclude options that are not in the dataclass.
+        valid_opts = {
+            opt: opts[opt]
+            for opt in opts
+            if opt in ExposeParameters.__dataclass_fields__
+        }
+
         if self.running:
-            opts["initial_apogee_dither"] = self.params.initial_apogee_dither
+            valid_opts["initial_apogee_dither"] = self.params.initial_apogee_dither
 
-        params = ExposeParameters(
-            boss_exptime=opts["boss_exptime"],
-            apogee_exptime=opts["apogee_exptime"],
-            count_apogee=opts["count_apogee"],
-            count_boss=opts["count_boss"],
-            dither=opts["dither"],
-            pairs=opts["pairs"],
-            initial_apogee_dither=opts["initial_apogee_dither"],
-            readout_matching=opts["readout_matching"],
-        )
+        self.params.__dict__.update(**valid_opts)
 
-        if "expose_boss" not in self.macro._flat_stages:
-            params.count_boss = None
-            params.readout_matching = False
-        elif "expose_apogee" not in self.macro._flat_stages:
-            params.count_apogee = None
+        if "expose_boss" not in self.macro.flat_stages:
+            self.params.count_boss = None
+            self.params.readout_matching = False
+        elif "expose_apogee" not in self.macro.flat_stages:
+            self.params.count_apogee = None
 
-        self.params = params
-
-        return params
+        return self.params
 
     async def start(self):
         """Indicate that exposures are starting. Output states on a timer."""
@@ -418,13 +412,13 @@ class ExposeMacro(Macro):
     def _reset_internal(self, **opts):
         """Reset the exposure status."""
 
-        self.expose_helper = ExposeHelper(self, opts)
+        self.expose_helper = ExposeHelper(self, **opts)
 
     async def prepare(self):
         """Prepare for exposures and run checks."""
 
-        do_apogee = "expose_apogee" in self._flat_stages
-        do_boss = "expose_boss" in self._flat_stages
+        do_apogee = "expose_apogee" in self.flat_stages
+        do_boss = "expose_boss" in self.flat_stages
 
         # First check if we are exposing and if we are fail before doing anything else.
         if do_apogee and self.helpers.apogee.is_exposing():
@@ -536,7 +530,7 @@ class ExposeMacro(Macro):
         await self.expose_helper.stop()
 
         # Close the APOGEE cold shutter.
-        if "expose_apogee" in self._flat_stages:
+        if "expose_apogee" in self.flat_stages:
             self.command.info("Closing APOGEE shutter.")
             await self.helpers.apogee.shutter(
                 self.command,

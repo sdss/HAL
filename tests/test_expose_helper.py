@@ -80,7 +80,25 @@ async def test_expose_helper(expose_helper, command):
     await expose_helper.start()
     await asyncio.sleep(0.1)
 
-    assert len(command.write.mock_calls) == 4
+    assert len(command.write.mock_calls) == 6
+
+
+async def test_expose_helper_no_opts(macro, command):
+    """Tests exposures with no options."""
+
+    macro.reset(command)
+
+    # BOSS: single exposure. Do not wait for readout, so only the flushing.
+    boss_expected = [[900, 917, False]]
+
+    # APOGEE: two exposures (dither set) with readout matching.
+    apogee_expected = [[459, "A"], [459, "B"]]
+
+    _check_exposures(
+        macro.expose_helper,
+        boss_expected=boss_expected,
+        apogee_expected=apogee_expected,
+    )
 
 
 async def test_expose_helper_defaults(expose_helper):

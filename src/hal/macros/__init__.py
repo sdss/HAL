@@ -23,7 +23,7 @@ from .macro import Macro
 # TODO: maybe Macro subclasses should be a singleton ...
 
 
-exclusions = ["__init__.py", "base.py"]
+exclusions = ["__init__.py", "macro.py"]
 
 cwd = os.getcwd()
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
@@ -42,7 +42,6 @@ for f_ in files:
                 locals().update({objname: obj})
 
     except Exception as ee:
-        raise
         warnings.warn(f"cannot import file {f_}: {ee}", HALUserWarning)
 
 os.chdir(cwd)

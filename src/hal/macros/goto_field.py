@@ -9,7 +9,6 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import suppress
 from time import time
 
 from hal import config
@@ -46,7 +45,7 @@ class GotoFieldMacro(Macro):
 
         self._lamps_task = None
 
-        stages = self._flat_stages
+        stages = self.flat_stages
 
         if "reconfigure" in stages:
             configuration_loaded = self.actor.models["jaeger"]["configuration_loaded"]
@@ -64,7 +63,7 @@ class GotoFieldMacro(Macro):
         # Stop the guider.
         # TODO: this will probably be different at LCO.
         if do_fvc or do_flat or do_arcs:
-            await self.send_command("cherno", "stop")
+            await self.helpers.cherno.stop_guiding(self.command)
             await self.helpers.tcc.axis_stop(self.command)
 
         # Ensure the APOGEE shutter is closed but don't wait for it.
@@ -115,6 +114,10 @@ class GotoFieldMacro(Macro):
 
     async def slew(self):
         """Slew to field but keep the rotator at a fixed position."""
+
+        # Wait five seconds to give time for the axis stop we issued in Prepare to
+        # take effect.
+        await asyncio.sleep(5)
 
         configuration_loaded = self.actor.models["jaeger"]["configuration_loaded"]
         ra, dec, pa = configuration_loaded[3:6]
@@ -176,7 +179,7 @@ class GotoFieldMacro(Macro):
     async def fvc(self):
         """Run the FVC loop."""
 
-        if "slew" in self._flat_stages:
+        if "slew" in self.flat_stages:
             self.command.info("Halting the rotator.")
             await self.helpers.tcc.axis_stop(self.command, axis="rot")
 
@@ -214,14 +217,14 @@ class GotoFieldMacro(Macro):
         """Ensures the correct lamps for calibrations are on."""
 
         cal_stages = ["boss_flat", "boss_hartmann", "boss_arcs"]
-        if all([stage not in self._flat_stages for stage in cal_stages]):
+        if all([stage not in self.flat_stages for stage in cal_stages]):
             return
 
         # If we are going to take BOSS cals, start warming up lamps now (some may
         # already be on).
-        if "boss_flat" in self._flat_stages:
+        if "boss_flat" in self.flat_stages:
             mode = "flat"
-        elif "boss_hartmann" in self._flat_stages:
+        elif "boss_hartmann" in self.flat_stages:
             mode = "hartmann"
         else:
             mode = "arcs"
@@ -275,7 +278,7 @@ class GotoFieldMacro(Macro):
                 "The collimator has been adjusted."
             )
 
-        if "boss_arcs" not in self._flat_stages:
+        if "boss_arcs" not in self.flat_stages:
             await self._all_lamps_off(wait=False)
 
     async def boss_arcs(self):
@@ -304,9 +307,13 @@ class GotoFieldMacro(Macro):
     async def acquire(self):
         """Acquires the field."""
 
+        if self.helpers.cherno.is_guiding():
+            self.command.info("Already guiding.")
+            return
+
         pretasks = []
 
-        if "reslew" not in self._flat_stages:
+        if "reslew" not in self.flat_stages:
             self.command.info("Re-slewing to field.")
             pretasks.append(self.reslew())
 
@@ -324,18 +331,25 @@ class GotoFieldMacro(Macro):
             raise MacroError("Axes must be tracking for acquisition.")
 
         guider_time = self.config["guider_time"]
-        n_acquisition = self.config["n_acquisition"]
+        target_rms = self.config["target_rms"]
+        max_iterations = self.config["max_iterations"]
 
         self.command.info("Acquiring field.")
-        await self.send_command(
-            "cherno",
-            f"acquire -t {guider_time} --count {n_acquisition} --full",
+        await self.helpers.cherno.acquire(
+            self.command,
+            exposure_time=guider_time,
+            target_rms=target_rms,
+            max_iterations=max_iterations,
         )
 
     async def guide(self):
         """Starts the guide loop."""
 
-        if "acquire" not in self._flat_stages:
+        if self.helpers.cherno.is_guiding():
+            self.command.info("Already guiding.")
+            return
+
+        if "acquire" not in self.flat_stages:
             self.command.info("Re-slewing to field.")
             await self.reslew()
 
@@ -349,12 +363,18 @@ class GotoFieldMacro(Macro):
         guider_time = self.config["guider_time"]
 
         self.command.info("Starting guide loop.")
-
-        with suppress(Exception):
-            asyncio.shield(self.send_command("cherno", f"acquire -c -t {guider_time}"))
+        await self.helpers.cherno.guide(
+            self.command,
+            exposure_time=guider_time,
+            wait=False,
+        )
 
     async def cleanup(self):
         """Turns off all lamps."""
+
+        # If enough stages have run, mark this configuration as goto_complete.
+        if self.helpers.jaeger.configuration is not None and self._is_goto_complete():
+            self.helpers.jaeger.configuration.goto_complete = True
 
         if self._lamps_task is not None and not self._lamps_task.done():
             self._lamps_task.cancel()
@@ -468,3 +488,20 @@ class GotoFieldMacro(Macro):
             offset = " ".join(map(str, offset))
             self.command.info(f"Setting guide offset to {offset}.")
             await self.send_command("cherno", f"offset {offset}")
+
+    def _is_goto_complete(self):
+        """Determines whether we can mark the configuration as ``goto_complete```.
+
+        The stage at which we mark the configuration as ``goto_complete`` depends
+        on what stages we are running, but it is always after the last stage
+        before acquisition.
+
+        """
+
+        for stage in self.flat_stages:
+            if stage == "acquire" or stage == "guide":
+                continue
+            if not self.is_stage_done(stage):
+                return False
+
+        return True

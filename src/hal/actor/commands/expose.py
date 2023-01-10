@@ -21,7 +21,7 @@ from . import hal_command_parser, stages
 if TYPE_CHECKING:
     from hal.macros.expose import ExposeMacro
 
-    from . import HALCommandType
+    from .. import HALCommandType
 
 
 __all__ = ["expose"]
@@ -229,7 +229,7 @@ async def expose(
             return command.fail("No expose macro currently running.")
 
         command.warning("Modifying running expose macro.")
-        macro.expose_helper.update_params(params)
+        macro.expose_helper.update_params(**params)
         macro.expose_helper.refresh()
 
         return command.finish()
