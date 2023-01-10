@@ -43,6 +43,8 @@ class Configuration:
         if self.design_id is None or self.design_id < 0:
             return
 
+        from hal.actor import HALActor
+
         self.actor = HALActor.get_instance()
 
         if self.check_db():
