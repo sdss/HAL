@@ -30,6 +30,7 @@ __all__ = ["JaegerHelper"]
 class Configuration:
     """Stores information about a configuration."""
 
+    actor: HALActor
     design_id: int
     configuration_id: int | None = None
     field_id: int | None = None
@@ -42,10 +43,6 @@ class Configuration:
     def __post_init__(self):
         if self.design_id is None or self.design_id < 0:
             return
-
-        from hal.actor import HALActor
-
-        self.actor = HALActor.get_instance()
 
         if self.check_db():
             self.set_field_id()
@@ -176,6 +173,7 @@ class JaegerHelper(HALHelper):
             new.cloned = is_cloned
         else:
             new = Configuration(
+                self.actor,
                 design_id,
                 configuration_id=configuration_id,
                 field_id=field_id,
@@ -216,4 +214,9 @@ class JaegerHelper(HALHelper):
 
         cloned = self.model["preloaded_is_cloned"].value[0]
 
-        self.preloaded = Configuration(design_id, cloned=cloned, preloaded=True)
+        self.preloaded = Configuration(
+            self.actor,
+            design_id,
+            cloned=cloned,
+            preloaded=True,
+        )
