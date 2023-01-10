@@ -162,6 +162,7 @@ class AutoModeMacro(Macro):
         await self._cancel_preload_task()
         self._preload_design_task = asyncio.create_task(_preload_executor(delay))
 
+        # At this point we consider this configuration has been observed.
         if self.helpers.jaeger.configuration:
             self.helpers.jaeger.configuration.observed = True
 

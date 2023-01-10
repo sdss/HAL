@@ -181,20 +181,19 @@ class JaegerHelper(HALHelper):
                 preloaded=False,
             )
 
-        self.actor.write(
-            "d",
-            text=f"Detected new configuration with design_id={design_id} "
-            f"and field_id={field_id}.",
-        )
+        user_message = f"Loaded design_id={design_id}, field_id={field_id}."
 
         if current:
             if current.observed and current.field_id == new.field_id:
-                current.new_field = False
+                new.new_field = False
+                user_message += " This is a repeat field design."
 
             self._previous.append(current)
 
         self.configuration = new
         self.preloaded = None
+
+        self.actor.write("d", text=user_message)
 
     async def _design_preloaded(self, key):
         """Processes a new preloaded design."""
