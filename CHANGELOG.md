@@ -4,7 +4,7 @@
 
 ### 🚀 New
 
-* [COS-89](https://jira.sdss.org/browse/COS-89) ([#12](https://github.com/sdss/HAL/issues/12) Added an auto-mode macro.
+* [COS-89](https://jira.sdss.org/browse/COS-89) ([#12](https://github.com/sdss/HAL/issues/12) Added an auto-mode macro. When active, the auto macro will run the `goto-field` and `expose` macros continuously. A few minutes before the end of the `expose` macro completes, a new design is preloaded from the queue. The `goto-field` logic for selecting stages is similar to `goto-field --auto`. The auto macro can be cancelled with `hal auto --stop` which will complete the current stage and then quit, or `hal auto --stop --now` that immediately aborts (ongoing exposures are never aborted). The auto mode should be able to take over from any current state; for example if the auto mode is enabled during an `expose` macro, it will skip the `goto-field` stage, wait until `expose` is done, and then start the loop (note tha this case a new design will not be preloaded during the ongoing `expose`). The count of exposures to take can me modified with `hal auto --modify --count X` which behaves similarly to the `hal expose --modify` command. Requires `cherno` 0.5.0 or above.
 * [COS-66](https://jira.sdss.org/browse/COS-66) ([#13](https://github.com/sdss/HAL/issues/13) The parameters for an ongoing `expose` macro can be modified by issuing a new `hal expose` command with the `--modify` flag. Exposure information is handled by a new `ExposureHelper` class that calculates the exposures for each instrument and ensures readout time matching. The behaviour for the user should be mostly unchanged.
 
 
