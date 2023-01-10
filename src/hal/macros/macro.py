@@ -306,13 +306,16 @@ class Macro:
 
     async def fail_macro(
         self,
-        error: Exception,
+        error_or_message: Exception | str,
         stage: Optional[StageType] = None,
     ):
         """Fails the macros and informs the actor."""
 
-        self.command.error(error=error)
-        self.command.actor.log.exception(f"Macro {self.name} failed with error:")
+        if isinstance(error_or_message, Exception):
+            self.command.error(error=error_or_message)
+            self.command.actor.log.exception(f"Macro {self.name} failed with error:")
+        else:
+            self.command.info(text=error_or_message)
 
         self.failed = True
 
@@ -435,7 +438,10 @@ class Macro:
                     output=False,
                 )
                 self.cancelled = True
-                await self.fail_macro(MacroError("The macro was cancelled"))
+
+                # Not really failing the macro since this was a user
+                # requested cancellation.
+                await self.fail_macro("The macro was cancelled")
                 return
 
             except Exception as err:
