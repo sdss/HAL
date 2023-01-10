@@ -57,7 +57,7 @@ class ChernoHelper(HALHelper):
     async def _guider_status(self, key: TronKey):
         """Updates the internal guider status."""
 
-        self.status = GuiderStatus(key.value[0])
+        self.status = GuiderStatus(int(key.value[0], 16))
 
         if self.status.value == 0:
             self.status = GuiderStatus.UNKNOWN
