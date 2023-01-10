@@ -45,7 +45,7 @@ class GotoFieldMacro(Macro):
 
         self._lamps_task = None
 
-        stages = self._flat_stages
+        stages = self.flat_stages
 
         if "reconfigure" in stages:
             configuration_loaded = self.actor.models["jaeger"]["configuration_loaded"]
@@ -179,7 +179,7 @@ class GotoFieldMacro(Macro):
     async def fvc(self):
         """Run the FVC loop."""
 
-        if "slew" in self._flat_stages:
+        if "slew" in self.flat_stages:
             self.command.info("Halting the rotator.")
             await self.helpers.tcc.axis_stop(self.command, axis="rot")
 
@@ -217,14 +217,14 @@ class GotoFieldMacro(Macro):
         """Ensures the correct lamps for calibrations are on."""
 
         cal_stages = ["boss_flat", "boss_hartmann", "boss_arcs"]
-        if all([stage not in self._flat_stages for stage in cal_stages]):
+        if all([stage not in self.flat_stages for stage in cal_stages]):
             return
 
         # If we are going to take BOSS cals, start warming up lamps now (some may
         # already be on).
-        if "boss_flat" in self._flat_stages:
+        if "boss_flat" in self.flat_stages:
             mode = "flat"
-        elif "boss_hartmann" in self._flat_stages:
+        elif "boss_hartmann" in self.flat_stages:
             mode = "hartmann"
         else:
             mode = "arcs"
@@ -278,7 +278,7 @@ class GotoFieldMacro(Macro):
                 "The collimator has been adjusted."
             )
 
-        if "boss_arcs" not in self._flat_stages:
+        if "boss_arcs" not in self.flat_stages:
             await self._all_lamps_off(wait=False)
 
     async def boss_arcs(self):
@@ -313,7 +313,7 @@ class GotoFieldMacro(Macro):
 
         pretasks = []
 
-        if "reslew" not in self._flat_stages:
+        if "reslew" not in self.flat_stages:
             self.command.info("Re-slewing to field.")
             pretasks.append(self.reslew())
 
@@ -349,7 +349,7 @@ class GotoFieldMacro(Macro):
             self.command.info("Already guiding.")
             return
 
-        if "acquire" not in self._flat_stages:
+        if "acquire" not in self.flat_stages:
             self.command.info("Re-slewing to field.")
             await self.reslew()
 

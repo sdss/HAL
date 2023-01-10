@@ -74,7 +74,7 @@ class Macro:
 
         self.stages = self.__PRECONDITIONS__ + self.__STAGES__ + self.__CLEANUP__
 
-        self._flat_stages = flatten(self.stages)
+        self.flat_stages = flatten(self.stages)
 
         for stage in self.__PRECONDITIONS__ + self.__CLEANUP__:
             if not isinstance(stage, str):
@@ -173,7 +173,7 @@ class Macro:
         if len(self.stages) == 0:
             raise MacroError("No stages found.")
 
-        self._flat_stages = flatten(self.stages)
+        self.flat_stages = flatten(self.stages)
 
         # Reload the config and update it with custom options for this run.
         self.config = defaultdict(lambda: None, self._base_config.copy())

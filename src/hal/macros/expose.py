@@ -99,10 +99,10 @@ class ExposeHelper:
 
         self.params.__dict__.update(**valid_opts)
 
-        if "expose_boss" not in self.macro._flat_stages:
+        if "expose_boss" not in self.macro.flat_stages:
             self.params.count_boss = None
             self.params.readout_matching = False
-        elif "expose_apogee" not in self.macro._flat_stages:
+        elif "expose_apogee" not in self.macro.flat_stages:
             self.params.count_apogee = None
 
         return self.params
@@ -417,8 +417,8 @@ class ExposeMacro(Macro):
     async def prepare(self):
         """Prepare for exposures and run checks."""
 
-        do_apogee = "expose_apogee" in self._flat_stages
-        do_boss = "expose_boss" in self._flat_stages
+        do_apogee = "expose_apogee" in self.flat_stages
+        do_boss = "expose_boss" in self.flat_stages
 
         # First check if we are exposing and if we are fail before doing anything else.
         if do_apogee and self.helpers.apogee.is_exposing():
@@ -530,7 +530,7 @@ class ExposeMacro(Macro):
         await self.expose_helper.stop()
 
         # Close the APOGEE cold shutter.
-        if "expose_apogee" in self._flat_stages:
+        if "expose_apogee" in self.flat_stages:
             self.command.info("Closing APOGEE shutter.")
             await self.helpers.apogee.shutter(
                 self.command,
