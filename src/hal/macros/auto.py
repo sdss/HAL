@@ -72,6 +72,11 @@ class AutoModeMacro(Macro):
         """Runs the goto-field macro with the appropriate stages."""
 
         goto = self.helpers.macros["goto_field"]
+        expose_macro = self.helpers.macros["expose"]
+
+        if expose_macro.running:
+            # Silently skip. The auto expose stage will wait for it.
+            return
 
         if goto.running:
             self.command.warning("goto-field is running. Waiting for it to complete.")
