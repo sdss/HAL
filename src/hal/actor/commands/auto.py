@@ -60,8 +60,10 @@ async def auto(
 
     macro = command.actor.helpers.macros["auto"]
 
-    if macro.running and (not stop or not modify):
-        return command.fail("Auto mode is already running.")
+    if macro.running and (not stop and not modify):
+        return command.fail(
+            "I'm afraid I cannot do that Dave. The auto mode is already running."
+        )
 
     if stop is True:
         if macro.running is False:
