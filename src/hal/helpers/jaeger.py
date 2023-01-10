@@ -126,11 +126,6 @@ class JaegerHelper(HALHelper):
 
         verb = "preload" if preload else "load"
 
-        if preload:
-            command.info("Preloading design from the queue.")
-        else:
-            command.info("Loading design from the queue.")
-
         cmd = await self._send_command(
             command,
             "jaeger",
@@ -153,7 +148,6 @@ class JaegerHelper(HALHelper):
                 "preloaded design but it will likely fail.",
             )
 
-        command.info("Loading preloaded design.")
         await self._send_command(
             command,
             "jaeger",
