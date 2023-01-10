@@ -80,7 +80,7 @@ async def test_expose_helper(expose_helper, command):
     await expose_helper.start()
     await asyncio.sleep(0.1)
 
-    assert len(command.write.mock_calls) == 4
+    assert len(command.write.mock_calls) == 6
 
 
 async def test_expose_helper_no_opts(macro, command):
