@@ -115,6 +115,10 @@ class GotoFieldMacro(Macro):
     async def slew(self):
         """Slew to field but keep the rotator at a fixed position."""
 
+        # Wait five seconds to give time for the axis stop we issued in Prepare to
+        # take effect.
+        await asyncio.sleep(5)
+
         configuration_loaded = self.actor.models["jaeger"]["configuration_loaded"]
         ra, dec, pa = configuration_loaded[3:6]
 
