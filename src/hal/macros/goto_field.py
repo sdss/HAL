@@ -15,7 +15,6 @@ from hal import config
 from hal.exceptions import HALError, MacroError
 from hal.helpers.lamps import LampsHelper
 from hal.macros import Macro
-from hal.macros.macro import StageStatus
 
 
 __all__ = ["GotoFieldMacro"]
