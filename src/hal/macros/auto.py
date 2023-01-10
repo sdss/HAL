@@ -80,8 +80,7 @@ class AutoModeMacro(Macro):
 
         if goto.running:
             self.message("goto-field is running. Waiting for it to complete.", "w")
-            result = await goto.wait_until_complete()
-            if not result:
+            if not await goto.wait_until_complete():
                 raise MacroError("Background goto-field failed. Cancelling auto mode.")
             # Skip goto-field since it's already been done.
             return
@@ -103,8 +102,14 @@ class AutoModeMacro(Macro):
             self.message("Skipping goto-field.")
             return
 
-        self.message("Running goto-field.")
+        # Check if this configuration has already been marked as "goto_complete",
+        # which means the goto-field routine has run at least until just before
+        # the acquire stage.
+        if configuration.goto_complete:
+            self.message("goto-field has already run for this configuration.")
+            return
 
+        self.message("Running goto-field.")
         goto.reset(self.command, stages)
         if not await goto.run():
             raise MacroError("Goto field failed during auto mode.")
@@ -116,11 +121,10 @@ class AutoModeMacro(Macro):
 
         if expose_macro.running:
             self.message("expose is running. Waiting for it to complete.", "w")
-            result = await expose_macro.wait_until_complete()
-            if not result:
+            if not await expose_macro.wait_until_complete():
                 raise MacroError("Background expose failed. Cancelling auto mode.")
             # Skip expose since it's already been done.
-            # TODO: this will not load a new design.
+            # This will not load a new design but the user can do it while exposing.
             return
 
         # Make sure guiding is good enough to start exposing.

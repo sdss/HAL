@@ -39,6 +39,7 @@ class Configuration:
     is_rm_field: bool = False
     new_field: bool = True
     observed: bool = False
+    goto_complete: bool = False
 
     def __post_init__(self):
         if self.design_id is None or self.design_id < 0:

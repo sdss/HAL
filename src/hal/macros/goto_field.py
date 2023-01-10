@@ -15,6 +15,7 @@ from hal import config
 from hal.exceptions import HALError, MacroError
 from hal.helpers.lamps import LampsHelper
 from hal.macros import Macro
+from hal.macros.macro import StageStatus
 
 
 __all__ = ["GotoFieldMacro"]
@@ -372,6 +373,10 @@ class GotoFieldMacro(Macro):
     async def cleanup(self):
         """Turns off all lamps."""
 
+        # If enough stages have run, mark this configuration as goto_complete.
+        if self.helpers.jaeger.configuration is not None and self._is_goto_complete():
+            self.helpers.jaeger.configuration.goto_complete = True
+
         if self._lamps_task is not None and not self._lamps_task.done():
             self._lamps_task.cancel()
 
@@ -484,3 +489,20 @@ class GotoFieldMacro(Macro):
             offset = " ".join(map(str, offset))
             self.command.info(f"Setting guide offset to {offset}.")
             await self.send_command("cherno", f"offset {offset}")
+
+    def _is_goto_complete(self):
+        """Determines whether we can mark the configuration as ``goto_complete```.
+
+        The stage at which we mark the configuration as ``goto_complete`` depends
+        on what stages we are running, but it is always after the last stage
+        before acquisition.
+
+        """
+
+        for stage in self.flat_stages:
+            if stage == "acquire" or stage == "guide":
+                continue
+            if not self.is_stage_done(stage):
+                return False
+
+        return True
