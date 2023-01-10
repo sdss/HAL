@@ -407,9 +407,14 @@ class Macro:
 
             try:
                 await current_task
+
+                was_cancelling = self.has_status(stage, StageStatus.CANCELLING)
+
+                # Regardless of whether it was cancelling, this stage finished.
                 self.set_stage_status(stage, StageStatus.FINISHED)
 
-                if self.has_status(stage, StageStatus.CANCELLING):
+                # But now abort the macro.
+                if was_cancelling:
                     raise asyncio.CancelledError()
 
             except asyncio.CancelledError:
