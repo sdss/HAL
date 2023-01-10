@@ -468,6 +468,11 @@ class Macro:
             if self.stage_status[stage] == StageStatus.ACTIVE
         ]
 
+    def is_stage_done(self, stage: str):
+        """Returns `True` if a stage is finished."""
+
+        return self.has_status(stage, StageStatus.FINISHED)
+
     def has_status(self, stages: StageType, status: StageStatus):
         """Determines if any of the stages has that status."""
 
