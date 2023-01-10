@@ -45,18 +45,18 @@ class AutoModeMacro(Macro):
 
         jaeger = self.helpers.jaeger
 
-        if jaeger.configuration and jaeger.configuration.observed is False:
+        if jaeger.preloaded:
+            self.message("Loading preloaded design.")
+            await jaeger.from_preloaded(self.command)
+
+        elif jaeger.configuration and jaeger.configuration.observed is False:
             self.message("Found unobserved design loaded.")
 
-        elif jaeger.preloaded is None:
+        else:
             self.message("No preloaded designs found. Loading new queue design.")
 
             if not await jaeger.load_from_queue(self.command):
                 raise MacroError("Failed loading design.")
-
-        else:
-            self.message("Loading preloaded design.")
-            await jaeger.from_preloaded(self.command)
 
         # Make sure everything all keywords have been emitted and database queries run.
         await asyncio.sleep(1)
@@ -161,6 +161,9 @@ class AutoModeMacro(Macro):
 
         await self._cancel_preload_task()
         self._preload_design_task = asyncio.create_task(_preload_executor(delay))
+
+        if self.helpers.jaeger.configuration:
+            self.helpers.jaeger.configuration.observed = True
 
     async def _cancel_preload_task(self):
         """Cancels an existing preload task."""
