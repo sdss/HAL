@@ -182,7 +182,9 @@ class JaegerHelper(HALHelper):
                 preloaded=False,
             )
 
-        user_message = f"Loaded design_id={design_id}, field_id={field_id}."
+        user_message = (
+            f"Found configuration with design_id={design_id}, field_id={field_id}."
+        )
 
         if current:
             if current.observed and current.field_id == new.field_id:

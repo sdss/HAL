@@ -46,14 +46,14 @@ class AutoModeMacro(Macro):
         jaeger = self.helpers.jaeger
 
         if jaeger.preloaded:
-            self.message("Loading preloaded design.")
+            self.message("Loading preloaded configuration.")
             await jaeger.from_preloaded(self.command)
 
         elif jaeger.configuration and jaeger.configuration.observed is False:
-            self.message("Found unobserved design loaded.")
+            self.message("Found unobserved design.")
 
         else:
-            self.message("No preloaded designs found. Loading new queue design.")
+            self.message("No preloaded configurations found. Loading new queue design.")
 
             if not await jaeger.load_from_queue(self.command):
                 raise MacroError("Failed loading design.")
