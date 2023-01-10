@@ -13,13 +13,13 @@ from typing import TYPE_CHECKING
 import click
 
 from hal import config
-from hal.macros.macro import StageType
 
 from . import hal_command_parser, stages
 
 
 if TYPE_CHECKING:
     from hal.macros import Macro
+    from hal.macros.macro import StageType
 
     from .. import HALCommandType
 
