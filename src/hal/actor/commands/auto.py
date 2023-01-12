@@ -89,6 +89,7 @@ async def auto(
         assert isinstance(expose_macro, ExposeMacro)
         if expose_macro.running:
             expose_macro.expose_helper.update_params(count_boss=count)
+            expose_macro.expose_helper.refresh()
 
         return command.finish()
 
