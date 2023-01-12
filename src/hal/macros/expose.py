@@ -450,9 +450,9 @@ class ExposeMacro(Macro):
         if do_boss and self.helpers.boss.is_exposing():
             raise MacroError("BOSS is already exposing.")
 
-        # if do_apogee and self.command.actor.observatory != "LCO":
-        #     if not self.command.actor.helpers.apogee.gang_helper.at_cartridge():
-        #         raise MacroError("The APOGEE gang connector is not at the cart.")
+        if do_apogee and self.command.actor.observatory != "LCO":
+            if not self.command.actor.helpers.apogee.gang_helper.at_cartridge():
+                raise MacroError("The APOGEE gang connector is not at the cart.")
 
         # Check that IEB FBI are off.
         try:
@@ -475,8 +475,8 @@ class ExposeMacro(Macro):
 
         # Concurrent tasks to run.
         tasks = []
-        # if self.command.actor.observatory == "APO":
-        #     tasks.append(self.helpers.ffs.open(self.command))
+        if self.command.actor.observatory == "APO":
+            tasks.append(self.helpers.ffs.open(self.command))
 
         if do_apogee:
             initial_dither = self.config["initial_apogee_dither"]
