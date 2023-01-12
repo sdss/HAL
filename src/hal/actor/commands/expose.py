@@ -42,6 +42,16 @@ __all__ = ["expose"]
     "are NOT remembered; all flags must be passed again.",
 )
 @click.option(
+    "--pause",
+    is_flag=True,
+    help="Pauses the execution of the macro. The current exposures will complete.",
+)
+@click.option(
+    "--resume",
+    is_flag=True,
+    help="Resumes the execution of the macro.",
+)
+@click.option(
     "--count",
     "-c",
     type=int,
@@ -130,6 +140,8 @@ async def expose(
     stages: list[StageType] | None,
     stop: bool = False,
     modify: bool = False,
+    pause: bool = False,
+    resume: bool = False,
     count: int = 1,
     count_apogee: int | None = None,
     count_boss: int | None = None,
@@ -148,12 +160,23 @@ async def expose(
     """Take science exposures."""
 
     # Handle stop
-    if (stop or modify) and not macro.running:
+    if (stop or modify or pause or resume) and not macro.running:
         return command.fail("No expose macro currently running.")
 
     if stop:
         macro.cancel()
         return command.finish("Expose macro has been cancelled")
+
+    if pause and resume:
+        return command.fail("--pause and --resume are incompatible.")
+
+    if pause:
+        await macro._pause()
+        return command.finish()
+
+    if resume:
+        await macro._resume()
+        return command.finish()
 
     # Check incompatible options.
     if exposure_time and (boss_exposure_time or apogee_exposure_time or reads):

@@ -14,6 +14,8 @@ import click
 
 from clu import Command
 
+from hal.macros.expose import ExposeMacro
+
 from . import hal_command_parser
 
 
@@ -43,5 +45,9 @@ async def status(command: HALCommandType, full: bool = False):
             macros[macro_name].output_stage_status(command, level="d")
 
     command.info(bypasses=list(command.actor.helpers.bypasses))
+
+    expose_macro = macros["expose"]
+    assert isinstance(expose_macro, ExposeMacro)
+    command.debug(expose_is_paused=not expose_macro._pause_event.is_set())
 
     return command.finish(text="Alles ist gut.")

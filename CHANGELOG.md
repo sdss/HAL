@@ -2,6 +2,10 @@
 
 ## Next version
 
+### 🚀 New
+
+* Added the ability to pause/resume the expose macro. Users can issue `hal expose --pause` that will finish the current exposure and then wait until `hal expose --resume` is issued. If the count is changed while paused, the adjusted ETR is output on resuming. The same behaviour can be achieved with `hal auto --pause` and `hal auto --resume` (note that this will NOT pause the `goto-field` macro).
+
 ### 🔧 Fixed
 
 * `hal auto --modify --count X` was not refreshing the `ExposureHelper` after updating the parameters.

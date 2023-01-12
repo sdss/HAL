@@ -47,6 +47,7 @@ class BossExposure:
     exptime: float
     actual_exptime: float
     read_sync: bool = True
+    done: bool = False
 
 
 @dataclass
@@ -56,6 +57,7 @@ class ApogeeExposure:
     n: int
     exptime: float
     dither_position: str
+    done: bool = False
 
 
 class ExposeHelper:
@@ -74,7 +76,8 @@ class ExposeHelper:
         self.apogee_exps: list[ApogeeExposure] = []
         self.boss_exps: list[BossExposure] = []
 
-        self.start_time: float = 0
+        self._apogee_exp_start_time: float = 0
+        self._boss_exp_start_time: float = 0
 
         self.interval: float = 10
         self._monitor_task: asyncio.Task | None = None
@@ -110,7 +113,6 @@ class ExposeHelper:
     async def start(self):
         """Indicate that exposures are starting. Output states on a timer."""
 
-        self.start_time = time()
         self._monitor_task = asyncio.create_task(self._monitor())
 
     async def stop(self):
@@ -316,6 +318,7 @@ class ExposeHelper:
 
         while self.n_apogee < len(self.apogee_exps):
             self.n_apogee += 1
+            self._apogee_exp_start_time = time()
             self.update_status("apogee")
             yield self.apogee_exps[self.n_apogee - 1]
 
@@ -327,6 +330,7 @@ class ExposeHelper:
 
         while self.n_boss < len(self.boss_exps):
             self.n_boss += 1
+            self._boss_exp_start_time = time()
             self.update_status("boss")
             yield self.boss_exps[self.n_boss - 1]
 
@@ -360,6 +364,7 @@ class ExposeHelper:
 
         if (instrument is None or instrument == "apogee") and len(self.apogee_exps) > 0:
             exps = self.apogee_exps
+            this_exp = exps[self.n_apogee - 1] if self.n_apogee > 0 else None
 
             if self.n_apogee == 0:
                 state_apogee["dither"] = exps[0].dither_position
@@ -369,10 +374,15 @@ class ExposeHelper:
             state_apogee["total_time"] = int(round(sum([exp.exptime for exp in exps])))
             state_apogee["timestamp"] = round(time(), 1)
 
+            n_completed = 0 if self.n_apogee == 0 else self.n_apogee - 1
+            if this_exp and this_exp.done:
+                n_completed += 1
+
             etr = state_apogee["total_time"]
-            if self.start_time > 0:
-                elapsed = time() - self.start_time
-                etr -= elapsed
+            etr -= sum([exps[ii].exptime for ii in range(0, n_completed)])
+            if self._apogee_exp_start_time > 0 and this_exp and not this_exp.done:
+                exp_elapsed = time() - self._apogee_exp_start_time
+                etr -= exp_elapsed
                 if etr < 0:
                     etr = 0
             state_apogee["etr"] = int(round(etr))
@@ -381,16 +391,22 @@ class ExposeHelper:
 
         if (instrument is None or instrument == "boss") and len(self.boss_exps) > 0:
             exps = self.boss_exps
+            this_exp = exps[self.n_boss - 1] if self.n_boss > 0 else None
 
             total_time = sum([exp.actual_exptime for exp in exps])
             state_boss["total_time"] = int(round(total_time))
 
             state_boss["timestamp"] = round(time(), 1)
 
+            n_completed = 0 if self.n_boss == 0 else self.n_boss - 1
+            if this_exp and this_exp.done:
+                n_completed += 1
+
             etr = state_boss["total_time"]
-            if self.start_time > 0:
-                elapsed = time() - self.start_time
-                etr -= elapsed
+            etr -= sum([exps[ii].actual_exptime for ii in range(0, n_completed)])
+            if self._boss_exp_start_time > 0 and this_exp and not this_exp.done:
+                exp_elapsed = time() - self._boss_exp_start_time
+                etr -= exp_elapsed
                 if etr < 0:
                     etr = 0
             state_boss["etr"] = int(round(etr))
@@ -408,14 +424,21 @@ class ExposeMacro(Macro):
     __CLEANUP__ = ["cleanup"]
 
     expose_helper: ExposeHelper
+    _pause_event = asyncio.Event()
 
     def _reset_internal(self, **opts):
         """Reset the exposure status."""
 
         self.expose_helper = ExposeHelper(self, **opts)
 
+        # An event blocker for when we wait to pause the execution of the macro.
+        if not self._pause_event.is_set():
+            self._pause_event.set()
+
     async def prepare(self):
         """Prepare for exposures and run checks."""
+
+        self.command.debug(expose_is_paused=False)
 
         do_apogee = "expose_apogee" in self.flat_stages
         do_boss = "expose_boss" in self.flat_stages
@@ -427,9 +450,9 @@ class ExposeMacro(Macro):
         if do_boss and self.helpers.boss.is_exposing():
             raise MacroError("BOSS is already exposing.")
 
-        if do_apogee and self.command.actor.observatory != "LCO":
-            if not self.command.actor.helpers.apogee.gang_helper.at_cartridge():
-                raise MacroError("The APOGEE gang connector is not at the cart.")
+        # if do_apogee and self.command.actor.observatory != "LCO":
+        #     if not self.command.actor.helpers.apogee.gang_helper.at_cartridge():
+        #         raise MacroError("The APOGEE gang connector is not at the cart.")
 
         # Check that IEB FBI are off.
         try:
@@ -452,8 +475,8 @@ class ExposeMacro(Macro):
 
         # Concurrent tasks to run.
         tasks = []
-        if self.command.actor.observatory == "APO":
-            tasks.append(self.helpers.ffs.open(self.command))
+        # if self.command.actor.observatory == "APO":
+        #     tasks.append(self.helpers.ffs.open(self.command))
 
         if do_apogee:
             initial_dither = self.config["initial_apogee_dither"]
@@ -496,6 +519,8 @@ class ExposeMacro(Macro):
         # in HAL.
         self.helpers.boss.clear_readout()
 
+        await self._pause_event.wait()
+
         for exposure_info in self.expose_helper.yield_boss():
             if exposure_info is None:
                 break
@@ -510,8 +535,23 @@ class ExposeMacro(Macro):
             if exposure_info.read_sync:
                 await self.helpers.boss.readout(self.command)
 
+            exposure_info.done = True
+
+            # We wait at the end of the loop so that if a new exposure is
+            # added while we are paused, the next iteration of the loop
+            # will yield it.
+            await self._pause_event.wait()
+
+            # If we have added exposures while paused and the expose, then
+            # this exposure readout will have become sync so we give it another
+            # try.
+            if exposure_info.read_sync and self.helpers.boss.readout_pending:
+                await self.helpers.boss.readout(self.command)
+
     async def expose_apogee(self):
         """Exposes APOGEE."""
+
+        await self._pause_event.wait()
 
         for exposure_info in self.expose_helper.yield_apogee():
             if exposure_info is None:
@@ -523,6 +563,10 @@ class ExposeMacro(Macro):
                 exp_type="object",
                 dither_position=exposure_info.dither_position,
             )
+
+            exposure_info.done = True
+
+            await self._pause_event.wait()
 
     async def cleanup(self):
         """Cancel any running exposures."""
@@ -546,3 +590,25 @@ class ExposeMacro(Macro):
                 self.command.info("BOSS is reading.")
             else:
                 self.command.warning("BOSS exposure is running. Not cancelling it.")
+
+    async def _pause(self):
+        """Pauses the execution of the macro."""
+
+        if self._pause_event.is_set():
+            self._pause_event.clear()
+            self.command.warning("Pausing execution of the expose macro.")
+            self.command.debug(expose_is_paused=True)
+        else:
+            self.command.warning("Macro is already paused.")
+            self.command.debug(expose_is_paused=True)
+
+    async def _resume(self):
+        """Resumes the execution of the macro."""
+
+        if not self._pause_event.is_set():
+            self._pause_event.set()
+            self.command.warning("Resuming execution of the expose macro.")
+            self.command.debug(expose_is_paused=False)
+        else:
+            self.command.warning("Macro is already running.")
+            self.command.debug(expose_is_paused=False)

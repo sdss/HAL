@@ -42,6 +42,16 @@ __all__ = ["auto"]
     help="Modify an ongoing auto loop.",
 )
 @click.option(
+    "--pause",
+    is_flag=True,
+    help="Pauses the execution of the macro. The current exposures will complete.",
+)
+@click.option(
+    "--resume",
+    is_flag=True,
+    help="Resumes the execution of the macro.",
+)
+@click.option(
     "--count",
     type=int,
     default=1,
@@ -52,11 +62,16 @@ async def auto(
     stop: bool = False,
     now: bool = False,
     modify: bool = False,
+    pause: bool = False,
+    resume: bool = False,
     count: int = 1,
 ):
     """Starts the auto mode."""
 
     assert command.actor
+
+    expose_macro = command.actor.helpers.macros["expose"]
+    assert isinstance(expose_macro, ExposeMacro)
 
     macro = command.actor.helpers.macros["auto"]
 
@@ -64,6 +79,17 @@ async def auto(
         return command.fail(
             "I'm afraid I cannot do that Dave. The auto mode is already running."
         )
+
+    if pause and resume:
+        return command.fail("--pause and --resume are incompatible Dave.")
+
+    if pause:
+        await expose_macro._pause()
+        return command.finish()
+
+    if resume:
+        await expose_macro._resume()
+        return command.finish()
 
     if stop is True:
         if macro.running is False:
@@ -85,8 +111,6 @@ async def auto(
         macro.config["count"] = count
 
         # Also modify active expose macro, if any is running.
-        expose_macro = command.actor.helpers.macros["expose"]
-        assert isinstance(expose_macro, ExposeMacro)
         if expose_macro.running:
             expose_macro.expose_helper.update_params(count_boss=count)
             expose_macro.expose_helper.refresh()
