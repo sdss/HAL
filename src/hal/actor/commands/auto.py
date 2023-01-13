@@ -75,9 +75,9 @@ async def auto(
 
     macro = command.actor.helpers.macros["auto"]
 
-    if macro.running and (not stop and not modify):
+    if (stop or modify or pause or resume) and not macro.running:
         return command.fail(
-            "I'm afraid I cannot do that Dave. The auto mode is already running."
+            "I'm afraid I cannot do that Dave. The auto mode is not running."
         )
 
     if pause and resume:
@@ -92,9 +92,7 @@ async def auto(
         return command.finish()
 
     if stop is True:
-        if macro.running is False:
-            return command.finish("Auto mode is not running.")
-        elif now is True:
+        if now is True:
             command.warning(auto_mode_message="Cancelling auto mode NOW.")
             macro.cancel(now=True)
         else:
@@ -104,9 +102,6 @@ async def auto(
         return command.finish()
 
     if modify is True:
-        if macro.running is False:
-            return command.finish("Auto mode is not running.")
-
         # For now the only option we can modify is the count of exposures.
         macro.config["count"] = count
 
@@ -117,8 +112,13 @@ async def auto(
 
         return command.finish()
 
-    result: bool = True
+    # From this point on this is a new macro, so it should not be already running.
+    if macro.running:
+        return command.fail(
+            "I'm afraid I cannot do that Dave. The auto mode is already running."
+        )
 
+    result: bool = True
     while True:
         # Run the auto loop until the command is cancelled.
         macro.reset(command, count=count)

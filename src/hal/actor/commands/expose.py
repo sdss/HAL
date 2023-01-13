@@ -159,24 +159,8 @@ async def expose(
 ):
     """Take science exposures."""
 
-    # Handle stop
     if (stop or modify or pause or resume) and not macro.running:
         return command.fail("No expose macro currently running.")
-
-    if stop:
-        macro.cancel()
-        return command.finish("Expose macro has been cancelled")
-
-    if pause and resume:
-        return command.fail("--pause and --resume are incompatible.")
-
-    if pause:
-        await macro._pause()
-        return command.finish()
-
-    if resume:
-        await macro._resume()
-        return command.finish()
 
     # Check incompatible options.
     if exposure_time and (boss_exposure_time or apogee_exposure_time or reads):
@@ -193,6 +177,23 @@ async def expose(
     if reads is not None and apogee_exposure_time is not None:
         return command.fail("--reads and --apogee-exposure-time are incompatible.")
 
+    if stop:
+        macro.cancel()
+        return command.finish("Expose macro has been cancelled")
+
+    if pause and resume:
+        return command.fail("--pause and --resume are incompatible.")
+
+    # Handle pause/resume
+    if pause:
+        await macro._pause()
+        return command.finish()
+
+    if resume:
+        await macro._resume()
+        return command.finish()
+
+    # Convert reads to exposure time.
     if reads is not None:
         apogee_exposure_time = reads * config["durations"]["apogee_read"]
 
@@ -248,14 +249,15 @@ async def expose(
 
     # Handle macro modification.
     if modify:
-        if not macro.running:
-            return command.fail("No expose macro currently running.")
-
         command.warning("Modifying running expose macro.")
         macro.expose_helper.update_params(**params)
         macro.expose_helper.refresh()
 
         return command.finish()
+
+    # From this point on this is a new macro, so it should not be already running.
+    if macro.running:
+        return command.fail("The expose macro is already running.")
 
     macro.reset(
         command,
