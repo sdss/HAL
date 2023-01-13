@@ -6,16 +6,12 @@ actor:
   tron_host: ${TRON_HOST}
   tron_port: ${TRON_PORT}
   models:
-    - tcc
-    - mcp
     - apogee
     - apogeefpi
     - apogeecal
     - jaeger
     - cherno
-    - boss
     - hartmann
-    - yao
   log_dir: /data/logs/actors/hal
 
 durations:
