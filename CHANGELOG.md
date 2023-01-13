@@ -9,6 +9,7 @@
 ### 🔧 Fixed
 
 * `hal auto --modify --count X` was not refreshing the `ExposureHelper` after updating the parameters.
+* Several issues deciding how to handle command modifiers when the macro is already running.
 
 
 ## 0.6.0b1 - January 10, 2023
