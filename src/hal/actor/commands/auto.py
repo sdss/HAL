@@ -107,7 +107,10 @@ async def auto(
 
         # Also modify active expose macro, if any is running.
         if expose_macro.running:
-            expose_macro.expose_helper.update_params(count_boss=count)
+            expose_macro.expose_helper.update_params(
+                count_boss=count,
+                count_apogee=count,
+            )
             expose_macro.expose_helper.refresh()
 
         return command.finish()
