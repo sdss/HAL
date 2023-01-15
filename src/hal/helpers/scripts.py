@@ -89,12 +89,25 @@ class Scripts:
                         step_message = f"{timeout} {step_message}"
                     command.warning(text=f"Script {name}: {step_message}")
 
-                await asyncio.wait_for(
-                    self.actor.send_command(actor, command_string),
-                    timeout,
-                )
+                runner = self.actor if command is None else command
+
                 if command:
-                    command.debug(script_step=[name, command_string, n + 1, len(steps)])
+                    command.debug(
+                        script_step=[
+                            name,
+                            f"{actor} {command_string}",
+                            n + 1,
+                            len(steps),
+                        ]
+                    )
+
+                if actor == "sleep":
+                    await asyncio.sleep(float(command_string))
+                else:
+                    await asyncio.wait_for(
+                        runner.send_command(actor, command_string),
+                        timeout,
+                    )
 
         if name in self.running:
             raise RuntimeError(f"Script {name} is already running.")
