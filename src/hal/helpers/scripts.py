@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import hal
+from hal.actor import HALCommandType
 
 
 if TYPE_CHECKING:
@@ -116,6 +117,7 @@ class Scripts:
 
         task = asyncio.create_task(run_steps(steps))
         self.running[name] = task
+        self._emit_running()
 
         # Now actually await the task, but be sure to handle cancellation.
         # If there is another kind of error (e.g. a timeout), raise it.
@@ -131,6 +133,7 @@ class Scripts:
             raise
         finally:
             self.running.pop(name)
+            self._emit_running()
 
         return True
 
@@ -142,3 +145,12 @@ class Scripts:
 
         task = self.running[name]
         task.cancel()
+
+    def _emit_running(self, command: HALCommandType | None = None):
+        """Emits the ``running_scripts`` keyword."""
+
+        running_scripts = list(self.running.keys())
+        if command:
+            command.info(running_scripts=running_scripts)
+        else:
+            self.actor.write("i", running_scripts=running_scripts)
