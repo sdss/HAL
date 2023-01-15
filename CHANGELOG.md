@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.0b3 - January 15, 2023
+
+### 🔧 Fixed
+
+* Only register MCP callback for gang connection when at APO.
+
+
 ## 0.6.0b2 - January 15, 2023
 
 ### 🚀 New

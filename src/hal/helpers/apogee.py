@@ -298,7 +298,8 @@ class APOGEEGangHelper:
         self.actor = actor
         self.flag: APOGEEGang = APOGEEGang.UNKNWON
 
-        actor.models["mcp"]["apogeeGang"].register_callback(self._update_flag)
+        if self.actor.observatory == "APO":
+            actor.models["mcp"]["apogeeGang"].register_callback(self._update_flag)
 
     async def _update_flag(self, value: list):
         """Callback to update the gang connector flag."""
