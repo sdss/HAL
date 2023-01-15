@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.0b4 - January 15, 2023
+
+### ✨ Improved
+
+* Emit `running_scripts` keyword when a command is running. Needed for Boson 0.3.1.
+
+
 ## 0.6.0b3 - January 15, 2023
 
 ### 🔧 Fixed
