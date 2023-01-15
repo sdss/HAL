@@ -15,13 +15,12 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import hal
-from hal.actor import HALCommandType
 
 
 if TYPE_CHECKING:
     from clu import Command
 
-    from hal.actor import HALActor
+    from hal.actor import HALActor, HALCommandType
 
 
 __all__ = ["Scripts"]
