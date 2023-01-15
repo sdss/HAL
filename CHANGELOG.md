@@ -1,6 +1,6 @@
 # Changelog
 
-## Next version
+## 0.6.0b2 - January 15, 2023
 
 ### 🚀 New
 
