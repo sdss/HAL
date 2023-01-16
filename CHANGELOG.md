@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🔧 Fixed
+
+* Fixed circular import preventing the import of the goto-field macro.
+
+
 ## 0.6.0b4 - January 15, 2023
 
 ### ✨ Improved
