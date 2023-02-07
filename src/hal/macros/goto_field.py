@@ -331,8 +331,8 @@ class GotoFieldMacro(Macro):
             raise MacroError("Axes must be tracking for acquisition.")
 
         guider_time = self.config["guider_time"]
-        target_rms = self.config["target_rms"]
-        max_iterations = self.config["max_iterations"]
+        target_rms = self.config["acquisition_target_rms"]
+        max_iterations = self.config["acquisition_max_iterations"]
 
         self.command.info("Acquiring field.")
         await self.helpers.cherno.acquire(

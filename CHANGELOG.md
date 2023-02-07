@@ -2,6 +2,9 @@
 
 ## Next version
 
+### 🏷️ Changed
+
+* Doubled the maximum number of iterations for acquisition in `goto-field`.
 ### 🔧 Fixed
 
 * Fixed circular import preventing the import of the goto-field macro.
