@@ -50,6 +50,7 @@ macros:
     flat_time: 25
     guider_time: 15.
     acquisition_target_rms: 1.0
+    acquisition_min_rms: 3.0
     acquisition_max_iterations: 10
     fvc_az: 121
     fvc_alt: 70
@@ -100,7 +101,7 @@ macros:
 
   auto:
     guider_time: 15
-    target_rms: 1.0
+    min_rms: 3.0
     count: 1
 
 goto:

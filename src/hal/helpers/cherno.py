@@ -67,10 +67,15 @@ class ChernoHelper(HALHelper):
 
         return bool(self.status & GuiderStatus.NON_IDLE)
 
-    def guiding_at_rms(self, rms: float, max_age: float = 120):
+    def guiding_at_rms(
+        self,
+        rms: float,
+        max_age: float = 120,
+        allow_not_guiding: bool = False,
+    ):
         """Checks that the guider has reached a given RMS."""
 
-        if not self.is_guiding():
+        if not self.is_guiding() and allow_not_guiding is True:
             return False
 
         guide_rms = self.model["guide_rms"]
@@ -124,7 +129,7 @@ class ChernoHelper(HALHelper):
 
         """
 
-        block = True if (target_rms and not wait) or wait is True else False
+        block = True if (target_rms and wait is None) or wait is True else False
 
         command_str = "acquire -c" if target_rms is None else f"acquire -r {target_rms}"
         command_str += f" -t {exposure_time}"

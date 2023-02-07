@@ -332,15 +332,29 @@ class GotoFieldMacro(Macro):
 
         guider_time = self.config["guider_time"]
         target_rms = self.config["acquisition_target_rms"]
+        min_rms = self.config["acquisition_min_rms"]
         max_iterations = self.config["acquisition_max_iterations"]
 
         self.command.info("Acquiring field.")
-        await self.helpers.cherno.acquire(
-            self.command,
-            exposure_time=guider_time,
-            target_rms=target_rms,
-            max_iterations=max_iterations,
-        )
+
+        try:
+            await self.helpers.cherno.acquire(
+                self.command,
+                exposure_time=guider_time,
+                target_rms=target_rms,
+                max_iterations=max_iterations,
+            )
+        except HALError:
+            # If we have exhausted the number of exposures and not reached
+            # the target RMS, check if we reach the minimum RMS. If so, warn
+            # but continue.
+            if self.helpers.cherno.guiding_at_rms(min_rms, allow_not_guiding=True):
+                self.command.warning(
+                    f"Target RMS not reached but RMS < {min_rms} arcsec. "
+                    "Will continue."
+                )
+            else:
+                raise
 
     async def guide(self):
         """Starts the guide loop."""
