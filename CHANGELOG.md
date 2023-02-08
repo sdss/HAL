@@ -7,7 +7,6 @@
 * Doubled the maximum number of iterations for acquisition in `goto-field`.
 * If acquisition fails to reach the target RMS after `acquisition_max_iterations` but the RMS is lower than `acquisition_min_rms`, the macro emits a warning but does not fail.
 
-
 ### 🔧 Fixed
 
 * Fixed circular import preventing the import of the goto-field macro.
