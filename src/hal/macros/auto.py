@@ -131,7 +131,7 @@ class AutoModeMacro(Macro):
         if not self.helpers.cherno.is_guiding():
             raise MacroError("Guider is not running. Cannot expose.")
 
-        target_rms = self.config["target_rms"]
+        target_rms = self.config["acquisition_target_rms"]
         if not self.helpers.cherno.guiding_at_rms(target_rms):
             self.message("RMS not reched yet. Waiting for guider to converge.")
             try:
