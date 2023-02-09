@@ -4,7 +4,7 @@
 
 ### 🏷️ Changed
 
-* Doubled the maximum number of iterations for acquisition in `goto-field`.
+* Set maximum number of iterations for acquisition in `goto-field` to 4.
 * If acquisition fails to reach the target RMS after `acquisition_max_iterations` but the RMS is lower than `acquisition_min_rms`, the macro emits a warning but does not fail.
 
 ### 🔧 Fixed

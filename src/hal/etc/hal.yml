@@ -51,7 +51,7 @@ macros:
     guider_time: 15.
     acquisition_target_rms: 1.0
     acquisition_min_rms: 3.0
-    acquisition_max_iterations: 10
+    acquisition_max_iterations: 4
     fvc_az: 121
     fvc_alt: 70
     fvc_rot: 190
