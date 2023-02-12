@@ -131,11 +131,11 @@ class AutoModeMacro(Macro):
         if not self.helpers.cherno.is_guiding():
             raise MacroError("Guider is not running. Cannot expose.")
 
-        target_rms = self.config["acquisition_target_rms"]
-        if not self.helpers.cherno.guiding_at_rms(target_rms):
+        min_rms = self.config["min_rms"]
+        if not self.helpers.cherno.guiding_at_rms(min_rms):
             self.message("RMS not reched yet. Waiting for guider to converge.")
             try:
-                await self.helpers.cherno.wait_for_rms(target_rms, max_wait=180)
+                await self.helpers.cherno.wait_for_rms(min_rms, max_wait=180)
             except asyncio.TimeoutError:
                 raise MacroError("Timed out waiting for guider to converge.")
 
