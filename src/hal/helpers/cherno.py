@@ -75,7 +75,7 @@ class ChernoHelper(HALHelper):
     ):
         """Checks that the guider has reached a given RMS."""
 
-        if not self.is_guiding() and allow_not_guiding is True:
+        if not self.is_guiding() and allow_not_guiding is False:
             return False
 
         guide_rms = self.model["guide_rms"]
