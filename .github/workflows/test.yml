@@ -52,21 +52,14 @@ jobs:
           pip install --upgrade wheel pip setuptools
           pip install .
 
-      - name: Lint with flake8
+      - name: Lint with ruff
         run: |
-          # stop the build if there are Python syntax errors or undefined names
-          pip install flake8
-          flake8 src/hal --count --show-source --statistics
+          ruff .
 
       - name: Lint with black
         run: |
           pip install black
           black --check src/hal
-
-      - name: Lint with isort
-        run: |
-          pip install isort
-          isort -c src/hal
 
       # - name: Run type checking
       #   continue-on-error: true
