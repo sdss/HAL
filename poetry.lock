@@ -2391,13 +2391,13 @@ sdsstools = ">=0.4.13"
 
 [[package]]
 name = "sdssdb"
-version = "0.6.6"
+version = "0.8.0"
 description = "SDSS product for database management"
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "sdssdb-0.6.6-py3-none-any.whl", hash = "sha256:1fe3bc09461746ec803cffd3d5823ec3f54f5d53d02bddbd1cd5e3ba7740729c"},
-    {file = "sdssdb-0.6.6.tar.gz", hash = "sha256:4b240ad9c59194e42c9ac781eb319b10c3ff29dbeb86ba563e506209412ba111"},
+    {file = "sdssdb-0.8.0-py3-none-any.whl", hash = "sha256:500d660e5c5b2657b970e89d9d769d77a61c20a43feaa3be85f035d615edad56"},
+    {file = "sdssdb-0.8.0.tar.gz", hash = "sha256:d85b2d7bb09a7005cb4d5bd53cef3495c8fa77c7012fba0e7e0504aaf734b0a7"},
 ]
 
 [package.dependencies]
@@ -3090,4 +3090,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10,<4.0"
-content-hash = "fd85ac007897dd38daa745f81df92c480aa68c7814e1e90f379c9d21ff198a38"
+content-hash = "470452baabe277a042c946bf79d6cbf215387c698d4f0edc549ebc654f783ce9"
