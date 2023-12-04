@@ -28,7 +28,7 @@ include = ["src/hal/etc/*"]
 hal = "hal.__main__:hal"
 
 [tool.poetry.dependencies]
-python = "^3.9,<4.0"
+python = "^3.10,<4.0"
 sdsstools = "^1.0.0"
 sdss-clu = "^1.4.0"
 click-default-group = "^1.2.2"

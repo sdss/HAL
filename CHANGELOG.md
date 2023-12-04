@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🔥 Breaking changes
+
+* Deprecated Python 3.9.
+
+
 ## 0.6.0 - December 4, 2023
 
 ### 🏷️ Changed
