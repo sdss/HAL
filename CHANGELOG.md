@@ -10,6 +10,12 @@
 ### 🔧 Fixed
 
 * Fixed circular import preventing the import of the goto-field macro.
+* Fix getting `target_rms` in auto mode.
+
+### ⚙️ Engineering
+
+* Lint using `ruff`.
+* Update workflows.
 
 
 ## 0.6.0b4 - January 15, 2023
