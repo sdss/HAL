@@ -12,7 +12,7 @@ import asyncio
 import sys
 import time
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 
 from typing import TYPE_CHECKING
 
@@ -86,6 +86,8 @@ class OverheadHelper:
             return None
 
         if sys.version_info >= (3, 11):
+            from datetime import UTC
+
             return datetime.fromtimestamp(timestamp, tz=UTC)
 
         return datetime.utcfromtimestamp(timestamp)
