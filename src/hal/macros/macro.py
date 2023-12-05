@@ -14,12 +14,13 @@ import warnings
 from collections import defaultdict
 from contextlib import suppress
 
-from typing import TYPE_CHECKING, Any, ClassVar, Coroutine, Optional, Union
+from typing import TYPE_CHECKING, Any, Awaitable, ClassVar, Coroutine, Optional, Union
 
 from clu import Command, CommandStatus
 
 from hal import config
 from hal.exceptions import HALUserWarning, MacroError
+from hal.helpers.overhead import OverheadHelper
 
 
 if TYPE_CHECKING:
@@ -30,6 +31,17 @@ __all__ = ["Macro"]
 
 
 StageType = Union[str, tuple[str, ...], list[str]]
+
+
+def record_overhead(macro: Macro):
+    """Runs a macro stage and records its overhead."""
+
+    async def record_overhead_wrapper(stage_coro: Awaitable[None]):
+        overhead_helper = OverheadHelper(macro, stage_coro.__name__)
+        async with overhead_helper:
+            await stage_coro
+
+    return record_overhead_wrapper
 
 
 class StageStatus(enum.Flag):
@@ -403,8 +415,12 @@ class Macro:
         current_task: asyncio.Future | None = None
 
         for istage, stage in enumerate(self.stages):
-            stage_coros = [asyncio.create_task(coro) for coro in self._get_coros(stage)]
-            current_task = asyncio.gather(*stage_coros)
+            wrapped_coros = [
+                asyncio.create_task(record_overhead(self)(coro))
+                for coro in self._get_coros(stage)
+            ]
+
+            current_task = asyncio.gather(*wrapped_coros)
 
             self.set_stage_status(stage, StageStatus.ACTIVE)
 
@@ -452,7 +468,7 @@ class Macro:
 
                 # Cancel stage tasks (in case we are running multiple concurrently).
                 with suppress(asyncio.CancelledError):
-                    for task in stage_coros:
+                    for task in wrapped_coros:
                         if not task.done():
                             task.cancel()
 
