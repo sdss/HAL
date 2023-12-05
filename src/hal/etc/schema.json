@@ -43,6 +43,14 @@
       "type": "array",
       "items": { "type": "string" }
     },
+    "stage_duration": {
+      "type": "array",
+      "items": [
+        { "type": "string" },
+        { "type": "string" },
+        { "type": "number" }
+      ]
+    },
     "bypasses": {
       "type": "array",
       "items": { "type": "string" }

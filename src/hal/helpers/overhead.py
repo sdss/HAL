@@ -1,0 +1,119 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# @Author: José Sánchez-Gallego (gallegoj@uw.edu)
+# @Date: 2023-12-04
+# @Filename: overhead.py
+# @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
+
+from __future__ import annotations
+
+import asyncio
+import time
+from dataclasses import dataclass
+from datetime import UTC, datetime
+
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from hal.macros.macro import Macro
+
+
+__all__ = ["OverheadHelper"]
+
+
+@dataclass
+class OverheadHelper:
+    """Collects and records stage overheads."""
+
+    macro: Macro
+    stage: str
+
+    def __post_init__(self) -> None:
+        self.elapsed: float | None = None
+
+        self.start_time: float | None = None
+        self.end_time: float | None = None
+
+        self.success: bool = False
+
+    async def __aenter__(self):
+        """Starts the timer."""
+
+        self.elapsed = 0
+        self.start_time = time.time()
+
+        return self
+
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        """Stops the timer and records the overhead."""
+
+        if self.start_time is None:
+            raise ValueError("Timer not started")
+
+        self.end_time = time.time()
+        self.elapsed = round(time.time() - self.start_time, 2)
+
+        if exc_type is not None:
+            self.success = False
+        else:
+            self.success = True
+
+        await self.emit_keywords()
+        asyncio.get_running_loop().call_soon(self.update_database)
+
+        # __aexit__ will re-raise the exception if the return value is None/False.
+        return self.success
+
+    async def emit_keywords(self):
+        """Emits the overhead as a keyword."""
+
+        command = self.macro.command
+        stage_full = f"{self.macro.name}.{self.stage}"
+
+        if self.elapsed is None:
+            command.warning(f"Overhead was not recorded for stage {stage_full}.")
+            return
+
+        command.info(stage_duration=[self.macro.name, self.stage, self.elapsed])
+
+    def update_database(self):
+        """Updates the database with the overhead."""
+
+        from sdssdb.peewee.sdss5db.opsdb import Overhead, database
+
+        command = self.macro.command
+
+        if not database.connected:
+            command.warning("Failed connecting to DB. Overhead cannot be recorded.")
+            return
+
+        with database.atomic():
+            try:
+                actor = self.macro.actor
+                configuration = actor.helpers.jaeger.configuration
+                cid = configuration.configuration_id if configuration else None
+
+                if self.start_time:
+                    start_time_dt = datetime.fromtimestamp(self.start_time, UTC)
+                else:
+                    start_time_dt = None
+
+                if self.end_time:
+                    end_time_dt = datetime.fromtimestamp(self.end_time, UTC)
+                else:
+                    end_time_dt = None
+
+                Overhead.insert(
+                    configuration_id=cid,
+                    macro=self.macro.name,
+                    stage=self.stage,
+                    start_time=start_time_dt,
+                    end_time=end_time_dt,
+                    elapsed=self.elapsed,
+                    success=self.success,
+                ).execute()
+
+            except Exception as err:
+                command.warning(f"Failed creating overhead record: {err}")
