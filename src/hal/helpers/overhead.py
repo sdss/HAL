@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 import time
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -78,6 +79,17 @@ class OverheadHelper:
 
         command.info(stage_duration=[self.macro.name, self.stage, self.elapsed])
 
+    def _get_datetime(self, timestamp: float | None):
+        """Converts a timestamp to a datetime object."""
+
+        if timestamp is None:
+            return None
+
+        if sys.version_info >= (3, 11):
+            return datetime.fromtimestamp(timestamp, tz=UTC)
+
+        return datetime.utcfromtimestamp(timestamp)
+
     def update_database(self):
         """Updates the database with the overhead."""
 
@@ -95,15 +107,8 @@ class OverheadHelper:
                 configuration = actor.helpers.jaeger.configuration
                 cid = configuration.configuration_id if configuration else None
 
-                if self.start_time:
-                    start_time_dt = datetime.fromtimestamp(self.start_time, UTC)
-                else:
-                    start_time_dt = None
-
-                if self.end_time:
-                    end_time_dt = datetime.fromtimestamp(self.end_time, UTC)
-                else:
-                    end_time_dt = None
+                start_time_dt = self._get_datetime(self.start_time)
+                end_time_dt = self._get_datetime(self.end_time)
 
                 Overhead.insert(
                     configuration_id=cid,
