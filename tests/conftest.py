@@ -9,6 +9,7 @@
 import os
 
 import pytest
+from pytest_mock import MockerFixture
 
 from clu import Command
 from clu.testing import setup_test_actor
@@ -30,6 +31,14 @@ def mock_send_command(mocker):
 
     HALHelper._send_command = mocker.AsyncMock(return_value=command)
     Macro.send_command = mocker.AsyncMock(return_value=command)
+
+
+@pytest.fixture(autouse=True)
+def mock_overhead_table(mocker: MockerFixture):
+    import sdssdb.peewee.sdss5db.opsdb
+
+    mocker.patch.object(sdssdb.peewee.sdss5db.opsdb, "Overhead", autospec=True)
+    mocker.patch.object(sdssdb.peewee.sdss5db.opsdb, "database", autospec=True)
 
 
 @pytest.fixture

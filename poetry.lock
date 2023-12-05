@@ -2498,13 +2498,13 @@ websocket = ["websockets (>=11.0.3,<12.0.0)"]
 
 [[package]]
 name = "sdssdb"
-version = "0.8.0"
+version = "0.8.2"
 description = "SDSS product for database management"
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "sdssdb-0.8.0-py3-none-any.whl", hash = "sha256:500d660e5c5b2657b970e89d9d769d77a61c20a43feaa3be85f035d615edad56"},
-    {file = "sdssdb-0.8.0.tar.gz", hash = "sha256:d85b2d7bb09a7005cb4d5bd53cef3495c8fa77c7012fba0e7e0504aaf734b0a7"},
+    {file = "sdssdb-0.8.2-py3-none-any.whl", hash = "sha256:8f11967245bc946d68bd7c2d02d271dda0a3d49098881fb7915df52efe9bdd3c"},
+    {file = "sdssdb-0.8.2.tar.gz", hash = "sha256:d0d26fbbfe96c37e76b87cae4d676574ba6943f9202ed755da7f05b5f5da67aa"},
 ]
 
 [package.dependencies]
@@ -2515,14 +2515,14 @@ pgpasslib = ">=1.1.0"
 psycopg2-binary = ">=2.7.7"
 pygments = "*"
 pyyaml = ">=5.1"
-sdsstools = ">=0.1.11"
+sdsstools = ">=0.1.0"
 six = ">=1.12.0"
 sqlalchemy = ">=1.3.6"
 
 [package.extras]
 all = ["astropy (>=4.0.0)", "inflect (>=4.1.0)", "pandas (>=1.0.0)", "progressbar2 (>=3.46.1)", "pydot (>=1.4.1)"]
 dev = ["astropy (>=4.0.0)", "factory-boy (>=2.12.0)", "ipdb (>=0.13.2)", "ipython (>=7.13.0)", "pydot (>=1.4.2)", "pytest (>=5.2)", "pytest-cov (>=2.4.0)", "pytest-factoryboy (>=2.0.3)", "pytest-postgresql (>=2.2.1)", "pytest-sugar (>=0.8.0)"]
-docs = ["Sphinx (>=3.0.0,<4.0.0)", "jinja2 (==3.0.0)", "sphinx-bootstrap-theme (>=0.4.12)"]
+docs = ["Sphinx (>=7.0.0)", "releases (>=2.0.0)", "sphinx-bootstrap-theme (>=0.4.12)"]
 
 [[package]]
 name = "sdsstools"
@@ -3212,4 +3212,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10,<4.0"
-content-hash = "c86068bae483f6e8460ca5d0e0390ac1839d738d343568069798144c81fb254d"
+content-hash = "b4b1dd52ca37f58eb7b4795f5d6ff425b95446e1bd92a04291a58002397826ea"

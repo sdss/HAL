@@ -5,16 +5,9 @@ coverage:
   status:
     project:
       default:
-        target: 90%
-        if_not_found: success
-        if_ci_failed: error
-        informational: true
-        only_pulls: true
+        target: auto # Require that we increase the coverage wrt the base commit
+        informational: false
     patch:
       default:
-        target: 90%
-        if_no_uploads: error
-        if_not_found: success
-        if_ci_failed: error
-        informational: true
-        only_pulls: true
+        target: 90% # Require to cover at least 90% of the new code
+        informational: false

@@ -10,21 +10,19 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import pytest
-
 from hal.exceptions import MacroError
 
 
 if TYPE_CHECKING:
+    from hal.actor import HALCommandType
     from hal.macros import Macro
 
-pytestmark = [pytest.mark.asyncio]
 
-
-async def test_macro(actor, macro: Macro):
+async def test_macro(actor, macro: Macro, command: HALCommandType):
     await macro.run()
 
-    assert len(actor.mock_replies) == 10
+    assert len(actor.mock_replies) == 13
+    assert command.replies.get("stage_duration") == ["macro_test", "stage1", 0.0]
 
 
 async def test_macro_stage_fails(actor, macro: Macro, mocker):
