@@ -68,9 +68,10 @@ def flatten(stages: list[StageType]) -> list[str]:
 class Macro:
     """A base macro class that offers concurrency and cancellation."""
 
-    __RUNNING__: ClassVar[list[str]] = []
+    name: ClassVar[str]
+    observatory: ClassVar[str | None] = None
 
-    name: str
+    __RUNNING__: ClassVar[list[str]] = []
 
     __STAGES__: list[StageType]
     __PRECONDITIONS__: list[StageType] = []

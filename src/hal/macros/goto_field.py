@@ -17,10 +17,10 @@ from hal.helpers.lamps import LampsHelper
 from hal.macros import Macro
 
 
-__all__ = ["GotoFieldMacro"]
+__all__ = ["GotoFieldAPOMacro"]
 
 
-class GotoFieldMacro(Macro):
+class _GotoFieldBaseMacro(Macro):
     """Go to field macro."""
 
     name = "goto_field"
@@ -519,3 +519,15 @@ class GotoFieldMacro(Macro):
                 return False
 
         return True
+
+
+class GotoFieldAPOMacro(_GotoFieldBaseMacro):
+    """Goto field macro for APO."""
+
+    observatory = "APO"
+
+
+class GotoFieldLCOMacro(_GotoFieldBaseMacro):
+    """Goto field macro for LCO."""
+
+    observatory = "LCO"

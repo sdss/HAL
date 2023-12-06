@@ -100,4 +100,9 @@ class ActorHelpers:
 
         self.scripts = Scripts(actor, actor.config["scripts"][self.observatory])
 
-        self.macros = {macro.name: macro for macro in all_macros}
+        self.macros = {
+            macro.name: macro
+            for macro in all_macros
+            if macro.observatory is None
+            or macro.observatory.lower() == self.observatory.lower()
+        }
