@@ -17,7 +17,7 @@ from sdsstools import read_yaml_file
 
 import hal
 from hal.actor import HALActor
-from hal.helpers import HALHelper
+from hal.helpers import HALHelper, overhead
 from hal.macros import Macro
 
 
@@ -35,10 +35,8 @@ def mock_send_command(mocker):
 
 @pytest.fixture(autouse=True)
 def mock_overhead_table(mocker: MockerFixture):
-    import sdssdb.peewee.sdss5db.opsdb
-
-    mocker.patch.object(sdssdb.peewee.sdss5db.opsdb, "Overhead", autospec=True)
-    mocker.patch.object(sdssdb.peewee.sdss5db.opsdb, "database", autospec=True)
+    mocker.patch.object(overhead, "Overhead", autospec=True)
+    mocker.patch.object(overhead, "database", autospec=True)
 
 
 @pytest.fixture

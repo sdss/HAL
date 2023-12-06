@@ -14,9 +14,9 @@ import time
 from typing import TYPE_CHECKING
 
 import pytest
-import sdssdb.peewee.sdss5db.opsdb
 from pytest_mock import MockerFixture
 
+from hal.helpers import overhead
 from hal.helpers.overhead import OverheadHelper
 
 
@@ -89,7 +89,7 @@ async def test_overhead_helper_update_database_connect_fails(
     overhead_helper: OverheadHelper,
     mocker: MockerFixture,
 ):
-    db = mocker.patch.object(sdssdb.peewee.sdss5db.opsdb, "database")
+    db = mocker.patch.object(overhead, "database")
     type(db).connected = mocker.PropertyMock(return_value=False)
 
     assert overhead_helper.update_database() is None
@@ -98,12 +98,12 @@ async def test_overhead_helper_update_database_connect_fails(
     assert "Failed connecting to DB" in command.replies[-1].message["text"]
 
 
-async def test_overhead_helper_update_database_indert_fails(
+async def test_overhead_helper_update_database_insert_fails(
     overhead_helper: OverheadHelper,
     mocker: MockerFixture,
 ):
     mocker.patch.object(
-        sdssdb.peewee.sdss5db.opsdb.Overhead,
+        overhead.Overhead,
         "insert",
         side_effect=RuntimeError,
     )

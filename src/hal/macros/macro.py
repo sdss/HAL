@@ -357,7 +357,12 @@ class Macro:
 
             try:
                 self.set_stage_status(cleanup_stage, StageStatus.ACTIVE)
-                await asyncio.gather(*self._get_coros(cleanup_stage))
+                await asyncio.gather(
+                    *[
+                        record_overhead(self)(coro)
+                        for coro in self._get_coros(cleanup_stage)
+                    ]
+                )
                 self.set_stage_status(cleanup_stage, StageStatus.FINISHED)
             except Exception as err:
                 self.command.error(f"Cleanup {cleanup_stage} failed: {err}")
@@ -366,7 +371,7 @@ class Macro:
 
         self.running = False
 
-    async def run(self):
+    async def run(self) -> bool:
         """Executes the macro allowing for cancellation."""
 
         if self.running:
@@ -382,7 +387,8 @@ class Macro:
         self._running_task = asyncio.create_task(self._do_run())
 
         try:
-            await self._running_task
+            async with OverheadHelper(self, ""):
+                await self._running_task
         except asyncio.CancelledError:
             with suppress(asyncio.CancelledError):
                 self._running_task.cancel()
@@ -417,7 +423,6 @@ class Macro:
 
         for istage, stage in enumerate(self.stages):
             coros = self._get_coros(stage)
-            print(coros)
             wrapped_coros = [
                 asyncio.create_task(record_overhead(self)(coro)) for coro in coros
             ]

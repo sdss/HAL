@@ -8,13 +8,14 @@
 
 from __future__ import annotations
 
-import asyncio
 import sys
 import time
 from dataclasses import dataclass
 from datetime import datetime
 
 from typing import TYPE_CHECKING
+
+from sdssdb.peewee.sdss5db.opsdb import Overhead, database
 
 
 if TYPE_CHECKING:
@@ -39,6 +40,9 @@ class OverheadHelper:
 
         self.success: bool = False
 
+        if database.connected:
+            database.become_admin()
+
     async def start(self):
         """Starts the timer."""
 
@@ -61,7 +65,9 @@ class OverheadHelper:
         self.elapsed = round(time.time() - self.start_time, 2)
 
         await self.emit_keywords()
-        await asyncio.get_running_loop().run_in_executor(None, self.update_database)
+
+        # Cannot run in executor or the database will not be connected.
+        self.update_database()
 
         return
 
@@ -88,7 +94,13 @@ class OverheadHelper:
             command.warning(f"Overhead was not recorded for stage {stage_full}.")
             return
 
-        command.debug(stage_duration=[self.macro.name, self.stage, self.elapsed])
+        command.debug(
+            stage_duration=[
+                self.macro.name,
+                self.stage if self.stage else '""',
+                self.elapsed,
+            ]
+        )
 
     def _get_datetime(self, timestamp: float | None):
         """Converts a timestamp to a datetime object."""
@@ -105,8 +117,6 @@ class OverheadHelper:
 
     def update_database(self):
         """Updates the database with the overhead."""
-
-        from sdssdb.peewee.sdss5db.opsdb import Overhead, database
 
         command = self.macro.command
 
