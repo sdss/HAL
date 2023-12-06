@@ -88,7 +88,7 @@ class OverheadHelper:
             command.warning(f"Overhead was not recorded for stage {stage_full}.")
             return
 
-        command.info(stage_duration=[self.macro.name, self.stage, self.elapsed])
+        command.debug(stage_duration=[self.macro.name, self.stage, self.elapsed])
 
     def _get_datetime(self, timestamp: float | None):
         """Converts a timestamp to a datetime object."""
