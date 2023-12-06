@@ -16,6 +16,8 @@ from datetime import datetime
 
 from typing import TYPE_CHECKING
 
+from sdssdb.peewee.sdss5db.opsdb import Overhead, database
+
 
 if TYPE_CHECKING:
     from hal.macros.macro import Macro
@@ -39,6 +41,9 @@ class OverheadHelper:
 
         self.success: bool = False
 
+        if database.connected:
+            database.become_admin()
+
     async def start(self):
         """Starts the timer."""
 
@@ -61,7 +66,9 @@ class OverheadHelper:
         self.elapsed = round(time.time() - self.start_time, 2)
 
         await self.emit_keywords()
-        await asyncio.get_running_loop().run_in_executor(None, self.update_database)
+
+        # Cannot run in executor or the database will not be connected.
+        self.update_database()
 
         return
 
@@ -105,8 +112,6 @@ class OverheadHelper:
 
     def update_database(self):
         """Updates the database with the overhead."""
-
-        from sdssdb.peewee.sdss5db.opsdb import Overhead, database
 
         command = self.macro.command
 
