@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from hal.actor import HALCommandType
 
 
-__all__ = ["FFSHelper"]
+__all__ = ["FFSHelper", "FFSStatus", "FFSLCOHelper"]
 
 
 class FFSHelper(HALHelper):
@@ -74,3 +74,19 @@ class FFSStatus(enum.Enum):
     CLOSED = "01"
     OPEN = "10"
     INVALID = "11"
+
+
+class FFSLCOHelper(FFSHelper):
+    """A version of FFS for LCO. Mainly a mocker that does nothing."""
+
+    def all_closed(self):
+        return True
+
+    def all_open(self):
+        return True
+
+    async def open(self, command: HALCommandType):
+        pass
+
+    async def close(self, command: HALCommandType):
+        pass

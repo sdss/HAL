@@ -71,6 +71,7 @@ class ActorHelpers:
             BOSSHelper,
             ChernoHelper,
             FFSHelper,
+            FFSLCOHelper,
             HALHelper,
             JaegerHelper,
             LampsHelper,
@@ -85,10 +86,16 @@ class ActorHelpers:
         self.apogee = APOGEEHelper(actor)
         self.boss = BOSSHelper(actor)
         self.cherno = ChernoHelper(actor)
-        self.ffs = FFSHelper(actor)
         self.jaeger = JaegerHelper(actor)
-        self.lamps = LampsHelper(actor)
-        self.tcc = TCCHelper(actor)
+
+        if self.observatory == "APO":
+            self.ffs = FFSHelper(actor)
+            self.lamps = LampsHelper(actor)
+            self.tcc = TCCHelper(actor)
+        else:
+            self.ffs = FFSLCOHelper(actor)
+            self.lamps = LampsLCOHelper(actor)
+            self.tcc = TCCLCOHelper(actor)
 
         self.bypasses: set[str] = set(actor.config["bypasses"])
         self._available_bypasses = ["all"]

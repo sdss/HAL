@@ -531,3 +531,6 @@ class GotoFieldLCOMacro(_GotoFieldBaseMacro):
     """Goto field macro for LCO."""
 
     observatory = "LCO"
+
+    async def _close_ffs(self, wait: bool = True):
+        return True
