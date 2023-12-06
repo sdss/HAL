@@ -422,7 +422,6 @@ class Macro:
 
         for istage, stage in enumerate(self.stages):
             coros = self._get_coros(stage)
-            print(coros)
             wrapped_coros = [
                 asyncio.create_task(record_overhead(self)(coro)) for coro in coros
             ]
