@@ -40,7 +40,7 @@ async def test_macro_stage_fails(actor, macro: Macro, mocker):
     assert "cleanup,finished" in last_stage_status
 
     last_stage_duration = actor.mock_replies[-1]["stage_duration"]
-    assert "macro_test,," in last_stage_duration
+    assert 'macro_test,"",' in last_stage_duration
 
     stage2.assert_called()
     cleanup.assert_called()

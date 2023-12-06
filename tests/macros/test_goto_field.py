@@ -70,5 +70,5 @@ async def test_goto_field_fails_tcc(goto_field_macro, mocker: MockerFixture):
 
     # Entire macro duration
     assert command.replies[-1].message["stage_duration"][0] == "goto_field"
-    assert command.replies[-1].message["stage_duration"][1] == ""
+    assert command.replies[-1].message["stage_duration"][1] == '""'
     assert isinstance(command.replies[-1].message["stage_duration"][2], float)

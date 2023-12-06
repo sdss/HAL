@@ -8,7 +8,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import sys
 import time
 from dataclasses import dataclass
@@ -95,7 +94,13 @@ class OverheadHelper:
             command.warning(f"Overhead was not recorded for stage {stage_full}.")
             return
 
-        command.debug(stage_duration=[self.macro.name, self.stage, self.elapsed])
+        command.debug(
+            stage_duration=[
+                self.macro.name,
+                self.stage if self.stage else '""',
+                self.elapsed,
+            ]
+        )
 
     def _get_datetime(self, timestamp: float | None):
         """Converts a timestamp to a datetime object."""
