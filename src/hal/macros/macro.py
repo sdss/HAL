@@ -356,7 +356,12 @@ class Macro:
 
             try:
                 self.set_stage_status(cleanup_stage, StageStatus.ACTIVE)
-                await asyncio.gather(*self._get_coros(cleanup_stage))
+                await asyncio.gather(
+                    *[
+                        record_overhead(self)(coro)
+                        for coro in self._get_coros(cleanup_stage)
+                    ]
+                )
                 self.set_stage_status(cleanup_stage, StageStatus.FINISHED)
             except Exception as err:
                 self.command.error(f"Cleanup {cleanup_stage} failed: {err}")
