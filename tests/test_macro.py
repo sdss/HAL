@@ -21,7 +21,9 @@ if TYPE_CHECKING:
 async def test_macro(actor, macro: Macro, command: HALCommandType):
     await macro.run()
 
-    assert len(actor.mock_replies) == 13
+    assert len(actor.mock_replies) == 14
+
+    # This checks the first stage_duration
     assert command.replies.get("stage_duration") == ["macro_test", "stage1", 0.0]
 
 
@@ -33,9 +35,12 @@ async def test_macro_stage_fails(actor, macro: Macro, mocker):
 
     assert macro.running is False
 
-    last_stage_status = actor.mock_replies[-2]["stage_status"]
+    last_stage_status = actor.mock_replies[-3]["stage_status"]
     assert "stage2,failed" in last_stage_status
     assert "cleanup,finished" in last_stage_status
+
+    last_stage_duration = actor.mock_replies[-1]["stage_duration"]
+    assert "macro_test,," in last_stage_duration
 
     stage2.assert_called()
     cleanup.assert_called()

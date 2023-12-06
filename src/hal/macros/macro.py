@@ -365,7 +365,7 @@ class Macro:
 
         self.running = False
 
-    async def run(self):
+    async def run(self) -> bool:
         """Executes the macro allowing for cancellation."""
 
         if self.running:
@@ -381,7 +381,8 @@ class Macro:
         self._running_task = asyncio.create_task(self._do_run())
 
         try:
-            await self._running_task
+            async with OverheadHelper(self, ""):
+                await self._running_task
         except asyncio.CancelledError:
             with suppress(asyncio.CancelledError):
                 self._running_task.cancel()
