@@ -39,16 +39,20 @@ class OverheadHelper:
 
         self.success: bool = False
 
-    async def __aenter__(self):
+    async def start(self):
         """Starts the timer."""
 
         self.elapsed = 0
         self.start_time = time.time()
 
+    async def __aenter__(self):
+        """Starts the timer."""
+
+        await self.start()
         return self
 
-    async def __aexit__(self, exc_type, exc_value, traceback):
-        """Stops the timer and records the overhead."""
+    async def stop(self):
+        """Stops the timer and records overheads."""
 
         if self.start_time is None:
             raise ValueError("Timer not started")
@@ -56,13 +60,20 @@ class OverheadHelper:
         self.end_time = time.time()
         self.elapsed = round(time.time() - self.start_time, 2)
 
+        await self.emit_keywords()
+        await asyncio.get_running_loop().run_in_executor(None, self.update_database)
+
+        return
+
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        """Stops the timer and records the overhead."""
+
         if exc_type is not None:
             self.success = False
         else:
             self.success = True
 
-        await self.emit_keywords()
-        asyncio.get_running_loop().call_soon(self.update_database)
+        await self.stop()
 
         # __aexit__ will re-raise the exception if the return value is None/False.
         return self.success
