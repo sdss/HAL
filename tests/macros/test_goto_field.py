@@ -8,7 +8,12 @@
 
 from __future__ import annotations
 
+import asyncio
+
 import pytest
+from pytest_mock import MockerFixture
+
+from hal.exceptions import MacroError
 
 
 pytestmark = [pytest.mark.asyncio]
@@ -29,6 +34,7 @@ async def goto_field_macro(actor, command, mocker):
         None,
         None,
         None,
+        False,
     ]
 
     actor.models["tcc"]["axePos"].value = [100, 60, 0]
@@ -42,12 +48,21 @@ async def goto_field_macro(actor, command, mocker):
     yield macro
 
 
-async def test_goto_field_fails_tcc(goto_field_macro):
+async def test_goto_field_fails_tcc(goto_field_macro, mocker: MockerFixture):
+    mocker.patch.object(goto_field_macro, "_all_lamps_off", return_value=True)
+
+    # This causes the slew stage to fail immediately since the first thing it does
+    # is sleep for a bit.
+    mocker.patch.object(asyncio, "sleep", side_effect=MacroError)
     await goto_field_macro.run()
 
+    command = goto_field_macro.command
+
     # Macros don't finish commands.
-    assert not goto_field_macro.command.status.is_done
+    assert not command.status.is_done
     assert not goto_field_macro.running
 
-    reply_codes = [reply.flag for reply in goto_field_macro.command.actor.mock_replies]
+    reply_codes = [reply.flag for reply in command.actor.mock_replies]
     assert "e" in reply_codes
+
+    assert command.replies[-1].message["stage_duration"][1] == "slew:reconfigure"

@@ -415,10 +415,19 @@ class Macro:
         current_task: asyncio.Future | None = None
 
         for istage, stage in enumerate(self.stages):
+            coros = self._get_coros(stage)
+            print(coros)
             wrapped_coros = [
-                asyncio.create_task(record_overhead(self)(coro))
-                for coro in self._get_coros(stage)
+                asyncio.create_task(record_overhead(self)(coro)) for coro in coros
             ]
+
+            # If we are running multiple stages concurrently, we also record the
+            # overhead of the entire set.
+            overhead_helper: OverheadHelper | None = None
+            if len(wrapped_coros) > 1:
+                costage_name = ":".join([coro.__name__ for coro in coros])
+                overhead_helper = OverheadHelper(self, costage_name)
+                await overhead_helper.start()
 
             current_task = asyncio.gather(*wrapped_coros)
 
@@ -474,6 +483,10 @@ class Macro:
 
                 await self.fail_macro(err, stage=stage)
                 return
+
+            finally:
+                if overhead_helper is not None:
+                    await overhead_helper.stop()
 
     def get_active_stages(self):
         """Returns a list of running stages."""
