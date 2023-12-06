@@ -6,6 +6,10 @@
 
 * Deprecated Python 3.9.
 
+### 🚀 New
+
+* [#14](https://github.com/sdss/HAL/issues/14) Record overheads for each stage and macro in the database and output `stage_duration` keyword.
+
 
 ## 0.6.0 - December 4, 2023
 
