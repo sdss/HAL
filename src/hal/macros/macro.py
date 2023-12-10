@@ -491,6 +491,8 @@ class Macro:
 
             finally:
                 if overhead_helper is not None:
+                    if not self.cancelled and not self.failed:
+                        overhead_helper.success = True
                     await overhead_helper.stop()
 
     def get_active_stages(self):

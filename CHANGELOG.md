@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🔧 Fixed
+
+* Correctly mark whether a set of concurrent stages succeeded in the database overhead table.
+
+
 ## 0.7.0 - December 6, 2023
 
 ### 🔥 Breaking changes
