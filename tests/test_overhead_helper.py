@@ -112,3 +112,19 @@ async def test_overhead_helper_update_database_insert_fails(
 
     command = overhead_helper.macro.command
     assert "Failed creating overhead record" in command.replies[-1].message["text"]
+
+
+async def test_overhead_helper_macro_fails(overhead_helper: OverheadHelper):
+    async with overhead_helper:
+        await overhead_helper.macro.fail_macro("An error was raised.")
+        await asyncio.sleep(0.1)
+
+    assert overhead_helper.success is False
+
+
+async def test_overhead_helper_macro_cancelled(overhead_helper: OverheadHelper):
+    async with overhead_helper:
+        overhead_helper.macro.cancelled = True
+        await asyncio.sleep(0.1)
+
+    assert overhead_helper.success is False

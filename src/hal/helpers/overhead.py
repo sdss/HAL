@@ -38,7 +38,7 @@ class OverheadHelper:
         self.start_time: float | None = None
         self.end_time: float | None = None
 
-        self.success: bool = False
+        self.success: bool = True
 
         if database.connected:
             database.become_admin()
@@ -63,6 +63,9 @@ class OverheadHelper:
 
         self.end_time = time.time()
         self.elapsed = round(time.time() - self.start_time, 2)
+
+        if self.macro.cancelled or self.macro.failed:
+            self.success = False
 
         await self.emit_keywords()
 
