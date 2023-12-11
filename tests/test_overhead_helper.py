@@ -31,7 +31,7 @@ def overhead_helper(macro: Macro):
 
     stage = "stage1"
 
-    yield OverheadHelper(macro, stage)
+    yield OverheadHelper(macro, stage, macro_id=macro.macro_id)
 
 
 async def test_overhead_helper(
@@ -40,6 +40,8 @@ async def test_overhead_helper(
 ):
     assert isinstance(overhead_helper, OverheadHelper)
 
+    assert overhead_helper.macro.macro_id == 1
+    assert overhead_helper.macro_id == 1
     assert overhead_helper.macro is not None
     assert overhead_helper.elapsed is None
 
