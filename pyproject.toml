@@ -92,7 +92,9 @@ include = ["src/hal/*"]
 omit = [
     "*/__init__.py",
     "src/hal/__main__.py",
-    "src/hal/exceptions.py"
+    "src/hal/exceptions.py",
+    "src/hal/macros/test_macro.py",
+    "src/hal/actor/commands/test.py"
 ]
 
 [tool.coverage.report]

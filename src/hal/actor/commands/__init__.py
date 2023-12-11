@@ -101,3 +101,4 @@ from .goto import *
 from .goto_field import *
 from .script import *
 from .status import *
+from .test import *
