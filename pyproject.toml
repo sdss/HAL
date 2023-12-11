@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sdss-hal"
-version = "0.7.2"
+version = "0.7.3a0"
 description = "High-level observing tool for SDSS-V (replaces SOP)"
 authors = ["José Sánchez-Gallego <gallegoj@uw.edu>"]
 license = "BSD-3-Clause"
