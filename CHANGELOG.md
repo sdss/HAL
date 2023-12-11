@@ -1,5 +1,13 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* The overheads are now recorded with a `macro_id` that increases for each new macro run.
+* Added a `test` macro and command that just waits but is useful for simple testing.
+
+
 ## 0.7.1 - December 10, 2023
 
 ### 🔧 Fixed
