@@ -109,6 +109,7 @@ class ChernoHelper(HALHelper):
         target_rms: float | None = None,
         wait: bool | None = None,
         max_iterations: int | None = None,
+        wait_time: float | None = None,
     ):
         """Runs the acquisition command.
 
@@ -126,6 +127,9 @@ class ChernoHelper(HALHelper):
             block only if ``target_rms`` has been defined.
         max_iterations
             Maximum number of iterations before failing.
+        wait_time
+            Time to wait between iterations, for example to let the telescope
+            settle.
 
         """
 
@@ -136,6 +140,9 @@ class ChernoHelper(HALHelper):
 
         if max_iterations:
             command_str += f" -x {max_iterations}"
+
+        if wait_time:
+            command_str += f" -w {wait_time}"
 
         if block:
             await self._send_command(command, "cherno", command_str)
@@ -148,11 +155,16 @@ class ChernoHelper(HALHelper):
         self,
         command: HALCommandType,
         exposure_time: float = 15,
+        wait_time: float | None = None,
         wait: bool = False,
     ):
         """Start the guide loop."""
 
-        coro = self._send_command(command, "cherno", f"guide -t {exposure_time}")
+        command_str = f"guide -t {exposure_time}"
+        if wait_time:
+            command_str += f" -w {wait_time}"
+
+        coro = self._send_command(command, "cherno", command_str)
 
         if wait:
             await coro

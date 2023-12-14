@@ -46,22 +46,39 @@ lamp_warmup:
 
 macros:
   goto_field:
+    fvc:
+      az: 121
+      alt: 70
+      rot: 190
+    keep_offsets: true
+    fixed_rot: false
+    fixed_altaz: false
     arc_time:
       APO: 4
       LCO: 10
     flat_time:
       APO: 25
       LCO: 100
-    guider_time: 15.
-    acquisition_target_rms: 1.0
-    acquisition_min_rms: 3.0
-    acquisition_max_iterations: 4
-    fvc_az: 121
-    fvc_alt: 70
-    fvc_rot: 190
-    keep_offsets: true
-    fixed_rot: false
-    fixed_altaz: false
+    acquisition:
+      APO:
+        exposure_time: 15
+        target_rms: 1.0
+        min_rms: 3.0
+        max_iterations: 4
+        wait_time: null
+      LCO:
+        exposure_time: 15
+        target_rms: 0.8
+        min_rms: 3.0
+        max_iterations: 5
+        wait_time: 5
+    guide:
+      APO:
+        exposure_time: 15
+        wait_time: null
+      LCO:
+        exposure_time: 15
+        wait_time: 10
     auto_mode:
       cloned_stages:
         APO: []

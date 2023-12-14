@@ -270,19 +270,23 @@ class _GotoFieldBaseMacro(Macro):
 
         await self._guide_preconditions("acquire")
 
-        guider_time = self.config["guider_time"]
-        target_rms = self.config["acquisition_target_rms"]
-        min_rms = self.config["acquisition_min_rms"]
-        max_iterations = self.config["acquisition_max_iterations"]
+        acquisition_config = self.config["acquisition"][self.observatory]
+
+        exposure_time = acquisition_config["exposure_time"]
+        target_rms = acquisition_config["target_rms"]
+        min_rms = acquisition_config["min_rms"]
+        max_iterations = acquisition_config["max_iterations"]
+        wait_time = acquisition_config["wait_time"]
 
         self.command.info("Acquiring field.")
 
         try:
             await self.helpers.cherno.acquire(
                 self.command,
-                exposure_time=guider_time,
+                exposure_time=exposure_time,
                 target_rms=target_rms,
                 max_iterations=max_iterations,
+                wait_time=wait_time,
             )
         except HALError:
             # If we have exhausted the number of exposures and not reached
@@ -305,12 +309,13 @@ class _GotoFieldBaseMacro(Macro):
 
         await self._guide_preconditions("guide")
 
-        guider_time = self.config["guider_time"]
+        guide_config = self.config["guide"][self.observatory]
 
         self.command.info("Starting guide loop.")
         await self.helpers.cherno.guide(
             self.command,
-            exposure_time=guider_time,
+            exposure_time=guide_config["exposure_time"],
+            wait_time=guide_config["wait_time"],
             wait=False,
         )
 
@@ -402,9 +407,9 @@ class GotoFieldAPOMacro(_GotoFieldBaseMacro):
             raise HALError("Some axes are not clear. Cannot continue.")
 
         # The fixed position at which to slew for the FVC loop.
-        alt = self.config["fvc_alt"]
-        az = self.config["fvc_az"]
-        rot = self.config["fvc_rot"]
+        alt = self.config["fvc"]["alt"]
+        az = self.config["fvc"]["az"]
+        rot = self.config["fvc"]["rot"]
         keep_offsets = self.config["keep_offsets"]
 
         if self.config["fixed_rot"] is False:
