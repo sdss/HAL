@@ -590,7 +590,7 @@ class GotoFieldAPOMacro(_GotoFieldBaseMacro):
             raise MacroError("Axes must be tracking for acquisition.")
 
 
-class GotoFieldLCOMacro(_GotoFieldBaseMacro):
+class GotoFieldLCOMacro(_GotoFieldBaseMacro):  # pragma: no cover
     """Goto field macro for LCO."""
 
     observatory = "LCO"
