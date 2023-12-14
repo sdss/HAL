@@ -37,6 +37,7 @@ def mock_send_command(mocker):
 def mock_overhead_table(mocker: MockerFixture):
     mocker.patch.object(overhead, "Overhead", autospec=True)
     mocker.patch.object(overhead, "database", autospec=True)
+    mocker.patch.object(overhead.OverheadHelper, "get_next_macro_id", return_value=1)
 
 
 @pytest.fixture

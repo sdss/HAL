@@ -37,7 +37,11 @@ def record_overhead(macro: Macro):
     """Runs a macro stage and records its overhead."""
 
     async def record_overhead_wrapper(stage_coro: Awaitable[None]):
-        overhead_helper = OverheadHelper(macro, stage_coro.__name__)
+        overhead_helper = OverheadHelper(
+            macro,
+            stage_coro.__name__,
+            macro_id=macro.macro_id,
+        )
         async with overhead_helper:
             await stage_coro
 
@@ -108,6 +112,8 @@ class Macro:
         )
 
         self.command: HALCommandType
+
+        self.macro_id = OverheadHelper.get_next_macro_id()
 
         self._running: bool = False
         self.failed: bool = False
@@ -387,7 +393,7 @@ class Macro:
         self._running_task = asyncio.create_task(self._do_run())
 
         try:
-            async with OverheadHelper(self, ""):
+            async with OverheadHelper(self, "", macro_id=self.macro_id):
                 await self._running_task
         except asyncio.CancelledError:
             with suppress(asyncio.CancelledError):
@@ -432,7 +438,11 @@ class Macro:
             overhead_helper: OverheadHelper | None = None
             if len(wrapped_coros) > 1:
                 costage_name = ":".join([coro.__name__ for coro in coros])
-                overhead_helper = OverheadHelper(self, costage_name)
+                overhead_helper = OverheadHelper(
+                    self,
+                    costage_name,
+                    macro_id=self.macro_id,
+                )
                 await overhead_helper.start()
 
             current_task = asyncio.gather(*wrapped_coros)

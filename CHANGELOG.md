@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.7.2 - December 11, 2023
+
+### ✨ Improved
+
+* The overheads are now recorded with a `macro_id` that increases for each new macro run.
+* Added a `test` macro and command that just waits but is useful for simple testing.
+
+
+## 0.7.1 - December 10, 2023
+
+### 🔧 Fixed
+
+* Correctly mark whether a set of concurrent stages succeeded in the database overhead table.
+
+
 ## 0.7.0 - December 6, 2023
 
 ### 🔥 Breaking changes

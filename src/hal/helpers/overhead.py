@@ -10,12 +10,16 @@ from __future__ import annotations
 
 import sys
 import time
+import warnings
 from dataclasses import dataclass
 from datetime import datetime
 
 from typing import TYPE_CHECKING
 
+import peewee
 from sdssdb.peewee.sdss5db.opsdb import Overhead, database
+
+from hal.exceptions import HALWarning
 
 
 if TYPE_CHECKING:
@@ -31,6 +35,7 @@ class OverheadHelper:
 
     macro: Macro
     stage: str
+    macro_id: int | None = None
 
     def __post_init__(self) -> None:
         self.elapsed: float | None = None
@@ -38,7 +43,7 @@ class OverheadHelper:
         self.start_time: float | None = None
         self.end_time: float | None = None
 
-        self.success: bool = False
+        self.success: bool = True
 
         if database.connected:
             database.become_admin()
@@ -63,6 +68,9 @@ class OverheadHelper:
 
         self.end_time = time.time()
         self.elapsed = round(time.time() - self.start_time, 2)
+
+        if self.macro.cancelled or self.macro.failed:
+            self.success = False
 
         await self.emit_keywords()
 
@@ -115,6 +123,19 @@ class OverheadHelper:
 
         return datetime.utcfromtimestamp(timestamp)
 
+    @staticmethod
+    def get_next_macro_id():  # pragma: no cover
+        """Returns the next ``macro_id`` value."""
+
+        if not database.connected:
+            warnings.warn(
+                "Failed connecting to DB. Overhead cannot be recorded.",
+                HALWarning,
+            )
+            return
+
+        return Overhead.select(peewee.fn.MAX(Overhead.macro_id)).scalar() + 1
+
     def update_database(self):
         """Updates the database with the overhead."""
 
@@ -135,6 +156,7 @@ class OverheadHelper:
 
                 Overhead.insert(
                     configuration_id=cid,
+                    macro_id=self.macro_id,
                     macro=self.macro.name,
                     stage=self.stage,
                     start_time=start_time_dt,
