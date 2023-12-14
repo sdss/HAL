@@ -595,8 +595,8 @@ class GotoFieldLCOMacro(_GotoFieldBaseMacro):
 
     observatory = "LCO"
 
-    def __init__(self, name: str | None = None):
-        super().__init__(name)
+    def __init__(self):
+        super().__init__()
 
         self.screen_on: bool = False
 
