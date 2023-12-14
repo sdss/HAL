@@ -39,7 +39,7 @@ class HALActor(LegacyActor):
         if self.observatory == "APO":
             kwargs["models"] += ["tcc", "mcp", "boss"]
         elif self.observatory == "LCO":
-            kwargs["models"] += ["yao"]
+            kwargs["models"] += ["yao", "lcolamps"]
 
         super().__init__(*args, schema=schema, **kwargs)
 
@@ -71,10 +71,10 @@ class ActorHelpers:
             BOSSHelper,
             ChernoHelper,
             FFSHelper,
-            FFSLCOHelper,
             HALHelper,
             JaegerHelper,
-            LampsHelper,
+            LampsHelperAPO,
+            LampsHelperLCO,
             Scripts,
             TCCHelper,
         )
@@ -90,12 +90,12 @@ class ActorHelpers:
 
         if self.observatory == "APO":
             self.ffs = FFSHelper(actor)
-            self.lamps = LampsHelper(actor)
+            self.lamps = LampsHelperAPO(actor)
             self.tcc = TCCHelper(actor)
         else:
-            self.ffs = FFSLCOHelper(actor)
-            self.lamps = LampsLCOHelper(actor)
-            self.tcc = TCCLCOHelper(actor)
+            self.ffs = None
+            self.lamps = LampsHelperLCO(actor)
+            self.tcc = None
 
         self.bypasses: set[str] = set(actor.config["bypasses"])
         self._available_bypasses = ["all"]
