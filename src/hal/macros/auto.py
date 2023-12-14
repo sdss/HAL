@@ -71,6 +71,8 @@ class AutoModeMacro(Macro):
     async def goto_field(self):
         """Runs the goto-field macro with the appropriate stages."""
 
+        observatory = self.actor.observatory
+
         goto = self.helpers.macros["goto_field"]
         expose_macro = self.helpers.macros["expose"]
 
@@ -86,17 +88,18 @@ class AutoModeMacro(Macro):
             return
 
         configuration = self.helpers.jaeger.configuration
+        auto_mode_stages = config["macros"]["goto_field"]["auto_mode"]
 
         if configuration is None:
             return MacroError("No configuration loaded.")
         elif configuration.cloned is True:
-            stages = config["macros"]["goto_field"]["cloned_stages"]
+            stages = auto_mode_stages["cloned_stages"][observatory]
         elif configuration.new_field is False:
-            stages = config["macros"]["goto_field"]["repeat_field_stages"]
+            stages = auto_mode_stages["repeat_field_stages"][observatory]
         elif configuration.is_rm_field is True:
-            stages = config["macros"]["goto_field"]["rm_field_stages"]
+            stages = auto_mode_stages["rm_field_stages"][observatory]
         else:
-            stages = config["macros"]["goto_field"]["new_field_stages"]
+            stages = auto_mode_stages["new_field_stages"][observatory]
 
         if len(stages) == 0:  # For cloned designs.
             self.message("Skipping goto-field.")

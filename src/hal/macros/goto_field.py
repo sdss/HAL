@@ -189,7 +189,7 @@ class _GotoFieldBaseMacro(Macro):
         await self._ensure_lamps(mode="flat")
 
         # Now take the flat. Do not read it yet.
-        flat_time = self.config["flat_time"]
+        flat_time = self.config["flat_time"][self.observatory]
 
         self.command.debug("Starting BOSS flat exposure.")
 
@@ -201,7 +201,8 @@ class _GotoFieldBaseMacro(Macro):
             read_async=True,
         )
 
-        asyncio.create_task(self.helpers.lamps.turn_lamp(self.command, "ff", False))
+        ff_lamp = "ff" if self.observatory == "APO" else "TCS_FF"
+        asyncio.create_task(self.helpers.lamps.turn_lamp(self.command, ff_lamp, False))
 
     async def boss_hartmann(self):
         """Takes the hartmann sequence."""
@@ -214,9 +215,15 @@ class _GotoFieldBaseMacro(Macro):
 
         # Run hartmann and adjust the collimator but ignore residuals.
         self.command.info("Running hartmann collimate.")
+
+        if self.observatory == "APO":
+            command_string = "collimate ignoreResiduals"
+        else:
+            command_string = "collimate"
+
         await self.send_command(
             "hartmann",
-            "collimate ignoreResiduals",
+            command_string,
             time_limit=config["timeouts"]["hartmann"],
         )
 
@@ -242,7 +249,7 @@ class _GotoFieldBaseMacro(Macro):
 
         self.command.info("Taking BOSS arc.")
 
-        arc_time = self.config["arc_time"]
+        arc_time = self.config["arc_time"][self.observatory]
 
         await self.helpers.boss.expose(
             self.command,
@@ -602,34 +609,6 @@ class GotoFieldLCOMacro(_GotoFieldBaseMacro):
 
         # No need for this at LCO.
         return
-
-    async def boss_hartmann(self):
-        """Takes the hartmann sequence."""
-
-        await self._ensure_lamps(mode="hartmann")
-
-        if self.helpers.boss.readout_pending:  # Potential readout from the flat.
-            self.command.info("Waiting for BOSS to read out.")
-            await self.helpers.boss.readout(self.command)
-
-        # Run hartmann and adjust the collimator but ignore residuals.
-        self.command.info("Running hartmann collimate.")
-        await self.send_command(
-            "hartmann",
-            "collimate ignoreResiduals",
-            time_limit=config["timeouts"]["hartmann"],
-        )
-
-        # Now check if there are residuals that require modifying the blue ring.
-        sp1Residuals = self.actor.models["hartmann"]["sp1Residuals"][2]
-        if sp1Residuals != "OK":
-            raise MacroError(
-                "Please adjust the blue ring and run goto-field again. "
-                "The collimator has been adjusted."
-            )
-
-        if "boss_arcs" not in self.flat_stages:
-            await self._all_lamps_off(wait=False)
 
     async def _all_lamps_off(self, wait: bool = True):
         """Turns all the lamps off."""

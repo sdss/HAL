@@ -98,6 +98,7 @@ async def goto_field(
 
     assert command.actor
 
+    observatory = command.actor.observatory
     jaeger_helper = command.actor.helpers.jaeger
 
     if stages is not None and auto is True:
@@ -111,17 +112,18 @@ async def goto_field(
         # previous configuration has the same field_id, regardless of whether it
         # was observed or not.
         previous = jaeger_helper._previous[-1] if jaeger_helper._previous else None
+        auto_mode_stages = config["macros"]["goto_field"]["auto_mode"]
 
         if configuration is None:
             return command.fail("No configuration loaded. Auto mode cannot be used.")
         elif configuration.cloned is True:
-            stages = config["macros"]["goto_field"]["cloned_stages"]
+            stages = auto_mode_stages["cloned_stages"][observatory]
         elif previous and previous.field_id == configuration.field_id:
-            stages = config["macros"]["goto_field"]["repeat_field_stages"]
+            stages = auto_mode_stages["repeat_field_stages"][observatory]
         elif configuration.is_rm_field is True:
-            stages = config["macros"]["goto_field"]["rm_field_stages"]
+            stages = auto_mode_stages["rm_field_stages"][observatory]
         else:
-            stages = config["macros"]["goto_field"]["new_field_stages"]
+            stages = auto_mode_stages["new_field_stages"][observatory]
 
     if stages is not None and len(stages) == 0:
         return command.finish("No stages to run.")
