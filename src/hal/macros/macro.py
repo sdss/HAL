@@ -73,7 +73,7 @@ class Macro:
     """A base macro class that offers concurrency and cancellation."""
 
     name: ClassVar[str]
-    observatory: ClassVar[str | None] = None
+    observatory: str | None = None
 
     __RUNNING__: ClassVar[list[str]] = []
 
@@ -81,11 +81,7 @@ class Macro:
     __PRECONDITIONS__: list[StageType] = []
     __CLEANUP__: list[StageType] = []
 
-    def __init__(self, name: Optional[str] = None):
-        if name is None and not hasattr(self, "name"):
-            raise MacroError("The macro does not have a name attribute.")
-        self.name = name or self.name
-
+    def __init__(self):
         if not hasattr(self, "__STAGES__"):
             raise MacroError("Must override __STAGES__.")
 
@@ -157,6 +153,8 @@ class Macro:
             raise MacroError("A new command must be passed to reset.")
 
         self.command = command
+        if self.observatory is None and command.actor is not None:
+            self.observatory = command.actor.observatory
 
         if reset_stages is None:
             self.stages = self.__PRECONDITIONS__ + self.__STAGES__ + self.__CLEANUP__
