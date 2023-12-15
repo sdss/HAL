@@ -219,7 +219,7 @@ class _GotoFieldBaseMacro(Macro):
         if self.observatory == "APO":
             command_string = "collimate ignoreResiduals"
         else:
-            command_string = "collimate"
+            command_string = "collimate --keep-lamps"
 
         await self.send_command(
             "hartmann",
@@ -228,8 +228,9 @@ class _GotoFieldBaseMacro(Macro):
         )
 
         # Now check if there are residuals that require modifying the blue ring.
-        sp1Residuals = self.actor.models["hartmann"]["sp1Residuals"][2]
-        if sp1Residuals != "OK":
+        residuals_kw = "sp1Residuals" if self.observatory == "APO" else "sp2Residuals"
+        residuals = self.actor.models["hartmann"][residuals_kw][2]
+        if residuals != "OK":
             raise MacroError(
                 "Please adjust the blue ring and run goto-field again. "
                 "The collimator has been adjusted."
