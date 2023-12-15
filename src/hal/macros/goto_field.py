@@ -665,19 +665,21 @@ class GotoFieldLCOMacro(_GotoFieldBaseMacro):  # pragma: no cover
         ra, dec, pa = self._get_pointing()
 
         command_string = f"target {ra}, {dec} /posAngle={pa:.3f}"
-        if screen:
-            command_string += " /screen"
+        # if screen:
+        #     command_string += " /screen"
 
         self.command.info("Slewing to field RA/Dec/PA.")
-        await self.send_command("lcotcc", command_string)
+
+        # The command times out when it gets there, so for now we ignore the failure.
+        await self.send_command("lcotcc", command_string, raise_on_fail=False)
 
         self.screen_on = screen
 
     async def _remove_screen(self):
         """Ensures the screen is not in front of the telescope."""
 
-        if self.screen_on:
-            await self._slew_telescope(False)
+        # if self.screen_on:
+        #     await self._slew_telescope(False)
 
     async def _guide_preconditions(self, stage: str):
         """Ensure the system is ready to guide/acquire."""
