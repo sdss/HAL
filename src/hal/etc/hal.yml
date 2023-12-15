@@ -55,7 +55,7 @@ macros:
     fixed_altaz: false
     arc_time:
       APO: 4
-      LCO: 10
+      LCO: 45
     flat_time:
       APO: 25
       LCO: 100
