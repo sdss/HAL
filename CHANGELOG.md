@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.0b1 - December 15, 2023
+
+### 🚀 New
+
+* [[#16](https://github.com/sdss/HAL/issues/16)] Implement `goto-field` macro for LCO.
+
+
 ## 0.7.2 - December 11, 2023
 
 ### ✨ Improved
