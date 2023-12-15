@@ -25,8 +25,8 @@ class AutoModeMacro(Macro):
     __STAGES__ = ["load", "goto_field", "expose"]
     __CLEANUP__ = ["cleanup"]
 
-    def __init__(self, name: str | None = None):
-        super().__init__(name)
+    def __init__(self):
+        super().__init__()
 
         self._preload_design_task: asyncio.Task | None = None
 
