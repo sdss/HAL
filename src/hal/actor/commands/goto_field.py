@@ -37,8 +37,6 @@ __all__ = ["goto_field"]
 @click.option(
     "--guider-time",
     type=float,
-    default=config["macros"]["goto_field"]["guider_time"],
-    show_default=True,
     help="Exposure time for guiding/acquisition.",
 )
 @click.option(
