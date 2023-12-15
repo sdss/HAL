@@ -13,14 +13,14 @@ from time import time
 
 from hal import config
 from hal.exceptions import HALError, MacroError
-from hal.helpers.lamps import LampsHelper
+from hal.helpers.lamps import LampsHelperAPO, LampsHelperLCO
 from hal.macros import Macro
 
 
-__all__ = ["GotoFieldMacro"]
+__all__ = ["GotoFieldAPOMacro"]
 
 
-class GotoFieldMacro(Macro):
+class _GotoFieldBaseMacro(Macro):
     """Go to field macro."""
 
     name = "goto_field"
@@ -63,8 +63,15 @@ class GotoFieldMacro(Macro):
         # Stop the guider.
         # TODO: this will probably be different at LCO.
         if do_fvc or do_flat or do_arcs:
-            await self.helpers.cherno.stop_guiding(self.command)
-            await self.helpers.tcc.axis_stop(self.command)
+            if self.observatory == "APO":
+                assert self.helpers.tcc
+
+                await self.helpers.cherno.stop_guiding(self.command)
+                await self.helpers.tcc.axis_stop(self.command)
+
+            else:
+                if "slew" in stages:
+                    await self.helpers.cherno.stop_guiding(self.command)
 
         # Ensure the APOGEE shutter is closed but don't wait for it.
         asyncio.create_task(
@@ -84,87 +91,42 @@ class GotoFieldMacro(Macro):
         # Do not turn lamps if we are going to take an FVC image. We add a delay
         # since the APOGEE shutter is closing and we don't want to start turning on
         # the lamps until it's fully closed.
-        if do_flat and not do_fvc:
-            self._lamps_task = asyncio.create_task(
-                self.helpers.lamps.turn_lamp(
-                    self.command,
-                    ["ff"],
-                    True,
-                    turn_off_others=True,
-                    delay=10,
+        if self.observatory == "APO":
+            if do_flat and not do_fvc:
+                self._lamps_task = asyncio.create_task(
+                    self.helpers.lamps.turn_lamp(
+                        self.command,
+                        ["ff"],
+                        True,
+                        turn_off_others=True,
+                        delay=10,
+                    )
                 )
-            )
-        elif not do_flat and do_arcs:
-            if do_fvc:
-                lamps = ["HgCd"]
-            else:
-                lamps = ["HgCd", "Ne"]
+            elif not do_flat and do_arcs:
+                if do_fvc:
+                    lamps = ["HgCd"]
+                else:
+                    lamps = ["HgCd", "Ne"]
 
-            self._lamps_task = asyncio.create_task(
-                self.helpers.lamps.turn_lamp(
-                    self.command,
-                    lamps,
-                    True,
-                    turn_off_others=True,
-                    delay=10,
+                self._lamps_task = asyncio.create_task(
+                    self.helpers.lamps.turn_lamp(
+                        self.command,
+                        lamps,
+                        True,
+                        turn_off_others=True,
+                        delay=10,
+                    )
                 )
-            )
+            else:
+                await self._all_lamps_off(wait=False)
+
         else:
             await self._all_lamps_off(wait=False)
 
     async def slew(self):
         """Slew to field but keep the rotator at a fixed position."""
 
-        # Wait five seconds to give time for the axis stop we issued in Prepare to
-        # take effect.
-        await asyncio.sleep(5)
-
-        configuration_loaded = self.actor.models["jaeger"]["configuration_loaded"]
-        ra, dec, pa = configuration_loaded[3:6]
-
-        if any([ra is None, dec is None, pa is None]):
-            raise MacroError("Unknown RA/Dec/PA coordinates for field.")
-
-        result = self.actor.helpers.tcc.axes_are_clear()
-        if not result:
-            raise HALError("Some axes are not clear. Cannot continue.")
-
-        # The fixed position at which to slew for the FVC loop.
-        alt = self.config["fvc_alt"]
-        az = self.config["fvc_az"]
-        rot = self.config["fvc_rot"]
-        keep_offsets = self.config["keep_offsets"]
-
-        if self.config["fixed_rot"] is False:
-            self.command.info("Slewing to field RA/Dec/PA.")
-            await self.actor.helpers.tcc.goto_position(
-                self.command,
-                {"ra": ra, "dec": dec, "rot": pa},
-                rotwrap="middle",
-                keep_offsets=keep_offsets,
-            )
-        else:
-            if self.config["fixed_altaz"]:
-                self.command.info("Slewing to field with fixed rotator angle.")
-                track_command = f"track {az}, {alt} mount /rota={rot} /rottype=mount"
-
-            else:
-                self.command.info("Slewing to field with fixed alt/az/rot position.")
-                track_command = f"track {ra}, {dec} icrs /rota={rot} /rottype=mount"
-
-            slew_result = await self.actor.helpers.tcc.do_slew(
-                self.command,
-                track_command=track_command,
-                keep_offsets=keep_offsets,
-            )
-
-            if slew_result is False:
-                raise HALError("Failed slewing to position.")
-
-            self.command.info(text="Position reached.")
-
-        self.command.info("Halting the rotator.")
-        await self.helpers.tcc.axis_stop(self.command, axis="rot")
+        raise NotImplementedError()
 
     async def reconfigure(self):
         """Reconfigures the FPS."""
@@ -179,7 +141,9 @@ class GotoFieldMacro(Macro):
     async def fvc(self):
         """Run the FVC loop."""
 
-        if "slew" in self.flat_stages:
+        if "slew" in self.flat_stages and self.observatory == "APO":
+            assert self.helpers.tcc
+
             self.command.info("Halting the rotator.")
             await self.helpers.tcc.axis_stop(self.command, axis="rot")
 
@@ -197,21 +161,7 @@ class GotoFieldMacro(Macro):
     async def reslew(self):
         """Re-slew to field."""
 
-        configuration_loaded = self.actor.models["jaeger"]["configuration_loaded"]
-        ra, dec, pa = configuration_loaded[3:6]
-
-        if any([ra is None, dec is None, pa is None]):
-            raise MacroError("Unknown RA/Dec/PA coordinates for field.")
-
-        self.command.info("Re-slewing to field.")
-
-        # Start going to position asynchronously.
-        await self.actor.helpers.tcc.goto_position(
-            self.command,
-            {"ra": ra, "dec": dec, "rot": pa},
-            rotwrap="nearest",
-            keep_offsets=self.config["keep_offsets"],
-        )
+        raise NotImplementedError()
 
     async def lamps(self):
         """Ensures the correct lamps for calibrations are on."""
@@ -239,7 +189,7 @@ class GotoFieldMacro(Macro):
         await self._ensure_lamps(mode="flat")
 
         # Now take the flat. Do not read it yet.
-        flat_time = self.config["flat_time"]
+        flat_time = self.config["flat_time"][self.observatory]
 
         self.command.debug("Starting BOSS flat exposure.")
 
@@ -251,7 +201,8 @@ class GotoFieldMacro(Macro):
             read_async=True,
         )
 
-        asyncio.create_task(self.helpers.lamps.turn_lamp(self.command, "ff", False))
+        ff_lamp = "ff" if self.observatory == "APO" else "TCS_FF"
+        asyncio.create_task(self.helpers.lamps.turn_lamp(self.command, ff_lamp, False))
 
     async def boss_hartmann(self):
         """Takes the hartmann sequence."""
@@ -264,15 +215,22 @@ class GotoFieldMacro(Macro):
 
         # Run hartmann and adjust the collimator but ignore residuals.
         self.command.info("Running hartmann collimate.")
+
+        if self.observatory == "APO":
+            command_string = "collimate ignoreResiduals"
+        else:
+            command_string = "collimate --keep-lamps"
+
         await self.send_command(
             "hartmann",
-            "collimate ignoreResiduals",
+            command_string,
             time_limit=config["timeouts"]["hartmann"],
         )
 
         # Now check if there are residuals that require modifying the blue ring.
-        sp1Residuals = self.actor.models["hartmann"]["sp1Residuals"][2]
-        if sp1Residuals != "OK":
+        residuals_kw = "sp1Residuals" if self.observatory == "APO" else "sp2Residuals"
+        residuals = self.actor.models["hartmann"][residuals_kw][2]
+        if residuals != "OK":
             raise MacroError(
                 "Please adjust the blue ring and run goto-field again. "
                 "The collimator has been adjusted."
@@ -292,7 +250,7 @@ class GotoFieldMacro(Macro):
 
         self.command.info("Taking BOSS arc.")
 
-        arc_time = self.config["arc_time"]
+        arc_time = self.config["arc_time"][self.observatory]
 
         await self.helpers.boss.expose(
             self.command,
@@ -311,38 +269,25 @@ class GotoFieldMacro(Macro):
             self.command.info("Already guiding.")
             return
 
-        pretasks = []
+        await self._guide_preconditions("acquire")
 
-        if "reslew" not in self.flat_stages:
-            self.command.info("Re-slewing to field.")
-            pretasks.append(self.reslew())
+        acquisition_config = self.config["acquisition"][self.observatory]
 
-        if not self.helpers.ffs.all_open():
-            self.command.info("Opening FFS")
-            pretasks.append(self.helpers.ffs.open(self.command))
-
-        # Open FFS and re-slew at the same time.
-        await asyncio.gather(*pretasks)
-
-        # A bit of delay to make sure the axis status keyword is updated.
-        await asyncio.sleep(1)
-
-        if not self.helpers.tcc.check_axes_status("Tracking"):
-            raise MacroError("Axes must be tracking for acquisition.")
-
-        guider_time = self.config["guider_time"]
-        target_rms = self.config["acquisition_target_rms"]
-        min_rms = self.config["acquisition_min_rms"]
-        max_iterations = self.config["acquisition_max_iterations"]
+        exposure_time = acquisition_config["exposure_time"]
+        target_rms = acquisition_config["target_rms"]
+        min_rms = acquisition_config["min_rms"]
+        max_iterations = acquisition_config["max_iterations"]
+        wait_time = acquisition_config["wait_time"]
 
         self.command.info("Acquiring field.")
 
         try:
             await self.helpers.cherno.acquire(
                 self.command,
-                exposure_time=guider_time,
+                exposure_time=exposure_time,
                 target_rms=target_rms,
                 max_iterations=max_iterations,
+                wait_time=wait_time,
             )
         except HALError:
             # If we have exhausted the number of exposures and not reached
@@ -363,23 +308,15 @@ class GotoFieldMacro(Macro):
             self.command.info("Already guiding.")
             return
 
-        if "acquire" not in self.flat_stages:
-            self.command.info("Re-slewing to field.")
-            await self.reslew()
+        await self._guide_preconditions("guide")
 
-        if not self.helpers.tcc.check_axes_status("Tracking"):
-            raise MacroError("Axes must be tracking for guiding.")
-
-        if not self.helpers.ffs.all_open():
-            self.command.info("Opening FFS")
-            await self.helpers.ffs.open(self.command)
-
-        guider_time = self.config["guider_time"]
+        guide_config = self.config["guide"][self.observatory]
 
         self.command.info("Starting guide loop.")
         await self.helpers.cherno.guide(
             self.command,
-            exposure_time=guider_time,
+            exposure_time=guide_config["exposure_time"],
+            wait_time=guide_config["wait_time"],
             wait=False,
         )
 
@@ -393,23 +330,140 @@ class GotoFieldMacro(Macro):
         if self._lamps_task is not None and not self._lamps_task.done():
             self._lamps_task.cancel()
 
-        await self.helpers.lamps.all_off(self.command, force=True)
+        await self._all_lamps_off()
 
         # Read any pending BOSS exposure.
         if self.helpers.boss.readout_pending:
             await self.helpers.boss.readout(self.command)
 
+    async def _set_guider_offset(self):
+        """Sets the guider offset."""
+
+        offset = self.config["guider_offset"]
+        if offset is not None:
+            offset = " ".join(map(str, offset))
+            self.command.info(f"Setting guide offset to {offset}.")
+            await self.send_command("cherno", f"offset {offset}")
+
+    def _is_goto_complete(self):
+        """Determines whether we can mark the configuration as ``goto_complete```.
+
+        The stage at which we mark the configuration as ``goto_complete`` depends
+        on what stages we are running, but it is always after the last stage
+        before acquisition.
+
+        """
+
+        for stage in self.flat_stages:
+            if stage == "acquire" or stage == "guide":
+                continue
+            if not self.is_stage_done(stage):
+                return False
+
+        return True
+
     async def _close_ffs(self, wait: bool = True):
         """Closes the FFS."""
 
-        if not self.helpers.ffs.all_closed():
-            self.command.info("Closing FFS")
-            task = self.helpers.ffs.close(self.command)
+        pass
 
-            if wait:
-                await task
+    async def _guide_preconditions(self, stage: str):
+        """Tasks to be run before acquisition/guiding can start."""
+
+        pass
+
+    async def _all_lamps_off(self, wait: bool = True):
+        """Turns all the lamps off after checking them."""
+
+        raise NotImplementedError()
+
+    async def _ensure_lamps(self, mode: str):
+        """Ensures the lamps for flats/arcs/hartmann are on."""
+
+        raise NotImplementedError()
+
+
+class GotoFieldAPOMacro(_GotoFieldBaseMacro):
+    """Goto field macro for APO."""
+
+    observatory = "APO"
+
+    async def slew(self):
+        """Slew to field but keep the rotator at a fixed position."""
+
+        assert self.helpers.tcc
+
+        # Wait five seconds to give time for the axis stop we issued in Prepare to
+        # take effect.
+        await asyncio.sleep(5)
+
+        configuration_loaded = self.actor.models["jaeger"]["configuration_loaded"]
+        ra, dec, pa = configuration_loaded[3:6]
+
+        if any([ra is None, dec is None, pa is None]):
+            raise MacroError("Unknown RA/Dec/PA coordinates for field.")
+
+        result = self.helpers.tcc.axes_are_clear()
+        if not result:
+            raise HALError("Some axes are not clear. Cannot continue.")
+
+        # The fixed position at which to slew for the FVC loop.
+        alt = self.config["fvc"]["alt"]
+        az = self.config["fvc"]["az"]
+        rot = self.config["fvc"]["rot"]
+        keep_offsets = self.config["keep_offsets"]
+
+        if self.config["fixed_rot"] is False:
+            self.command.info("Slewing to field RA/Dec/PA.")
+            await self.helpers.tcc.goto_position(
+                self.command,
+                {"ra": ra, "dec": dec, "rot": pa},
+                rotwrap="middle",
+                keep_offsets=keep_offsets,
+            )
+        else:
+            if self.config["fixed_altaz"]:
+                self.command.info("Slewing to field with fixed rotator angle.")
+                track_command = f"track {az}, {alt} mount /rota={rot} /rottype=mount"
+
             else:
-                asyncio.create_task(task)
+                self.command.info("Slewing to field with fixed alt/az/rot position.")
+                track_command = f"track {ra}, {dec} icrs /rota={rot} /rottype=mount"
+
+            slew_result = await self.helpers.tcc.do_slew(
+                self.command,
+                track_command=track_command,
+                keep_offsets=keep_offsets,
+            )
+
+            if slew_result is False:
+                raise HALError("Failed slewing to position.")
+
+            self.command.info(text="Position reached.")
+
+        self.command.info("Halting the rotator.")
+        await self.helpers.tcc.axis_stop(self.command, axis="rot")
+
+    async def reslew(self):
+        """Re-slew to field."""
+
+        assert self.helpers.tcc
+
+        configuration_loaded = self.actor.models["jaeger"]["configuration_loaded"]
+        ra, dec, pa = configuration_loaded[3:6]
+
+        if any([ra is None, dec is None, pa is None]):
+            raise MacroError("Unknown RA/Dec/PA coordinates for field.")
+
+        self.command.info("Re-slewing to field.")
+
+        # Start going to position asynchronously.
+        await self.helpers.tcc.goto_position(
+            self.command,
+            {"ra": ra, "dec": dec, "rot": pa},
+            rotwrap="nearest",
+            keep_offsets=self.config["keep_offsets"],
+        )
 
     async def _all_lamps_off(self, wait: bool = True):
         """Turns all the lamps off after checking them."""
@@ -429,6 +483,8 @@ class GotoFieldMacro(Macro):
 
     async def _ensure_lamps(self, mode: str):
         """Ensures the lamps for flats/arcs/hartmann are on."""
+
+        assert isinstance(self.helpers.lamps, LampsHelperAPO)
 
         # Make sure FFS are closed.
         close_ffs = asyncio.create_task(self._close_ffs())
@@ -475,12 +531,12 @@ class GotoFieldMacro(Macro):
                         else:
                             wait = 5 if wait < 5 else wait
                     else:
-                        if LampsHelper.WARMUP[lamp] > wait:
-                            wait = LampsHelper.WARMUP[lamp]
+                        if LampsHelperAPO.WARMUP[lamp] > wait:
+                            wait = LampsHelperAPO.WARMUP[lamp]
 
                 elif mode == "arcs" and lamp_status[lamp][3] is False:
                     elapsed = lamp_status[lamp][2]
-                    wait_lamp = LampsHelper.WARMUP[lamp] - elapsed
+                    wait_lamp = LampsHelperAPO.WARMUP[lamp] - elapsed
                     if wait < wait_lamp:
                         wait = wait_lamp
 
@@ -494,28 +550,141 @@ class GotoFieldMacro(Macro):
         # Ensure FFS have fully closed.
         await close_ffs
 
-    async def _set_guider_offset(self):
-        """Sets the guider offset."""
+    async def _close_ffs(self, wait: bool = True):
+        """Closes the FFS."""
 
-        offset = self.config["guider_offset"]
-        if offset is not None:
-            offset = " ".join(map(str, offset))
-            self.command.info(f"Setting guide offset to {offset}.")
-            await self.send_command("cherno", f"offset {offset}")
+        assert self.helpers.ffs
 
-    def _is_goto_complete(self):
-        """Determines whether we can mark the configuration as ``goto_complete```.
+        if not self.helpers.ffs.all_closed():
+            self.command.info("Closing FFS")
+            task = self.helpers.ffs.close(self.command)
 
-        The stage at which we mark the configuration as ``goto_complete`` depends
-        on what stages we are running, but it is always after the last stage
-        before acquisition.
+            if wait:
+                await task
+            else:
+                asyncio.create_task(task)
 
-        """
+    async def _guide_preconditions(self, stage: str):
+        """Run guide preconditions."""
 
-        for stage in self.flat_stages:
-            if stage == "acquire" or stage == "guide":
-                continue
-            if not self.is_stage_done(stage):
-                return False
+        assert self.helpers.ffs and self.helpers.tcc
 
+        pretasks = []
+
+        if (stage == "acquire" and "reslew" not in self.flat_stages) or (
+            stage == "guide" and "acquire" not in self.flat_stages
+        ):
+            self.command.info("Re-slewing to field.")
+            pretasks.append(self.reslew())
+
+        if not self.helpers.ffs.all_open():
+            self.command.info("Opening FFS")
+            pretasks.append(self.helpers.ffs.open(self.command))
+
+        # Open FFS and re-slew at the same time.
+        await asyncio.gather(*pretasks)
+
+        # A bit of delay to make sure the axis status keyword is updated.
+        await asyncio.sleep(1)
+
+        if self.helpers.tcc.check_axes_status("Tracking"):
+            raise MacroError("Axes must be tracking for acquisition.")
+
+
+class GotoFieldLCOMacro(_GotoFieldBaseMacro):  # pragma: no cover
+    """Goto field macro for LCO."""
+
+    observatory = "LCO"
+
+    def __init__(self):
+        super().__init__()
+
+        self.screen_on: bool = False
+
+    async def slew(self):
+        """Slews the telescope."""
+
+        do_flat = "boss_flat" in self.flat_stages
+        do_arcs = "boss_hartmann" in self.flat_stages or "boss_arcs" in self.flat_stages
+        do_screen = True if do_flat or do_arcs else False
+
+        await self._slew_telescope(screen=do_screen)
+
+    async def reslew(self):
+        """Reslew to position after the FVC stage."""
+
+        # No need for this at LCO.
+        return
+
+    async def _all_lamps_off(self, wait: bool = True):
+        """Turns all the lamps off."""
+
+        task = asyncio.create_task(self.helpers.lamps.all_off(self.command))
+        if wait:
+            await task
+
+    async def _ensure_lamps(self, mode: str):
+        """Makes sure the lamps are configured properly."""
+
+        assert isinstance(self.helpers.lamps, LampsHelperLCO)
+
+        if self._lamps_task and not self._lamps_task.done():
+            # Lamps have been commanded on but are not warmed up yet.
+            await self._lamps_task
+
+        if mode == "flat":
+            await self.helpers.lamps.turn_lamp(
+                self.command,
+                ["TCS_FF"],
+                True,
+                turn_off_others=True,
+            )
+
+        else:
+            await self.helpers.lamps.turn_lamp(
+                self.command,
+                ["HeAr", "Ne"],
+                True,
+                turn_off_others=True,
+            )
+
+    def _get_pointing(self):
+        """Returns the configuration pointing."""
+
+        configuration_loaded = self.actor.models["jaeger"]["configuration_loaded"]
+        ra, dec, pa = configuration_loaded[3:6]
+
+        if any([ra is None, dec is None, pa is None]):
+            raise MacroError("Unknown RA/Dec/PA coordinates for field.")
+
+        return ra, dec, pa
+
+    async def _slew_telescope(self, screen: bool = False):
+        """Slews the du Pont telescope."""
+
+        ra, dec, pa = self._get_pointing()
+
+        command_string = f"target {ra}, {dec} /posAngle={pa:.3f}"
+        # if screen:
+        #     command_string += " /screen"
+
+        self.command.info("Slewing to field RA/Dec/PA.")
+
+        # The command times out when it gets there, so for now we ignore the failure.
+        await self.send_command("lcotcc", command_string, raise_on_fail=False)
+
+        self.screen_on = screen
+
+    async def _remove_screen(self):
+        """Ensures the screen is not in front of the telescope."""
+
+        # if self.screen_on:
+        #     await self._slew_telescope(False)
+
+    async def _guide_preconditions(self, stage: str):
+        """Ensure the system is ready to guide/acquire."""
+
+        await self._remove_screen()
+
+    async def _close_ffs(self, wait: bool = True):
         return True

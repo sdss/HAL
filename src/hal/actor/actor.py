@@ -39,7 +39,7 @@ class HALActor(LegacyActor):
         if self.observatory == "APO":
             kwargs["models"] += ["tcc", "mcp", "boss"]
         elif self.observatory == "LCO":
-            kwargs["models"] += ["yao"]
+            kwargs["models"] += ["yao", "lcolamps"]
 
         super().__init__(*args, schema=schema, **kwargs)
 
@@ -73,7 +73,8 @@ class ActorHelpers:
             FFSHelper,
             HALHelper,
             JaegerHelper,
-            LampsHelper,
+            LampsHelperAPO,
+            LampsHelperLCO,
             Scripts,
             TCCHelper,
         )
@@ -85,10 +86,16 @@ class ActorHelpers:
         self.apogee = APOGEEHelper(actor)
         self.boss = BOSSHelper(actor)
         self.cherno = ChernoHelper(actor)
-        self.ffs = FFSHelper(actor)
         self.jaeger = JaegerHelper(actor)
-        self.lamps = LampsHelper(actor)
-        self.tcc = TCCHelper(actor)
+
+        if self.observatory == "APO":
+            self.ffs = FFSHelper(actor)
+            self.lamps = LampsHelperAPO(actor)
+            self.tcc = TCCHelper(actor)
+        else:
+            self.ffs = None
+            self.lamps = LampsHelperLCO(actor)
+            self.tcc = None
 
         self.bypasses: set[str] = set(actor.config["bypasses"])
         self._available_bypasses = ["all"]
@@ -100,4 +107,9 @@ class ActorHelpers:
 
         self.scripts = Scripts(actor, actor.config["scripts"][self.observatory])
 
-        self.macros = {macro.name: macro for macro in all_macros}
+        self.macros = {
+            macro.name: macro
+            for macro in all_macros
+            if macro.observatory is None
+            or macro.observatory.lower() == self.observatory.lower()
+        }

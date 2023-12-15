@@ -134,7 +134,9 @@ class OverheadHelper:
             )
             return
 
-        return Overhead.select(peewee.fn.MAX(Overhead.macro_id)).scalar() + 1
+        current_macro_id = Overhead.select(peewee.fn.MAX(Overhead.macro_id)).scalar()
+
+        return (current_macro_id or 0) + 1
 
     def update_database(self):
         """Updates the database with the overhead."""

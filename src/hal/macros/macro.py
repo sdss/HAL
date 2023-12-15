@@ -72,19 +72,16 @@ def flatten(stages: list[StageType]) -> list[str]:
 class Macro:
     """A base macro class that offers concurrency and cancellation."""
 
-    __RUNNING__: ClassVar[list[str]] = []
+    name: ClassVar[str]
+    observatory: str | None = None
 
-    name: str
+    __RUNNING__: ClassVar[list[str]] = []
 
     __STAGES__: list[StageType]
     __PRECONDITIONS__: list[StageType] = []
     __CLEANUP__: list[StageType] = []
 
-    def __init__(self, name: Optional[str] = None):
-        if name is None and not hasattr(self, "name"):
-            raise MacroError("The macro does not have a name attribute.")
-        self.name = name or self.name
-
+    def __init__(self):
         if not hasattr(self, "__STAGES__"):
             raise MacroError("Must override __STAGES__.")
 
@@ -156,6 +153,8 @@ class Macro:
             raise MacroError("A new command must be passed to reset.")
 
         self.command = command
+        if self.observatory is None and command.actor is not None:
+            self.observatory = command.actor.observatory
 
         if reset_stages is None:
             self.stages = self.__PRECONDITIONS__ + self.__STAGES__ + self.__CLEANUP__

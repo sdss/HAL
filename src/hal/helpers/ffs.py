@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from hal.actor import HALCommandType
 
 
-__all__ = ["FFSHelper"]
+__all__ = ["FFSHelper", "FFSStatus"]
 
 
 class FFSHelper(HALHelper):

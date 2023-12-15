@@ -36,6 +36,9 @@ for f_ in files:
         modname = f_[0:-3].replace("/", ".")
         mod = importlib.import_module("hal.macros." + modname)
         for objname in dir(mod):
+            if objname.startswith("_"):
+                continue
+
             obj = getattr(mod, objname)
             if inspect.isclass(obj) and issubclass(obj, Macro) and obj != Macro:
                 all_macros.append(obj())
