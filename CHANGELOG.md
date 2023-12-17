@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0b2
+## 1.0.0b2 - December 17, 2023
 
 ### 🔧 Fixed
 
