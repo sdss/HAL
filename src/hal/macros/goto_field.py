@@ -323,6 +323,9 @@ class _GotoFieldBaseMacro(Macro):
     async def cleanup(self):
         """Turns off all lamps."""
 
+        if self.observatory == "LCO":
+            await asyncio.sleep(3)
+
         # If enough stages have run, mark this configuration as goto_complete.
         if self.helpers.jaeger.configuration is not None and self._is_goto_complete():
             self.helpers.jaeger.configuration.goto_complete = True

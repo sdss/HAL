@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.0b2
+
+### 🔧 Fixed
+
+* Add 3 second delay before running `goto-field` cleanup at LCO to prevent lamps being switched on/off too fast.
+
+
 ## 1.0.0b1 - December 15, 2023
 
 ### 🚀 New
