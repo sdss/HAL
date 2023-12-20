@@ -212,6 +212,8 @@ class Macro:
         self.running = False
         self._running_task = None
 
+        self.macro_id = OverheadHelper.get_next_macro_id()
+
         if not self._running_event.is_set():
             self._running_event.set()
 
