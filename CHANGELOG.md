@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.3 - December 20, 2023
+
+### 🔧 Fixed
+
+* Update `macro_id` when `Macro.reset()` is called.
+
+
 ## 0.7.2 - December 11, 2023
 
 ### ✨ Improved
