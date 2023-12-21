@@ -59,6 +59,9 @@ macros:
     flat_time:
       APO: 25
       LCO: 100
+    slew_offsets:
+      LCO:
+        rot: 0.056
     acquisition:
       APO:
         exposure_time: 15

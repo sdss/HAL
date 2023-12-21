@@ -11,6 +11,8 @@ from __future__ import annotations
 import asyncio
 from time import time
 
+import numpy
+
 from hal import config
 from hal.exceptions import HALError, MacroError
 from hal.helpers.lamps import LampsHelperAPO, LampsHelperLCO
@@ -339,6 +341,27 @@ class _GotoFieldBaseMacro(Macro):
         if self.helpers.boss.readout_pending:
             await self.helpers.boss.readout(self.command)
 
+    def _get_pointing(self):
+        """Returns the configuration pointing."""
+
+        configuration_loaded = self.actor.models["jaeger"]["configuration_loaded"]
+        ra, dec, pa = configuration_loaded[3:6]
+
+        if any([ra is None, dec is None, pa is None]):
+            raise MacroError("Unknown RA/Dec/PA coordinates for field.")
+
+        ra_off = self.config[f"slew_offsets.{self.observatory}.ra"]
+        dec_off = self.config[f"slew_offsets.{self.observatory}.dec"]
+        rot_off = self.config[f"slew_offsets.{self.observatory}.rot"]
+
+        if ra_off is not None:
+            ra += ra_off / numpy.cos(numpy.radians(dec))
+
+        dec += dec_off or 0.0
+        pa += rot_off or 0.0
+
+        return ra, dec, pa
+
     async def _set_guider_offset(self):
         """Sets the guider offset."""
 
@@ -400,11 +423,7 @@ class GotoFieldAPOMacro(_GotoFieldBaseMacro):
         # take effect.
         await asyncio.sleep(5)
 
-        configuration_loaded = self.actor.models["jaeger"]["configuration_loaded"]
-        ra, dec, pa = configuration_loaded[3:6]
-
-        if any([ra is None, dec is None, pa is None]):
-            raise MacroError("Unknown RA/Dec/PA coordinates for field.")
+        ra, dec, pa = self._get_pointing()
 
         result = self.helpers.tcc.axes_are_clear()
         if not result:
@@ -452,11 +471,7 @@ class GotoFieldAPOMacro(_GotoFieldBaseMacro):
 
         assert self.helpers.tcc
 
-        configuration_loaded = self.actor.models["jaeger"]["configuration_loaded"]
-        ra, dec, pa = configuration_loaded[3:6]
-
-        if any([ra is None, dec is None, pa is None]):
-            raise MacroError("Unknown RA/Dec/PA coordinates for field.")
+        ra, dec, pa = self._get_pointing()
 
         self.command.info("Re-slewing to field.")
 
@@ -650,17 +665,6 @@ class GotoFieldLCOMacro(_GotoFieldBaseMacro):  # pragma: no cover
                 True,
                 turn_off_others=True,
             )
-
-    def _get_pointing(self):
-        """Returns the configuration pointing."""
-
-        configuration_loaded = self.actor.models["jaeger"]["configuration_loaded"]
-        ra, dec, pa = configuration_loaded[3:6]
-
-        if any([ra is None, dec is None, pa is None]):
-            raise MacroError("Unknown RA/Dec/PA coordinates for field.")
-
-        return ra, dec, pa
 
     async def _slew_telescope(self, screen: bool = False):
         """Slews the du Pont telescope."""
