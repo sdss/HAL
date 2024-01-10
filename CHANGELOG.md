@@ -2,6 +2,10 @@
 
 ## Next version
 
+### ✨ Improved
+
+* Reset cherno offsets when goto-field is called.
+
 ### 🏷️ Changed
 
 * LCO: added a 25 second delay before acquisition / guiding to give observers time to remove the FFS.

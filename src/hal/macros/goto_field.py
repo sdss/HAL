@@ -84,6 +84,10 @@ class _GotoFieldBaseMacro(Macro):
             )
         )
 
+        # Reset cherno offsets.
+        self.command.debug("Resetting cherno offsets.")
+        await self.helpers.cherno.reset_offsets(self.command)
+
         # Start closing the FFS if they are open but do not block. Only close the FFS
         # if we're going to do BOSS cals, otherwise it's about 20 seconds of lost time.
         if do_flat or do_arcs:

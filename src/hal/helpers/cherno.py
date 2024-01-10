@@ -175,3 +175,8 @@ class ChernoHelper(HALHelper):
         """Stops the guide loop."""
 
         await self._send_command(command, "cherno", "stop")
+
+    async def reset_offsets(self, command: HALCommandType):
+        """Resets the cherno offsets."""
+
+        await self._send_command(command, "cherno", "offset")
