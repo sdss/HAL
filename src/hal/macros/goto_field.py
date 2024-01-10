@@ -619,6 +619,11 @@ class GotoFieldLCOMacro(_GotoFieldBaseMacro):  # pragma: no cover
 
         self.screen_on: bool = False
 
+    def _reset_internal(self, **opts):
+        self.screen_on = False
+
+        return super()._reset_internal(**opts)
+
     async def slew(self):
         """Slews the telescope."""
 
@@ -684,6 +689,13 @@ class GotoFieldLCOMacro(_GotoFieldBaseMacro):  # pragma: no cover
 
     async def _remove_screen(self):
         """Ensures the screen is not in front of the telescope."""
+
+        # HACK: for now, if we the screen is in front of the telescope we wait 25
+        # seconds to give observers time to remove it.
+        if self.screen_on:
+            self.command.warning("Waiting for FFS to be removed.")
+            await asyncio.sleep(25)
+            self.screen_on = False
 
         # if self.screen_on:
         #     await self._slew_telescope(False)

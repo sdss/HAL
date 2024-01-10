@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🏷️ Changed
+
+* LCO: added a 25 second delay before acquisition / guiding to give observers time to remove the FFS.
+
+
 ## 1.0.0 - December 22, 2023
 
 ### ✨ Improved
