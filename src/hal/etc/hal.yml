@@ -27,7 +27,7 @@ durations:
 timeouts:
   ffs: 30.0
   lamps: 30.0
-  apogee_shutter: 15.0
+  apogee_shutter: 20.0
   apogee_dither: 30.0
   boss_icc_flushing: 25.0
   boss_icc_readout: 82.0
