@@ -609,7 +609,7 @@ class GotoFieldAPOMacro(_GotoFieldBaseMacro):
         # A bit of delay to make sure the axis status keyword is updated.
         await asyncio.sleep(1)
 
-        if self.helpers.tcc.check_axes_status("Tracking"):
+        if not self.helpers.tcc.check_axes_status("Tracking"):
             raise MacroError("Axes must be tracking for acquisition.")
 
 
