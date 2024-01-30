@@ -251,6 +251,7 @@ class LampsHelperLCO(HALHelper):
         state: bool,
         turn_off_others: bool = False,
         delay: float = 0.0,
+        is_retry: bool = False,
     ):
         """Turns a lamp on or off.
 
@@ -269,6 +270,8 @@ class LampsHelperLCO(HALHelper):
             Turn off all other lamps.
         delay
             Wait this amount of seconds before actually commanding the lamps.
+        is_retry
+            Flag to track whether the method is being called as a retry.
 
         """
 
@@ -299,6 +302,22 @@ class LampsHelperLCO(HALHelper):
                         turn_off_tasks.append(self._command_one(command, ll, False))
 
         if len(turn_off_tasks) > 0:
-            await asyncio.gather(*turn_off_tasks)
+            try:
+                if len(turn_off_tasks) > 0:
+                    await asyncio.gather(*turn_off_tasks)
 
-        await asyncio.gather(*tasks)
+                await asyncio.gather(*tasks)
+            except Exception as err:
+                if is_retry:
+                    raise
+                else:
+                    command.warning(f"Failed commanding lamps: {err}")
+                    command.warning("Retrying lamps.")
+                    return await self.turn_lamp(
+                        command,
+                        lamps,
+                        state,
+                        turn_off_others=turn_off_others,
+                        delay=delay,
+                        is_retry=True,
+                    )
