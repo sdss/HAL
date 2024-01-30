@@ -681,8 +681,8 @@ class GotoFieldLCOMacro(_GotoFieldBaseMacro):  # pragma: no cover
         ra, dec, pa = self._get_pointing()
 
         command_string = f"target {ra}, {dec} /posAngle={pa:.3f}"
-        # if screen:
-        #     command_string += " /screen"
+        if screen:
+            command_string += " /screen"
 
         self.command.info("Slewing to field RA/Dec/PA.")
 
@@ -694,15 +694,8 @@ class GotoFieldLCOMacro(_GotoFieldBaseMacro):  # pragma: no cover
     async def _remove_screen(self):
         """Ensures the screen is not in front of the telescope."""
 
-        # HACK: for now, if we the screen is in front of the telescope we wait 25
-        # seconds to give observers time to remove it.
         if self.screen_on:
-            self.command.warning("Waiting for FFS to be removed.")
-            await asyncio.sleep(25)
-            self.screen_on = False
-
-        # if self.screen_on:
-        #     await self._slew_telescope(False)
+            await self._slew_telescope(False)
 
     async def _guide_preconditions(self, stage: str):
         """Ensure the system is ready to guide/acquire."""

@@ -1,5 +1,13 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* Retry lamps at LCO to deal with cases when `TCS_FF` fails.
+* Use `/screen` flag for LCO slews.
+
+
 ## 1.0.1 - January 15, 2024
 
 ### ✨ Improved
