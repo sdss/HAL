@@ -301,23 +301,22 @@ class LampsHelperLCO(HALHelper):
                     if status[ll][0] is not False:
                         turn_off_tasks.append(self._command_one(command, ll, False))
 
-        if len(turn_off_tasks) > 0:
-            try:
-                if len(turn_off_tasks) > 0:
-                    await asyncio.gather(*turn_off_tasks)
+        try:
+            if len(turn_off_tasks) > 0:
+                await asyncio.gather(*turn_off_tasks)
 
-                await asyncio.gather(*tasks)
-            except Exception as err:
-                if is_retry:
-                    raise
-                else:
-                    command.warning(f"Failed commanding lamps: {err}")
-                    command.warning("Retrying lamps.")
-                    return await self.turn_lamp(
-                        command,
-                        lamps,
-                        state,
-                        turn_off_others=turn_off_others,
-                        delay=delay,
-                        is_retry=True,
-                    )
+            await asyncio.gather(*tasks)
+        except Exception as err:
+            if is_retry:
+                raise
+            else:
+                command.warning(f"Failed commanding lamps: {err}")
+                command.warning("Retrying lamps.")
+                return await self.turn_lamp(
+                    command,
+                    lamps,
+                    state,
+                    turn_off_others=turn_off_others,
+                    delay=delay,
+                    is_retry=True,
+                )
