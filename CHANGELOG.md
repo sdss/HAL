@@ -4,7 +4,7 @@
 
 ### 🏷️ Changed
 
-* Increase slew timeout to 240 seconds.
+* Increase slew timeout to 300 seconds.
 
 
 ## 1.0.2 - February 27, 2024
