@@ -33,7 +33,7 @@ timeouts:
   boss_icc_readout: 82.0
   boss_yao_readout: 35.0
   expose: 25.0
-  slew: 180.0
+  slew: 240.0
   hartmann: 260.
   fvc: 300.
 
