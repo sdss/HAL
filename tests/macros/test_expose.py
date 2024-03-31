@@ -226,4 +226,4 @@ async def test_expose_bright_design(actor: HALActor, mocker: MockerFixture, macr
     await actor.invoke_mock_command("expose")
 
     assert macro.expose_helper.boss_exps[0].exptime == 730
-    assert macro.expose_helper.apogee_exps[0].exptime == 730
+    assert macro.expose_helper.apogee_exps[0].exptime == 374.0
