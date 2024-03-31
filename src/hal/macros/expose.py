@@ -476,6 +476,7 @@ class ExposeMacro(Macro):
         # Concurrent tasks to run.
         tasks = []
         if self.command.actor.observatory == "APO":
+            assert self.helpers.ffs
             tasks.append(self.helpers.ffs.open(self.command))
 
         if do_apogee:
