@@ -219,7 +219,7 @@ async def test_expose_modify(actor: HALActor, mock_run, mocker):
     assert len(expose_macro.expose_helper.apogee_exps) == 4
 
 
-async def test_expose_bright_design(actor: HALActor, mocker: MockerFixture):
+async def test_expose_bright_design(actor: HALActor, mocker: MockerFixture, macro):
     actor.helpers.jaeger.configuration = mocker.MagicMock()
     actor.helpers.jaeger.configuration.design_mode = "bright_time"
 
