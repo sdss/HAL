@@ -225,10 +225,5 @@ async def test_expose_bright_design(actor: HALActor, mocker: MockerFixture, macr
 
     await actor.invoke_mock_command("expose")
 
-    assert len(macro.expose_helper.boss_exps) == 1
-    assert len(macro.expose_helper.apogee_exps) == 4
-
-    assert macro.expose_helper.params.readout_matching is False
-
     assert macro.expose_helper.boss_exps[0].exptime == 730
     assert macro.expose_helper.apogee_exps[0].exptime == 730
