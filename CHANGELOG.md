@@ -5,7 +5,7 @@
 
 ### 🚀 New
 
-* Use 730 second exposure times for bright designs.
+* [#17](https://github.com/sdss/HAL/pull/17) Use 730 second exposure times for bright designs.
 
 
 ## 1.0.3 - March 5, 2024
