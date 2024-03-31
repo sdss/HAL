@@ -13,6 +13,7 @@ import asyncio
 from typing import TYPE_CHECKING
 
 import pytest
+from pytest_mock import MockerFixture
 
 from hal.helpers.apogee import APOGEEHelper
 from hal.helpers.boss import BOSSHelper
@@ -216,3 +217,18 @@ async def test_expose_modify(actor: HALActor, mock_run, mocker):
 
     assert len(expose_macro.expose_helper.boss_exps) == 2
     assert len(expose_macro.expose_helper.apogee_exps) == 4
+
+
+async def test_expose_bright_design(actor: HALActor, mocker: MockerFixture):
+    actor.helpers.jaeger.configuration = mocker.MagicMock()
+    actor.helpers.jaeger.configuration.design_mode = "bright_time"
+
+    await actor.invoke_mock_command("expose")
+
+    assert len(macro.expose_helper.boss_exps) == 1
+    assert len(macro.expose_helper.apogee_exps) == 4
+
+    assert macro.expose_helper.params.readout_matching is False
+
+    assert macro.expose_helper.boss_exps[0].exptime == 730
+    assert macro.expose_helper.apogee_exps[0].exptime == 730
