@@ -40,6 +40,7 @@ class Configuration:
     new_field: bool = True
     observed: bool = False
     goto_complete: bool = False
+    design_mode: str | None = None
 
     def __post_init__(self):
         if self.design_id is None or self.design_id < 0:
@@ -83,14 +84,14 @@ class Configuration:
         self.is_rm_field = False
 
         try:
-            design_mode_label = (
+            self.design_mode = (
                 targetdb.Design.select(targetdb.Design.design_mode)
                 .where(targetdb.Design.design_id == self.design_id)
                 .scalar()
             )
-            if design_mode_label is None:
+            if self.design_mode is None:
                 self.warn(f"Cannot find design_mode_label for design {self.design_id}")
-            elif design_mode_label in ["dark_monit", "dark_rm"]:
+            elif self.design_mode in ["dark_monit", "dark_rm"]:
                 self.is_rm_field = True
         except Exception as err:
             self.warn(f"Failed determining RM/AQMES: {err}")
@@ -122,7 +123,12 @@ class JaegerHelper(HALHelper):
 
         self.actor.write("w", error=message)
 
-    async def load_from_queue(self, command: HALCommandType, preload: bool = False):
+    async def load_from_queue(
+        self,
+        command: HALCommandType,
+        preload: bool = False,
+        extra_epoch_delay: float = 0.0,
+    ):
         """(Pre-)Loads a design from the queue."""
 
         verb = "preload" if preload else "load"
@@ -130,7 +136,7 @@ class JaegerHelper(HALHelper):
         cmd = await self._send_command(
             command,
             "jaeger",
-            f"configuration {verb} --epoch-delay 600",
+            f"configuration {verb} --extra-epoch-delay {extra_epoch_delay}",
             raise_on_fail=False,
         )
 

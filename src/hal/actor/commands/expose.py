@@ -205,7 +205,11 @@ async def expose(
     # If nothing has been defined explicitely, revert to the defaults.
     if not exposure_time:
         if not boss_exposure_time and not apogee_exposure_time:
-            exposure_time = config["macros"]["expose"]["fallback"]["exptime"]
+            design_mode: str | None = None
+            assert command.actor.helpers.jaeger, "Jaeger helper not available."
+            if command.actor.helpers.jaeger.configuration:
+                design_mode = command.actor.helpers.jaeger.configuration.design_mode
+            exposure_time = get_default_exposure_time(design_mode)
         elif apogee_exposure_time and not boss_exposure_time:
             boss_exposure_time = apogee_exposure_time
             disable_readout_matching = True
@@ -273,3 +277,10 @@ async def expose(
         return command.fail()
 
     return command.finish()
+
+
+def get_default_exposure_time(design_mode: str | None = None):
+    """Returns the default exposure time for the current design mode."""
+    if design_mode is not None and "bright" in design_mode:
+        return config["macros"]["expose"]["fallback"]["exptime"]["bright_design_mode"]
+    return config["macros"]["expose"]["fallback"]["exptime"]["default"]

@@ -29,7 +29,7 @@ __all__ = ["ExposeMacro"]
 class ExposeParameters:
     """Expose macro parameters."""
 
-    boss_exptime: float | None = config["macros"]["expose"]["fallback"]["exptime"]
+    boss_exptime: float | None = config["macros"]["expose"]["fallback"]["exptime"]["default"]  # fmt: skip  # noqa
     apogee_exptime: float | None = None
     count_apogee: int | None = 1
     count_boss: int | None = 1

@@ -12,6 +12,7 @@ import asyncio
 from contextlib import suppress
 
 from hal import config
+from hal.actor.commands.expose import get_default_exposure_time
 from hal.exceptions import MacroError
 from hal.macros.macro import Macro
 
@@ -143,8 +144,13 @@ class AutoModeMacro(Macro):
                 raise MacroError("Timed out waiting for guider to converge.")
 
         # Calculate expose time and schedule preloading a design.
+        # The exposure time depends on the design mode.
+        design_mode: str | None = None
+        if self.helpers.jaeger.configuration:
+            design_mode = self.helpers.jaeger.configuration.design_mode
+        exptime = get_default_exposure_time(design_mode)
+
         count = self.config["count"]
-        exptime = config["macros"]["expose"]["fallback"]["exptime"]
         flushing = config["durations"]["boss"][self.actor.observatory]["flushing"]
         readout = config["durations"]["boss"][self.actor.observatory]["readout"]
         total_time = (exptime + flushing + readout) * count - readout

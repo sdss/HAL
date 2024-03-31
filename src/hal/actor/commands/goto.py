@@ -26,6 +26,7 @@ async def goto_position(command: HALCommandType, name: str):
     """Go to position."""
 
     try:
+        assert command.actor.helpers.tcc, "TCC helper not available."
         await command.actor.helpers.tcc.goto_position(command, name)
     except HALError as err:
         return command.fail(f"Goto position failed with error: {err}")
