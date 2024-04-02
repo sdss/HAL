@@ -20,6 +20,8 @@ from hal.macros.auto import AutoModeMacro
 
 if TYPE_CHECKING:
     from hal.actor.actor import HALActor
+    from hal.macros.auto import AutoModeMacro
+    from hal.macros.macro import Macro
 
 
 @pytest.fixture
@@ -39,7 +41,7 @@ def test_auto_macro(actor: HALActor):
     assert isinstance(macro, AutoModeMacro)
 
 
-async def test_expose_command(actor: HALActor, mock_auto_macro):
+async def test_auto_command(actor: HALActor, mock_auto_macro: AutoModeMacro):
     async def stop_loop():
         await asyncio.sleep(0.2)
         mock_auto_macro.cancelled = True
@@ -51,3 +53,30 @@ async def test_expose_command(actor: HALActor, mock_auto_macro):
 
     assert cmd.status.did_succeed
     mock_auto_macro.run.assert_called()
+
+
+@pytest.mark.parametrize(
+    "design_mode,wait_time", [("dark_time", 737), ("bright_time", 567)]
+)
+async def test_auto_expose_time(
+    actor: HALActor,
+    mock_auto_macro: AutoModeMacro,
+    mocker: MockerFixture,
+    design_mode: str,
+    wait_time: int,
+):
+    expose_macro: Macro = actor.helpers.macros["expose"]
+    expose_macro.run = mocker.AsyncMock()
+    expose_macro.wait_until_complete = mocker.AsyncMock(return_value=True)
+
+    mock_auto_macro.helpers.cherno.guiding_at_rms = mocker.MagicMock(return_value=True)
+    mock_auto_macro.helpers.jaeger.configuration = mocker.MagicMock()
+    mock_auto_macro.helpers.jaeger.configuration.design_mode = design_mode
+
+    preload_mock = mocker.AsyncMock()
+    mock_auto_macro._preload_design = preload_mock
+
+    await mock_auto_macro.expose()
+
+    preload_mock.assert_called()
+    preload_mock.assert_called_with(wait_time)

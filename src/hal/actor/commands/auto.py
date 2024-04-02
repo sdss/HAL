@@ -8,6 +8,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from typing import TYPE_CHECKING
 
 import click
@@ -128,6 +130,8 @@ async def auto(
         if not await macro.run():
             result = False
             break
+
+        await asyncio.sleep(0.1)
 
         if macro.cancelled:
             # Cancelled macros return result=True
