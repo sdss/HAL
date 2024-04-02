@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, cast
 
 from clu import Command, CommandStatus
 
+from hal import config
 from hal.exceptions import HALError
 
 
@@ -57,6 +58,13 @@ class HALHelper:
                 raise HALError(f"Command '{target} {cmd_str}' failed.")
 
         return cast(Command, cmd)
+
+
+def get_default_exposure_time(design_mode: str | None = None):
+    """Returns the default exposure time for the current design mode."""
+    if design_mode is not None and "bright" in design_mode:
+        return config["macros"]["expose"]["fallback"]["exptime"]["bright_design_mode"]
+    return config["macros"]["expose"]["fallback"]["exptime"]["default"]
 
 
 from .apogee import *

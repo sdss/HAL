@@ -12,8 +12,8 @@ import asyncio
 from contextlib import suppress
 
 from hal import config
-from hal.actor.commands.expose import get_default_exposure_time
 from hal.exceptions import MacroError
+from hal.helpers import get_default_exposure_time
 from hal.macros.macro import Macro
 
 

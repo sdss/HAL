@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, cast
 import click
 
 from hal import config
+from hal.helpers import get_default_exposure_time
 from hal.macros.macro import StageType, flatten
 
 from . import hal_command_parser, stages
@@ -278,10 +279,3 @@ async def expose(
         return command.fail()
 
     return command.finish()
-
-
-def get_default_exposure_time(design_mode: str | None = None):
-    """Returns the default exposure time for the current design mode."""
-    if design_mode is not None and "bright" in design_mode:
-        return config["macros"]["expose"]["fallback"]["exptime"]["bright_design_mode"]
-    return config["macros"]["expose"]["fallback"]["exptime"]["default"]
