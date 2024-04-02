@@ -14,7 +14,7 @@ import warnings
 from collections import defaultdict
 from contextlib import suppress
 
-from typing import TYPE_CHECKING, Any, Awaitable, ClassVar, Coroutine, Optional, Union
+from typing import TYPE_CHECKING, Any, ClassVar, Coroutine, Optional, Union
 
 from clu import Command, CommandStatus
 
@@ -36,7 +36,7 @@ StageType = Union[str, tuple[str, ...], list[str]]
 def record_overhead(macro: Macro):
     """Runs a macro stage and records its overhead."""
 
-    async def record_overhead_wrapper(stage_coro: Awaitable[None]):
+    async def record_overhead_wrapper(stage_coro: Coroutine[Any, Any, None]):
         overhead_helper = OverheadHelper(
             macro,
             stage_coro.__name__,

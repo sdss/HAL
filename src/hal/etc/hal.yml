@@ -157,7 +157,9 @@ macros:
     readout_matching: true
     fallback:
       count: 1
-      exptime: 900.0
+      exptime:
+        default: 900
+        bright_design_mode: 730
 
   auto:
     guider_time: 15

@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, cast
 import click
 
 from hal import config
+from hal.helpers import get_default_exposure_time
 from hal.macros.macro import StageType, flatten
 
 from . import hal_command_parser, stages
@@ -205,7 +206,11 @@ async def expose(
     # If nothing has been defined explicitely, revert to the defaults.
     if not exposure_time:
         if not boss_exposure_time and not apogee_exposure_time:
-            exposure_time = config["macros"]["expose"]["fallback"]["exptime"]
+            design_mode: str | None = None
+            assert command.actor.helpers.jaeger, "Jaeger helper not available."
+            if command.actor.helpers.jaeger.configuration:
+                design_mode = command.actor.helpers.jaeger.configuration.design_mode
+            exposure_time = get_default_exposure_time(design_mode)
         elif apogee_exposure_time and not boss_exposure_time:
             boss_exposure_time = apogee_exposure_time
             disable_readout_matching = True
@@ -264,6 +269,7 @@ async def expose(
         selected_stages,
         initial_apogee_dither=initial_apogee_dither,
         with_fpi=with_fpi,
+        force=False,
         **params,
     )
 
