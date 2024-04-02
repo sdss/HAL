@@ -42,6 +42,8 @@ class APOGEEDomeFlatMacro(Macro):
     async def ffs(self):
         """Check the FFS status and closes it."""
 
+        assert self.command.actor.helpers.ffs, "FFS helper not available."
+
         if self.command.actor.helpers.ffs.all_closed():
             self.command.debug("FFS already closed.")
             self.__ffs_initial_state = "closed"
@@ -107,6 +109,8 @@ class APOGEEDomeFlatMacro(Macro):
 
     async def cleanup(self):
         """Closes the shutter and does cleanup."""
+
+        assert self.command.actor.helpers.ffs, "FFS helper not available."
 
         apogee = self.command.actor.helpers.apogee
 

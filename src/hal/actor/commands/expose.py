@@ -268,6 +268,7 @@ async def expose(
         selected_stages,
         initial_apogee_dither=initial_apogee_dither,
         with_fpi=with_fpi,
+        force=False,
         **params,
     )
 
