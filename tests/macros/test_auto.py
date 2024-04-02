@@ -66,15 +66,17 @@ async def test_auto_expose_time(
     wait_time: int,
 ):
     expose_macro: Macro = actor.helpers.macros["expose"]
-    expose_macro.run = mocker.AsyncMock()
-    expose_macro.wait_until_complete = mocker.AsyncMock(return_value=True)
+    mocker.patch.object(expose_macro, "reset")
+    mocker.patch.object(expose_macro, "run")
+    mocker.patch.object(expose_macro, "wait_until_complete", return_value=True)
 
-    mock_auto_macro.helpers.cherno.guiding_at_rms = mocker.MagicMock(return_value=True)
-    mock_auto_macro.helpers.jaeger.configuration = mocker.MagicMock()
-    mock_auto_macro.helpers.jaeger.configuration.design_mode = design_mode
+    cherno_helper = mock_auto_macro.helpers.cherno
+    mocker.patch.object(cherno_helper, "guiding_at_rms", return_value=True)
 
-    preload_mock = mocker.AsyncMock()
-    mock_auto_macro._preload_design = preload_mock
+    conf_mock = mocker.patch.object(mock_auto_macro.helpers.jaeger, "configuration")
+    conf_mock.design_mode = design_mode
+
+    preload_mock = mocker.patch.object(mock_auto_macro, "_preload_design")
 
     await mock_auto_macro.expose()
 
