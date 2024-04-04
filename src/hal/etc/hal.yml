@@ -165,6 +165,7 @@ macros:
     guider_time: 15
     min_rms: 3.0
     count: 1
+    preload_ahead_time: 300
 
 goto:
   stow:

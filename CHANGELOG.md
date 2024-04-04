@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* Pass `--extra-epoch-delay` when preloading a design.
+
+
 ## 1.1.0 - April 1st, 2024
 
 ### 🚀 New

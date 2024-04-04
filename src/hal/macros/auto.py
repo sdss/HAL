@@ -155,9 +155,10 @@ class AutoModeMacro(Macro):
         readout = config["durations"]["boss"][self.actor.observatory]["readout"]
         total_time = (exptime + flushing + readout) * count - readout
 
-        wait_design_load = int(total_time - 180)
+        preload_ahead_time = self.config["preload_ahead_time"]
+        wait_design_load = int(total_time - preload_ahead_time)
         self.message(f"Scheduling next design preload in {wait_design_load} s.", "d")
-        await self._preload_design(wait_design_load)
+        await self._preload_design(wait_design_load, preload_ahead_time)
 
         self.message("Exposing cameras.")
         expose_macro.reset(self.command, count_boss=count)
@@ -170,13 +171,17 @@ class AutoModeMacro(Macro):
         if self.cancelled:
             await self._cancel_preload_task()
 
-    async def _preload_design(self, delay: float):
+    async def _preload_design(self, delay: float, preload_ahead_time: float):
         """Preloads the next design after a delay."""
 
         async def _preload_executor(delay: float):
             await asyncio.sleep(delay)
             self.message("Preloading design from the queue.")
-            await self.helpers.jaeger.load_from_queue(self.command, preload=True)
+            await self.helpers.jaeger.load_from_queue(
+                self.command,
+                preload=True,
+                extra_epoch_delay=preload_ahead_time,
+            )
 
         await self._cancel_preload_task()
         self._preload_design_task = asyncio.create_task(_preload_executor(delay))
