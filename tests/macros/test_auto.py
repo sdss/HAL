@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 import pytest
 from pytest_mock import MockerFixture
 
+from hal import config
 from hal.macros.auto import AutoModeMacro
 
 
@@ -81,4 +82,7 @@ async def test_auto_expose_time(
     await mock_auto_macro.expose()
 
     preload_mock.assert_called()
-    preload_mock.assert_called_with(wait_time)
+    preload_mock.assert_called_with(
+        wait_time,
+        config["macros"]["auto"]["preload_ahead_time"],
+    )
