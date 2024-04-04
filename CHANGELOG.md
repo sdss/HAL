@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* Update `auto_mode` stages for LCO: removed `boss_flat` for new fields and only do `reconfiguration` and `guide` for repeat fields.
+
+
 ## 1.1.1 - April 3rd, 2024
 
 ### ✨ Improved

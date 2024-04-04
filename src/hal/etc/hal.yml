@@ -103,7 +103,6 @@ macros:
           - reslew
           - lamps
           - boss_arcs
-          - boss_flat
           - acquire
           - guide
       repeat_field_stages:
@@ -112,16 +111,11 @@ macros:
           - reconfigure
           - fvc
           - reslew
-          - lamps
           - acquire
           - guide
         LCO:
-          - slew
           - reconfigure
           - fvc
-          - reslew
-          - lamps
-          - acquire
           - guide
       rm_field_stages:
         APO:
