@@ -153,7 +153,9 @@ macros:
       count: 1
       exptime:
         default: 900
-        bright_design_mode: 730
+        bright_design_mode:
+          APO: 730
+          LCO: 900
 
   auto:
     guider_time: 15

@@ -148,7 +148,7 @@ class AutoModeMacro(Macro):
         design_mode: str | None = None
         if self.helpers.jaeger.configuration:
             design_mode = self.helpers.jaeger.configuration.design_mode
-        exptime = get_default_exposure_time(design_mode)
+        exptime = get_default_exposure_time(self.actor.observatory, design_mode)
 
         count = self.config["count"]
         flushing = config["durations"]["boss"][self.actor.observatory]["flushing"]

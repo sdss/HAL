@@ -57,12 +57,19 @@ async def test_auto_command(actor: HALActor, mock_auto_macro: AutoModeMacro):
 
 
 @pytest.mark.parametrize(
-    "design_mode,wait_time", [("dark_time", 617), ("bright_time", 447)]
+    "observatory,design_mode,wait_time",
+    [
+        ("APO", "dark_time", 617),
+        ("APO", "bright_time", 447),
+        ("LCO", "dark_time", 604),
+        ("LCO", "bright_time", 604),
+    ],
 )
 async def test_auto_expose_time(
     actor: HALActor,
     mock_auto_macro: AutoModeMacro,
     mocker: MockerFixture,
+    observatory: str,
     design_mode: str,
     wait_time: int,
 ):
@@ -79,6 +86,7 @@ async def test_auto_expose_time(
 
     preload_mock = mocker.patch.object(mock_auto_macro, "_preload_design")
 
+    mock_auto_macro.command.actor.observatory = observatory
     await mock_auto_macro.expose()
 
     preload_mock.assert_called()

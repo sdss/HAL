@@ -210,7 +210,10 @@ async def expose(
             assert command.actor.helpers.jaeger, "Jaeger helper not available."
             if command.actor.helpers.jaeger.configuration:
                 design_mode = command.actor.helpers.jaeger.configuration.design_mode
-            exposure_time = get_default_exposure_time(design_mode)
+            exposure_time = get_default_exposure_time(
+                command.actor.observatory,
+                design_mode,
+            )
         elif apogee_exposure_time and not boss_exposure_time:
             boss_exposure_time = apogee_exposure_time
             disable_readout_matching = True

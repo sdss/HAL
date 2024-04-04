@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🔧 Fixed
+
+* We don't want 12-minute exposures for bright time designs at LCO yet. Fixed the code to accept different exposure times for bright designs depending on the observatory.
+
+
 ## 1.1.2 - April 4th, 2024
 
 ### ✨ Improved

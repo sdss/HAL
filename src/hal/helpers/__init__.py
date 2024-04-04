@@ -60,10 +60,11 @@ class HALHelper:
         return cast(Command, cmd)
 
 
-def get_default_exposure_time(design_mode: str | None = None):
+def get_default_exposure_time(observatory: str, design_mode: str | None = None):
     """Returns the default exposure time for the current design mode."""
+
     if design_mode is not None and "bright" in design_mode:
-        return config["macros"]["expose"]["fallback"]["exptime"]["bright_design_mode"]
+        return config["macros"]["expose"]["fallback"]["exptime"]["bright_design_mode"][observatory.upper()]  # fmt: skip  # noqa
     return config["macros"]["expose"]["fallback"]["exptime"]["default"]
 
 
