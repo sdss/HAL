@@ -57,7 +57,7 @@ async def test_auto_command(actor: HALActor, mock_auto_macro: AutoModeMacro):
 
 
 @pytest.mark.parametrize(
-    "design_mode,wait_time", [("dark_time", 737), ("bright_time", 567)]
+    "design_mode,wait_time", [("dark_time", 617), ("bright_time", 447)]
 )
 async def test_auto_expose_time(
     actor: HALActor,
