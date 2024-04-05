@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* Added `--preload-ahead` option to override how long ahead of time the next design is preloaded in auto mode.
+
+
 ## 1.1.3 - April 4th, 2024
 
 ### 🔧 Fixed

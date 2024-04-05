@@ -59,6 +59,12 @@ __all__ = ["auto"]
     default=1,
     help="Number of exposures per design.",
 )
+@click.option(
+    "--preload-ahead",
+    type=float,
+    default=None,
+    help="Preload the next design this many seconds before the exposure completes.",
+)
 async def auto(
     command: HALCommandType,
     stop: bool = False,
@@ -67,6 +73,7 @@ async def auto(
     pause: bool = False,
     resume: bool = False,
     count: int = 1,
+    preload_ahead: float | None = None,
 ):
     """Starts the auto mode."""
 
@@ -126,7 +133,7 @@ async def auto(
     result: bool = True
     while True:
         # Run the auto loop until the command is cancelled.
-        macro.reset(command, count=count)
+        macro.reset(command, count=count, preload_ahead_time=preload_ahead)
         if not await macro.run():
             result = False
             break
