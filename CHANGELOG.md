@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🔧 Fixed
+
+* Prevent the list of stages in `goto-field` with `--auto` to be modified in place when adding the `--with-hartmann` option.
+
+
 ## 1.1.4 - April 5th, 2024
 
 ### ✨ Improved

@@ -14,6 +14,8 @@ import pytest
 from pytest_mock import MockerFixture
 
 from hal.exceptions import MacroError
+from src.hal.actor.actor import HALActor
+from src.hal.macros.goto_field import GotoFieldAPOMacro
 
 
 pytestmark = [pytest.mark.asyncio]
@@ -72,3 +74,32 @@ async def test_goto_field_fails_tcc(goto_field_macro, mocker: MockerFixture):
     assert command.replies[-1].message["stage_duration"][0] == "goto_field"
     assert command.replies[-1].message["stage_duration"][1] == '""'
     assert isinstance(command.replies[-1].message["stage_duration"][2], float)
+
+
+async def test_goto_field_auto_hartmann(
+    actor: HALActor,
+    goto_field_macro: GotoFieldAPOMacro,
+    mocker: MockerFixture,
+):
+    """Confirms that --with-hartmann behaves correctly."""
+
+    goto_field_macro.run = mocker.AsyncMock()
+
+    cmd = await actor.invoke_mock_command("goto-field --auto --with-hartmann")
+    await cmd
+    # goto_field_macro.cancel()
+
+    # await asyncio.sleep(0.1)
+
+    assert cmd.status.did_succeed
+    assert "boss_hartmann" in goto_field_macro.stages
+
+    await asyncio.sleep(0.1)  # Small delay to let the command really finish.
+
+    # Try again, now without the hartmann and confirm that it is not included
+    # in the stages.
+    cmd = await actor.invoke_mock_command("goto-field --auto")
+    await cmd
+
+    assert cmd.status.did_succeed
+    assert "boss_hartmann" not in goto_field_macro.stages

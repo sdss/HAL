@@ -126,6 +126,8 @@ async def goto_field(
     if stages is not None and len(stages) == 0:
         return command.finish("No stages to run.")
 
+    stages = stages[:]  # Prevent modifying the original list.
+
     if with_hartmann and stages is not None and "boss_hartmann" not in stages:
         # Can be added at the end. Macro.reset() will order it.
         stages.append("boss_hartmann")
