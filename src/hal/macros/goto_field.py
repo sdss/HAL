@@ -280,6 +280,8 @@ class _GotoFieldBaseMacro(Macro):
         acquisition_config = self.config["acquisition"][self.observatory]
 
         exposure_time = acquisition_config["exposure_time"]
+        max_exposure_time = acquisition_config["max_exposure_time"]
+        dynamic_exposure_time = acquisition_config["dynamic_exposure_time"]
         target_rms = acquisition_config["target_rms"]
         min_rms = acquisition_config["min_rms"]
         max_iterations = acquisition_config["max_iterations"]
@@ -291,6 +293,8 @@ class _GotoFieldBaseMacro(Macro):
             await self.helpers.cherno.acquire(
                 self.command,
                 exposure_time=exposure_time,
+                max_exposure_time=max_exposure_time,
+                dynamic_exposure_time=dynamic_exposure_time,
                 target_rms=target_rms,
                 max_iterations=max_iterations,
                 wait_time=wait_time,
@@ -322,6 +326,8 @@ class _GotoFieldBaseMacro(Macro):
         await self.helpers.cherno.guide(
             self.command,
             exposure_time=guide_config["exposure_time"],
+            max_exposure_time=guide_config["max_exposure_time"],
+            dynamic_exposure_time=guide_config["dynamic_exposure_time"],
             wait_time=guide_config["wait_time"],
             wait=False,
         )

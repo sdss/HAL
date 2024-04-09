@@ -65,12 +65,16 @@ macros:
     acquisition:
       APO:
         exposure_time: 15
+        max_exposure_time: 30
+        dynamic_exposure_time: false
         target_rms: 1.0
         min_rms: 3.0
         max_iterations: 4
         wait_time: null
       LCO:
-        exposure_time: 15
+        exposure_time: 5
+        max_exposure_time: 30
+        dynamic_exposure_time: true
         target_rms: 0.8
         min_rms: 3.0
         max_iterations: 5
@@ -78,9 +82,13 @@ macros:
     guide:
       APO:
         exposure_time: 15
+        max_exposure_time: 30
+        dynamic_exposure_time: false
         wait_time: null
       LCO:
         exposure_time: 15
+        max_exposure_time: 30
+        dynamic_exposure_time: true
         wait_time: 10
     auto_mode:
       cloned_stages:

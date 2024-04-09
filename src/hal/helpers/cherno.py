@@ -106,6 +106,8 @@ class ChernoHelper(HALHelper):
         self,
         command: HALCommandType,
         exposure_time: float = 15,
+        max_exposure_time: float = 30,
+        dynamic_exposure_time: bool = True,
         target_rms: float | None = None,
         wait: bool | None = None,
         max_iterations: int | None = None,
@@ -119,6 +121,11 @@ class ChernoHelper(HALHelper):
             The command to use to send the acquisition command.
         exposure_time
             The exposure time to use.
+        max_exposure_time
+            Maximum exposure time if ``dynamic_exposure_time`` is set to True.
+        dynamic_exposure_time
+            Whether to adjust the exposure time dynamically if the guider fails
+            to solve the field.
         target_rms
             The RMS to be reached by the acquisition command. If not specified,
             acquisition will be run in continuous mode.
@@ -144,6 +151,12 @@ class ChernoHelper(HALHelper):
         if wait_time:
             command_str += f" -w {wait_time}"
 
+        if max_exposure_time:
+            command_str += f" --max-exposure-time {max_exposure_time}"
+
+        if dynamic_exposure_time:
+            command_str += " --dynamic-exposure-time"
+
         if block:
             await self._send_command(command, "cherno", command_str)
         else:
@@ -155,14 +168,43 @@ class ChernoHelper(HALHelper):
         self,
         command: HALCommandType,
         exposure_time: float = 15,
+        max_exposure_time: float = 30,
+        dynamic_exposure_time: bool = True,
         wait_time: float | None = None,
         wait: bool = False,
     ):
-        """Start the guide loop."""
+        """Start the guide loop.
+
+        Parameters
+        ----------
+        command
+            The command to use to send the acquisition command.
+        exposure_time
+            The exposure time to use.
+        max_exposure_time
+            Maximum exposure time if ``dynamic_exposure_time`` is set to True.
+        dynamic_exposure_time
+            Whether to adjust the exposure time dynamically if the guider fails
+            to solve the field.
+        wait_time
+            Time to wait between iterations, for example to let the telescope
+            settle.
+        wait
+            Whether to wait for the acquisition to be complete. If `None`, it will
+            block only if ``target_rms`` has been defined.
+
+        """
 
         command_str = f"guide -t {exposure_time}"
+
         if wait_time:
             command_str += f" -w {wait_time}"
+
+        if max_exposure_time:
+            command_str += f" --max-exposure-time {max_exposure_time}"
+
+        if dynamic_exposure_time:
+            command_str += " --dynamic-exposure-time"
 
         coro = self._send_command(command, "cherno", command_str)
 
