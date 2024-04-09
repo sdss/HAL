@@ -120,13 +120,13 @@ test-all = ["astropy[test]", "coverage[toml]", "ipython (>=4.2)", "objgraph", "s
 
 [[package]]
 name = "astropy-iers-data"
-version = "0.2024.4.1.0.33.14"
+version = "0.2024.4.8.0.32.4"
 description = "IERS Earth Rotation and Leap Second tables for the astropy core package"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "astropy-iers-data-0.2024.4.1.0.33.14.tar.gz", hash = "sha256:e09dc2c52e26b3fac604f29fb97de28fb2f691d6c7da65ac5fece6b56dc2ac2a"},
-    {file = "astropy_iers_data-0.2024.4.1.0.33.14-py3-none-any.whl", hash = "sha256:b70b91dddc36454b385dcb4be8af5728fa869b8a725dc0a06b8757ee2ef617bd"},
+    {file = "astropy-iers-data-0.2024.4.8.0.32.4.tar.gz", hash = "sha256:420afca681a63ef2fa9fa22f78b7629008bd8638ed0a73f9c9288a08dca08bc7"},
+    {file = "astropy_iers_data-0.2024.4.8.0.32.4-py3-none-any.whl", hash = "sha256:4d461830f74b7b8bedac00d45d1a5413b6db58442e2df7c38c6fdc7cabc7a553"},
 ]
 
 [package.extras]
@@ -2554,13 +2554,13 @@ test = ["argcomplete (>=3.0.3)", "mypy (>=1.7.0)", "pre-commit", "pytest (>=7.0,
 
 [[package]]
 name = "typer"
-version = "0.12.1"
+version = "0.12.2"
 description = "Typer, build great CLIs. Easy to code. Based on Python type hints."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "typer-0.12.1-py3-none-any.whl", hash = "sha256:43ebb23c8a358c3d623e31064359a65f50229d0bf73ae8dfd203f49d9126ae06"},
-    {file = "typer-0.12.1.tar.gz", hash = "sha256:72d218ef3c686aed9c6ff3ca25b238aee0474a1628b29c559b18b634cfdeca88"},
+    {file = "typer-0.12.2-py3-none-any.whl", hash = "sha256:e1accbaa7e2b2350753acec896ac30493ac573211a8d4603e88f8356217e01f7"},
+    {file = "typer-0.12.2.tar.gz", hash = "sha256:977929604fde12aeada011852ad9c64370501be6ac2eac248f3161cdc9eeb7c9"},
 ]
 
 [package.dependencies]
