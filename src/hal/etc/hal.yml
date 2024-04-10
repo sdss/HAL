@@ -68,7 +68,7 @@ macros:
         max_exposure_time: 30
         dynamic_exposure_time: false
         target_rms: 1.0
-        min_rms: 3.0
+        min_rms: 1.0
         max_iterations: 4
         wait_time: null
       LCO:
@@ -76,7 +76,7 @@ macros:
         max_exposure_time: 30
         dynamic_exposure_time: true
         target_rms: 0.8
-        min_rms: 3.0
+        min_rms: 1.0
         max_iterations: 5
         wait_time: 5
     guide:
