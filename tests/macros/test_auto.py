@@ -68,12 +68,12 @@ async def test_auto_command(
 
 
 @pytest.mark.parametrize(
-    "observatory,design_mode,wait_time",
+    "observatory,design_mode,exptime,wait_time",
     [
-        ("APO", "dark_time", 617),
-        ("APO", "bright_time", 447),
-        ("LCO", "dark_time", 604),
-        ("LCO", "bright_time", 604),
+        ("APO", "dark_time", 900, 617),
+        ("APO", "bright_time", 730, 447),
+        ("LCO", "dark_time", 900, 604),
+        ("LCO", "bright_time", 900, 604),
     ],
 )
 async def test_auto_expose_time(
@@ -82,10 +82,11 @@ async def test_auto_expose_time(
     mocker: MockerFixture,
     observatory: str,
     design_mode: str,
+    exptime: float,
     wait_time: int,
 ):
     expose_macro: Macro = actor.helpers.macros["expose"]
-    mocker.patch.object(expose_macro, "reset")
+    reset_mock = mocker.patch.object(expose_macro, "reset")
     mocker.patch.object(expose_macro, "run")
     mocker.patch.object(expose_macro, "wait_until_complete", return_value=True)
 
@@ -104,6 +105,13 @@ async def test_auto_expose_time(
     preload_mock.assert_called_with(
         wait_time,
         config["macros"]["auto"]["preload_ahead_time"],
+    )
+
+    reset_mock.assert_called_with(
+        mocker.ANY,
+        count_boss=1,
+        boss_exptime=exptime,
+        apogee_exptime=exptime,
     )
 
 

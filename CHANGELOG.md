@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🔧 Fixed
+
+* When using the `auto` macro, set the exposure time correctly based on the design mode.
+
+
 ## 1.1.5 - April 6th, 2024
 
 ### 🔧 Fixed

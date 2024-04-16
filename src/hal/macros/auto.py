@@ -161,7 +161,12 @@ class AutoModeMacro(Macro):
         await self._preload_design(wait_design_load, preload_ahead_time)
 
         self.message("Exposing cameras.")
-        expose_macro.reset(self.command, count_boss=count)
+        expose_macro.reset(
+            self.command,
+            count_boss=count,
+            boss_exptime=exptime,
+            apogee_exptime=exptime,
+        )
         if not await expose_macro.run():
             raise MacroError("Expose failed during auto mode.")
 
