@@ -6,6 +6,10 @@
 
 * [#18](https://github.com/sdss/HAL/pull/18) Implement dynamic exposure times during acquisition. `cherno acquire` (and potentially `cherno guide`) can be called with the `--dynamic-exposure-time` and `--max-exposure-time` flags. Initial exposure time during acquisition defaults to 5 seconds.
 
+### 🏷️ Changed
+
+* Changed the number of `max_iterations` during acquisition to 5 (from 4) at APO and 7 (from 5) at LCO.
+
 
 ## 1.1.7 - April 17th, 2024
 
