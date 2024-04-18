@@ -1,10 +1,11 @@
 # Changelog
 
-### Next version
+## Next version
 
 ### 🔧 Fixed
 
 * Fix `hal goto-field --guider-time` flag which was previously ignored.
+* Potentially fixed and issue in which if the auto pilot mode is turned on while a configuration is being observed and the next configuration is a repeat field, it was treated as a new field and the additional goto-field stages were executed. The old logic required the configuration to be complete (i.e., at least one exposure done). The new logic just requires the goto-field to have been executed in the previous configuration.
 
 
 ## 1.1.6 - April 16th, 2024
