@@ -1,5 +1,12 @@
 # Changelog
 
+### Next version
+
+### 🔧 Fixed
+
+* Fix `hal goto-field --guider-time` flag which was previously ignored.
+
+
 ## 1.1.6 - April 16th, 2024
 
 ### 🔧 Fixed
