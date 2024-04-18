@@ -64,7 +64,7 @@ macros:
         rot: 0.056
     acquisition:
       APO:
-        exposure_time: 15
+        exposure_time: 5
         max_exposure_time: 30
         dynamic_exposure_time: false
         target_rms: 1.0
