@@ -321,13 +321,15 @@ class _GotoFieldBaseMacro(Macro):
         await self._guide_preconditions("guide")
 
         guide_config = self.config["guide"][self.observatory]
+        if self.config["guider_time"] is not None:
+            exposure_time = self.config["guider_time"]
+        else:
+            exposure_time = guide_config["exposure_time"]
 
         self.command.info("Starting guide loop.")
         await self.helpers.cherno.guide(
             self.command,
-            exposure_time=guide_config["exposure_time"],
-            max_exposure_time=guide_config["max_exposure_time"],
-            dynamic_exposure_time=guide_config["dynamic_exposure_time"],
+            exposure_time=exposure_time,
             wait_time=guide_config["wait_time"],
             wait=False,
         )

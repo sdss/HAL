@@ -193,7 +193,7 @@ class JaegerHelper(HALHelper):
         )
 
         if current:
-            if current.observed and current.field_id == new.field_id:
+            if current.goto_complete and current.field_id == new.field_id:
                 new.new_field = False
                 user_message += " This is a repeat field design."
 

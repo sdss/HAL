@@ -83,7 +83,7 @@ async def test_goto_field_auto_hartmann(
 ):
     """Confirms that --with-hartmann behaves correctly."""
 
-    goto_field_macro.run = mocker.AsyncMock()
+    mocker.patch.object(goto_field_macro, "run")
 
     cmd = await actor.invoke_mock_command("goto-field --auto --with-hartmann")
     await cmd
@@ -103,3 +103,48 @@ async def test_goto_field_auto_hartmann(
 
     assert cmd.status.did_succeed
     assert "boss_hartmann" not in goto_field_macro.stages
+
+
+async def test_goto_field_guider_time(
+    actor: HALActor,
+    goto_field_macro: GotoFieldAPOMacro,
+    mocker: MockerFixture,
+):
+    # Do not run the prepare and cleanup stages.
+    mocker.patch.object(goto_field_macro, "prepare")
+    mocker.patch.object(goto_field_macro, "cleanup")
+
+    mocker.patch.object(goto_field_macro, "_guide_preconditions")
+
+    mocker.patch.object(actor.helpers.cherno, "is_guiding", return_value=False)
+
+    # Wrap goto_field.reset() but still call it.
+    reset_mock = mocker.patch.object(
+        goto_field_macro,
+        "reset",
+        wraps=goto_field_macro.reset,
+    )
+
+    guide_mock = mocker.patch.object(actor.helpers.cherno, "guide")
+
+    cmd = await actor.invoke_mock_command("goto-field -s guide --guider-time 10")
+    await cmd
+
+    reset_mock.assert_called_once_with(
+        mocker.ANY,
+        mocker.ANY,
+        guider_time=10,
+        fixed_rot=mocker.ANY,
+        fixed_altaz=mocker.ANY,
+        fvc_alt=mocker.ANY,
+        fvc_az=mocker.ANY,
+        fvc_rot=mocker.ANY,
+        keep_offsets=mocker.ANY,
+    )
+
+    guide_mock.assert_called_once_with(
+        mocker.ANY,
+        exposure_time=10,
+        wait_time=mocker.ANY,
+        wait=False,
+    )
