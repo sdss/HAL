@@ -66,7 +66,7 @@ macros:
       APO:
         exposure_time: 5
         max_exposure_time: 30
-        dynamic_exposure_time: false
+        dynamic_exposure_time: true
         target_rms: 1.0
         min_rms: 2.0
         max_iterations: 5

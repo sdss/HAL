@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.9 - April 26th, 2024
+
+### 🔧 Fixed
+
+* `goto-field acquire` was setting the exposure time to 5 seconds for APO but not using the dynamic exposure time flag.
+
+
 ## 1.1.8 - April 18th, 2024
 
 ### ✨ Improved
