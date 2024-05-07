@@ -16,18 +16,17 @@ from pytest_mock import MockerFixture
 from clu.command import Command
 
 from hal import config
-from hal.macros.auto import AutoModeMacro
+from hal.macros.auto import AutoPilotMacro
 
 
 if TYPE_CHECKING:
     from hal.actor.actor import HALActor
-    from hal.macros.auto import AutoModeMacro
     from hal.macros.macro import Macro
 
 
 @pytest.fixture
 def mock_auto_macro(mocker: MockerFixture, actor: HALActor):
-    macro = actor.helpers.macros["auto"]
+    macro = actor.helpers.macros["auto_pilot"]
     orig_run = macro.run
 
     async def cancel_macro():
@@ -38,19 +37,19 @@ def mock_auto_macro(mocker: MockerFixture, actor: HALActor):
     macro.run = mocker.AsyncMock(side_effect=cancel_macro)
     macro.command = Command(actor=actor)
 
-    yield actor.helpers.macros["auto"]
+    yield actor.helpers.macros["auto_pilot"]
 
     macro.run = orig_run
 
 
 def test_auto_macro(actor: HALActor):
-    macro = actor.helpers.macros["auto"]
-    assert isinstance(macro, AutoModeMacro)
+    macro = actor.helpers.macros["auto_pilot"]
+    assert isinstance(macro, AutoPilotMacro)
 
 
 async def test_auto_command(
     actor: HALActor,
-    mock_auto_macro: AutoModeMacro,
+    mock_auto_macro: AutoPilotMacro,
     mocker: MockerFixture,
 ):
     mock_auto_macro.reset = mocker.AsyncMock()
@@ -78,7 +77,7 @@ async def test_auto_command(
 )
 async def test_auto_expose_time(
     actor: HALActor,
-    mock_auto_macro: AutoModeMacro,
+    mock_auto_macro: AutoPilotMacro,
     mocker: MockerFixture,
     observatory: str,
     design_mode: str,
@@ -104,7 +103,7 @@ async def test_auto_expose_time(
     preload_mock.assert_called()
     preload_mock.assert_called_with(
         wait_time,
-        config["macros"]["auto"]["preload_ahead_time"],
+        config["macros"]["auto_pilot"]["preload_ahead_time"],
     )
 
     reset_mock.assert_called_with(
@@ -117,7 +116,7 @@ async def test_auto_expose_time(
 
 async def test_auto_macro_preload_ahead(
     actor: HALActor,
-    mock_auto_macro: AutoModeMacro,
+    mock_auto_macro: AutoPilotMacro,
     mocker: MockerFixture,
 ):
     mock_auto_macro.reset = mocker.AsyncMock()

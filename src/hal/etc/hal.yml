@@ -165,7 +165,7 @@ macros:
           APO: 730
           LCO: 900
 
-  auto:
+  auto_pilot:
     guider_time: 15
     min_rms: 3.0
     count: 1

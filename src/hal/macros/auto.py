@@ -17,10 +17,10 @@ from hal.helpers import get_default_exposure_time
 from hal.macros.macro import Macro
 
 
-class AutoModeMacro(Macro):
-    """A macro that runs one iteration of the auto mode."""
+class AutoPilotMacro(Macro):
+    """A macro that runs one iteration of the auto-pilot mode."""
 
-    name = "auto"
+    name = "auto_pilot"
 
     __PRECONDITIONS__ = ["prepare"]
     __STAGES__ = ["load", "goto_field", "expose"]

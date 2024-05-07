@@ -75,18 +75,18 @@ async def auto(
     count: int = 1,
     preload_ahead: float | None = None,
 ):
-    """Starts the auto mode."""
+    """Starts the auto-pilot mode."""
 
     assert command.actor
 
     expose_macro = command.actor.helpers.macros["expose"]
     assert isinstance(expose_macro, ExposeMacro)
 
-    macro = command.actor.helpers.macros["auto"]
+    macro = command.actor.helpers.macros["auto_pilot"]
 
     if (stop or modify or pause or resume) and not macro.running:
         return command.fail(
-            "I'm afraid I cannot do that Dave. The auto mode is not running."
+            "I'm afraid I cannot do that Dave. The auto pilot mode is not running."
         )
 
     if pause and resume:
@@ -102,10 +102,10 @@ async def auto(
 
     if stop is True:
         if now is True:
-            command.warning(auto_mode_message="Cancelling auto mode NOW.")
+            command.warning(auto_mode_message="Cancelling auto-pilot mode NOW.")
             macro.cancel(now=True)
         else:
-            command.warning(auto_mode_message="Cancelling auto after stage completes.")
+            command.warning(auto_mode_message="Cancelling auto-pilot after this stage.")
             macro.cancel(now=False)
 
         return command.finish()

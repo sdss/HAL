@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import os
 
-from typing import ClassVar, TypeVar
+from typing import ClassVar
 
 from clu.legacy import LegacyActor
 
@@ -19,9 +19,6 @@ from hal.actor.commands import hal_command_parser
 
 
 __all__ = ["HALActor", "ActorHelpers"]
-
-
-T = TypeVar("T", bound="HALActor")
 
 
 class HALActor(LegacyActor):

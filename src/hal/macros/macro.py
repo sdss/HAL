@@ -121,7 +121,7 @@ class Macro:
 
     def __repr__(self):
         stages = flatten(self.stages)
-        return f"<{self.__class__.__name__} (name={self.name}, stages={stages})>"
+        return f"<{self.__class__.__name__} (name={self.name!r}, stages={stages})>"
 
     def _reset_internal(self, **opts):
         """Internal reset method that can be overridden by the subclasses."""
