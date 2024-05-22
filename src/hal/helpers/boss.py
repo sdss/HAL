@@ -12,10 +12,12 @@ import asyncio
 
 from typing import TYPE_CHECKING
 
+from sdsstools.utils import cancel_task
+
 from hal import config
 from hal.exceptions import HALError
 
-from . import HALHelper
+from . import SpectrographHelper
 
 
 if TYPE_CHECKING:
@@ -25,7 +27,7 @@ if TYPE_CHECKING:
 __all__ = ["BOSSHelper"]
 
 
-class BOSSHelper(HALHelper):
+class BOSSHelper(SpectrographHelper):
     """Control for BOSS spectrograph."""
 
     __readout_pending: bool = False
@@ -108,10 +110,13 @@ class BOSSHelper(HALHelper):
     ):
         """Exposes BOSS. If ``readout=False``, does not read the exposure."""
 
-        if self.readout_pending is not False:
+        if self.readout_pending is not False or self.is_exposing():
             raise HALError(
                 "Cannot expose. The camera is exposing or a readout is pending."
             )
+
+        self._exposure_time_remaining = exp_time
+        self._exposure_time_remaining_timer = asyncio.create_task(self._timer())
 
         if self.actor.observatory == "APO":
             await self._expose_boss_icc(
@@ -129,6 +134,8 @@ class BOSSHelper(HALHelper):
                 readout=readout,
                 read_async=read_async,
             )
+
+        await cancel_task(self._exposure_time_remaining_timer)
 
     async def _expose_boss_icc(
         self,

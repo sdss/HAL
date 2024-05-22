@@ -8,14 +8,17 @@
 
 from __future__ import annotations
 
+import asyncio
 import enum
 
 from typing import TYPE_CHECKING
 
+from sdsstools.utils import cancel_task
+
 from hal import config
 from hal.exceptions import HALError
 
-from . import HALHelper
+from . import SpectrographHelper
 
 
 if TYPE_CHECKING:
@@ -25,7 +28,7 @@ if TYPE_CHECKING:
 __all__ = ["APOGEEHelper"]
 
 
-class APOGEEHelper(HALHelper):
+class APOGEEHelper(SpectrographHelper):
     """APOGEE instrument helper."""
 
     name = "apogee"
@@ -282,6 +285,9 @@ class APOGEEHelper(HALHelper):
             if dither_sequence not in ["AB", "BA", "AA", "BB"]:
                 raise HALError(f"Invalid dither sequence {dither_sequence}.")
 
+        self._exposure_time_remaining = exp_time * len(dither_sequence)
+        self._exposure_time_remaining_timer = asyncio.create_task(self._timer())
+
         for dither_position in dither_sequence:
             await self.expose(
                 command,
@@ -289,6 +295,8 @@ class APOGEEHelper(HALHelper):
                 exp_type=exp_type,
                 dither_position=dither_position,
             )
+
+        await cancel_task(self._exposure_time_remaining_timer)
 
 
 class APOGEEGangHelper:

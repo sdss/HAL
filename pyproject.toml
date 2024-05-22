@@ -30,7 +30,7 @@ hal = "hal.__main__:hal"
 [tool.poetry.dependencies]
 python = "^3.10,<4.0"
 sdsstools = "^1.0.0"
-sdss-clu = "^2.0.0"
+sdss-clu = "^2.2.7"
 click-default-group = "^1.2.2"
 numpy = "^1.22.1"
 sdssdb = ">=0.8.3"
@@ -92,7 +92,7 @@ asyncio_mode = "auto"
 branch = true
 include = ["src/hal/*"]
 omit = [
-    "*/__init__.py",
+    "src/hal/__init__.py",
     "src/hal/__main__.py",
     "src/hal/exceptions.py",
     "src/hal/macros/test_macro.py",
