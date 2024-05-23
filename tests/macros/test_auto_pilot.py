@@ -16,7 +16,7 @@ from pytest_mock import MockerFixture
 from clu.command import Command
 
 from hal import config
-from hal.macros.auto import AutoPilotMacro
+from hal.macros.auto_pilot import AutoPilotMacro
 
 
 if TYPE_CHECKING:
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture
-def mock_auto_macro(mocker: MockerFixture, actor: HALActor):
+def mock_auto_pilot_macro(mocker: MockerFixture, actor: HALActor):
     macro = actor.helpers.macros["auto_pilot"]
     orig_run = macro.run
 
@@ -42,28 +42,32 @@ def mock_auto_macro(mocker: MockerFixture, actor: HALActor):
     macro.run = orig_run
 
 
-def test_auto_macro(actor: HALActor):
+def test_auto_pilot_macro(actor: HALActor):
     macro = actor.helpers.macros["auto_pilot"]
     assert isinstance(macro, AutoPilotMacro)
 
 
-async def test_auto_command(
+async def test_auto_pilot_command(
     actor: HALActor,
-    mock_auto_macro: AutoPilotMacro,
+    mock_auto_pilot_macro: AutoPilotMacro,
     mocker: MockerFixture,
 ):
-    mock_auto_macro.reset = mocker.AsyncMock()
+    mock_auto_pilot_macro.reset = mocker.AsyncMock()
 
-    cmd = actor.invoke_mock_command("auto")
+    cmd = actor.invoke_mock_command("auto-pilot")
     await cmd
 
     assert cmd.status.did_succeed
 
-    mock_auto_macro.run.assert_called()
-    mock_auto_macro.reset.assert_called_with(cmd, count=1, preload_ahead_time=None)
+    mock_auto_pilot_macro.run.assert_called()
+    mock_auto_pilot_macro.reset.assert_called_with(
+        cmd,
+        count=1,
+        preload_ahead_time=None,
+    )
 
-    assert mock_auto_macro.config["count"] == 1
-    assert mock_auto_macro.config["preload_ahead_time"] == 300
+    assert mock_auto_pilot_macro.config["count"] == 1
+    assert mock_auto_pilot_macro.config["preload_ahead_time"] == 300
 
 
 @pytest.mark.parametrize(
@@ -75,9 +79,9 @@ async def test_auto_command(
         ("LCO", "bright_time", 900, 604),
     ],
 )
-async def test_auto_expose_time(
+async def test_auto_pilot_expose_time(
     actor: HALActor,
-    mock_auto_macro: AutoPilotMacro,
+    mock_auto_pilot_macro: AutoPilotMacro,
     mocker: MockerFixture,
     observatory: str,
     design_mode: str,
@@ -89,21 +93,28 @@ async def test_auto_expose_time(
     mocker.patch.object(expose_macro, "run")
     mocker.patch.object(expose_macro, "wait_until_complete", return_value=True)
 
-    cherno_helper = mock_auto_macro.helpers.cherno
+    cherno_helper = mock_auto_pilot_macro.helpers.cherno
     mocker.patch.object(cherno_helper, "guiding_at_rms", return_value=True)
 
-    conf_mock = mocker.patch.object(mock_auto_macro.helpers.jaeger, "configuration")
+    conf_mock = mocker.patch.object(
+        mock_auto_pilot_macro.helpers.jaeger,
+        "configuration",
+    )
     conf_mock.design_mode = design_mode
 
-    preload_mock = mocker.patch.object(mock_auto_macro, "_preload_design")
+    mocker.patch.object(mock_auto_pilot_macro, "_wait_integration_done")
+    preload_mock = mocker.patch.object(
+        mock_auto_pilot_macro,
+        "_wait_and_preload_design",
+    )
 
-    mock_auto_macro.command.actor.observatory = observatory
-    await mock_auto_macro.expose()
+    mock_auto_pilot_macro.command.actor.observatory = observatory
+    await mock_auto_pilot_macro.expose()
 
     preload_mock.assert_called()
     preload_mock.assert_called_with(
-        wait_time,
-        config["macros"]["auto_pilot"]["preload_ahead_time"],
+        delay=wait_time,
+        preload_ahead_time=config["macros"]["auto_pilot"]["preload_ahead_time"],
     )
 
     reset_mock.assert_called_with(
@@ -114,14 +125,14 @@ async def test_auto_expose_time(
     )
 
 
-async def test_auto_macro_preload_ahead(
+async def test_auto_pilot_macro_preload_ahead(
     actor: HALActor,
-    mock_auto_macro: AutoPilotMacro,
+    mock_auto_pilot_macro: AutoPilotMacro,
     mocker: MockerFixture,
 ):
-    mock_auto_macro.reset = mocker.AsyncMock()
-    cmd = actor.invoke_mock_command("auto --preload-ahead 100")
+    mock_auto_pilot_macro.reset = mocker.AsyncMock()
+    cmd = actor.invoke_mock_command("auto-pilot --preload-ahead 100")
     await cmd
 
     assert cmd.status.did_succeed
-    mock_auto_macro.reset.assert_called_with(cmd, count=1, preload_ahead_time=100)
+    mock_auto_pilot_macro.reset.assert_called_with(cmd, count=1, preload_ahead_time=100)

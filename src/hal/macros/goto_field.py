@@ -393,7 +393,7 @@ class _GotoFieldBaseMacro(Macro):
         """
 
         for stage in self.flat_stages:
-            if stage == "acquire" or stage == "guide":
+            if stage in ["acquire", "guide", "cleanup"]:
                 continue
             if not self.is_stage_done(stage):
                 return False

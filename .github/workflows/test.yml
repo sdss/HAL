@@ -45,7 +45,7 @@ jobs:
       - name: Lint with ruff
         run: |
           pip install ruff
-          ruff src/hal
+          ruff check src/hal
 
       - name: Lint with black
         run: |

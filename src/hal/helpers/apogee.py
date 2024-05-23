@@ -201,16 +201,21 @@ class APOGEEHelper(SpectrographHelper):
     def is_exposing(self):
         """Returns `True` if APOGEE is exposing or stopping."""
 
+        state = self.get_exposure_state()
+
+        if state in ["exposing", "stopping"]:
+            return True
+        else:
+            return False
+
+    def get_exposure_state(self) -> str | None:
+
         exposure_state = self.actor.models["apogee"]["exposureState"]
 
         if exposure_state.value is None or None in exposure_state.value:
             raise ValueError("Unknown APOGEE exposure state.")
 
-        state = exposure_state.value[0].lower()
-        if state in ["exposing", "stopping"]:
-            return True
-        else:
-            return False
+        return exposure_state.value[0].lower()
 
     async def expose(
         self,

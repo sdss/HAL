@@ -77,27 +77,26 @@ class SpectrographHelper(HALHelper):
         raise NotImplementedError()
 
     @property
-    def exposure_time_remaining(self):
+    def exposure_time_remaining(self) -> float:
         """Returns the remaining exposure time in seconds."""
 
-        if not self.is_exposing() or self._exposure_time_remaining <= 0:
-            return 0
+        if not self.is_exposing() or self._exposure_time_remaining <= 0.0:
+            return 0.0
 
         return self._exposure_time_remaining
 
     async def _timer(self):
         """Updates the exposure time remaining."""
-        print("b")
+
         try:
-            print("a")
-            while self._exposure_time_remaining > 0:
+            while self._exposure_time_remaining > 0.0:
                 await asyncio.sleep(0.1)
                 self._exposure_time_remaining -= 0.1
         except asyncio.CancelledError:
             pass
         finally:
             self._exposure_time_remaining_timer = None
-            self._exposure_time_remaining = 0
+            self._exposure_time_remaining = 0.0
 
 
 def get_default_exposure_time(observatory: str, design_mode: str | None = None):

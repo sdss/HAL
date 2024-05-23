@@ -78,7 +78,7 @@
       ]
     },
     "expose_is_paused": { "type": "boolean" },
-    "auto_mode_message": { "type": "string" },
+    "auto_pilot_message": { "type": "string" },
     "additionalProperties": false
   }
 }

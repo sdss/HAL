@@ -23,10 +23,10 @@ if TYPE_CHECKING:
     from .. import HALCommandType
 
 
-__all__ = ["auto"]
+__all__ = ["auto_pilot"]
 
 
-@hal_command_parser.command(name="auto")
+@hal_command_parser.command(name="auto-pilot", aliases=["auto"])
 @click.option(
     "--stop",
     is_flag=True,
@@ -65,7 +65,7 @@ __all__ = ["auto"]
     default=None,
     help="Preload the next design this many seconds before the exposure completes.",
 )
-async def auto(
+async def auto_pilot(
     command: HALCommandType,
     stop: bool = False,
     now: bool = False,

@@ -592,6 +592,9 @@ class ExposeMacro(Macro):
             else:
                 self.command.warning("BOSS exposure is running. Not cancelling it.")
 
+        if not self.failed and not self.cancelled and self.helpers.jaeger.configuration:
+            self.helpers.jaeger.configuration.observed = True
+
     async def _pause(self):
         """Pauses the execution of the macro."""
 
