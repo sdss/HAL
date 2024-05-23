@@ -12,7 +12,13 @@ from typing import TYPE_CHECKING
 
 import click
 
+<<<<<<< HEAD
 from . import hal_command_parser, stages
+=======
+from hal import config
+
+from . import fail_if_running_macro, hal_command_parser, stages
+>>>>>>> main
 
 
 if TYPE_CHECKING:
@@ -94,6 +100,13 @@ async def goto_field(
 
     assert command.actor
 
+<<<<<<< HEAD
+=======
+    if not fail_if_running_macro(command):
+        return
+
+    observatory = command.actor.observatory
+>>>>>>> main
     jaeger_helper = command.actor.helpers.jaeger
 
     if stages is not None and auto is True:

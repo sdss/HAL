@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* Fail `expose` and `goto-field` macros if another macro is running.
+
+
 ## 1.1.9 - April 26th, 2024
 
 ### 🔧 Fixed

@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 import click
 
-from . import hal_command_parser
+from . import fail_if_running_macro, hal_command_parser
 
 
 if TYPE_CHECKING:
@@ -68,6 +68,9 @@ async def get_steps(command: HALCommandType, script: str):
 @click.argument("SCRIPT", type=str)
 async def run(command: HALCommandType, script: str):
     """Runs a script."""
+
+    if not fail_if_running_macro(command):
+        return
 
     try:
         result = await command.actor.helpers.scripts.run(script, command)
