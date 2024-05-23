@@ -60,12 +60,12 @@ ruff = ">=0.0.291"
 
 [tool.black]
 line-length = 88
-target-version = ['py311']
+target-version = ['py312']
 fast = true
 
 [tool.ruff]
 line-length = 88
-target-version = 'py311'
+target-version = 'py312'
 exclude = ["typings/"]
 
 [ruff.lint]
