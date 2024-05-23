@@ -16,7 +16,7 @@ from hal import config
 from hal.helpers import get_default_exposure_time
 from hal.macros.macro import StageType, flatten
 
-from . import hal_command_parser, stages
+from . import fail_if_running_macro, hal_command_parser, stages
 
 
 if TYPE_CHECKING:
@@ -160,8 +160,12 @@ async def expose(
 ):
     """Take science exposures."""
 
-    if (stop or modify or pause or resume) and not macro.running:
-        return command.fail("No expose macro currently running.")
+    if stop or modify or pause or resume:
+        if not macro.running:
+            return command.fail("No expose macro currently running.")
+    else:
+        if not fail_if_running_macro(command):
+            return
 
     # Check incompatible options.
     if exposure_time and (boss_exposure_time or apogee_exposure_time or reads):

@@ -14,7 +14,7 @@ import click
 
 from hal import config
 
-from . import hal_command_parser, stages
+from . import fail_if_running_macro, hal_command_parser, stages
 
 
 if TYPE_CHECKING:
@@ -95,6 +95,9 @@ async def goto_field(
     """Execute the go-to-field macro."""
 
     assert command.actor
+
+    if not fail_if_running_macro(command):
+        return
 
     observatory = command.actor.observatory
     jaeger_helper = command.actor.helpers.jaeger

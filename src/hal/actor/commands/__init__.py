@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import functools
+from re import L
 
 from typing import TYPE_CHECKING
 
@@ -21,7 +22,7 @@ from hal.macros.macro import StageType, flatten
 
 
 if TYPE_CHECKING:
-    from hal.actor.actor import HALActor
+    from hal.actor import HALActor, HALCommandType
 
 
 hal_command_parser = command_parser
@@ -91,6 +92,18 @@ def stages(macro_name: str, reset: bool = True):
         return functools.update_wrapper(wrapper, f)
 
     return decorator
+
+
+def fail_if_running_macro(command: HALCommandType):
+    """Fails a command if a macro is already running."""
+
+    macros = command.actor.helpers.macros
+    running_macros = [macro for macro in macros if macros[macro].running]
+    if any(running_macros):
+        command.fail("An expose macro is already running.")
+        return False
+
+    return True
 
 
 from .auto import *
