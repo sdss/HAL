@@ -139,8 +139,14 @@ class _GotoFieldBaseMacro(Macro):
 
         self.command.info("Reconfiguring FPS array.")
 
-        # This is always safe. If it's already folded jaeger will return immediately.
-        await self.send_command("jaeger", "configuration reverse")
+        if not (await self.helpers.jaeger.is_folded(self.command)):
+            try:
+                await self.send_command("jaeger", "configuration reverse")
+            except MacroError:
+                self.command.warning("Reverse trajectory failed. Will try to unwind.")
+
+                if not (await self.helpers.jaeger.unwind(self.command)):
+                    raise MacroError("Failed unwindind the FPS array.")
 
         await self.send_command("jaeger", "configuration execute")
 
