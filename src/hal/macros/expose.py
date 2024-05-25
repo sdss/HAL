@@ -508,6 +508,11 @@ class ExposeMacro(Macro):
 
         await asyncio.gather(*tasks)
 
+        # If we are about to expose that means the goto-field is done, so let's mark it.
+        # This is useful in cases where the goto failed and it was manually completed.
+        if self.helpers.jaeger.configuration:
+            self.helpers.jaeger.configuration.goto_complete = True
+
         # Tell the helper that we're about to start exposing.
         await self.expose_helper.start()
 
