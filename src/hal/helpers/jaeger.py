@@ -144,6 +144,34 @@ class JaegerHelper(HALHelper):
 
         self.actor.write("w", error=message)
 
+    async def is_folded(self, command: HALCommandType):
+        """Checks whether the FPS is folded."""
+
+        cmd = await self._send_command(
+            command,
+            "jaeger",
+            "unwind --status",
+            raise_on_fail=True,
+        )
+
+        return cmd.replies.get("folded")[0]
+
+    async def unwind(self, command: HALCommandType):
+        """Unwinds the FPS."""
+
+        cmd = await self._send_command(
+            command,
+            "jaeger",
+            "unwind",
+            raise_on_fail=False,
+        )
+
+        if cmd.status.did_fail:
+            self.warn("Failed unwinding the FPS.")
+            return False
+
+        return True
+
     async def load_from_queue(
         self,
         command: HALCommandType,
