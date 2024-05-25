@@ -60,11 +60,12 @@ async def test_auto_pilot_command(
     assert cmd.status.did_succeed
 
     mock_auto_pilot_macro.run.assert_called()
-    mock_auto_pilot_macro.reset.assert_called_with(
-        cmd,
-        count=1,
-        preload_ahead_time=None,
-    )
+
+    calls = [
+        mocker.call(cmd, count=1, preload_ahead_time=None),
+        mocker.call(cmd, reset_config=False),
+    ]
+    mock_auto_pilot_macro.reset.assert_has_calls(calls)  # type: ignore
 
     assert mock_auto_pilot_macro.config["count"] == 1
     assert mock_auto_pilot_macro.config["preload_ahead_time"] == 300
@@ -135,4 +136,8 @@ async def test_auto_pilot_macro_preload_ahead(
     await cmd
 
     assert cmd.status.did_succeed
-    mock_auto_pilot_macro.reset.assert_called_with(cmd, count=1, preload_ahead_time=100)
+    calls = [
+        mocker.call(cmd, count=1, preload_ahead_time=100),
+        mocker.call(cmd, reset_config=False),
+    ]
+    mock_auto_pilot_macro.reset.assert_has_calls(calls)  # type: ignore
