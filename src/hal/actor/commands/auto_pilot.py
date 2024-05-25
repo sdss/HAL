@@ -130,10 +130,14 @@ async def auto_pilot(
             "I'm afraid I cannot do that Dave. The auto mode is already running."
         )
 
+    macro.reset(command, count=count, preload_ahead_time=preload_ahead)
+
     result: bool = True
     while True:
+        # Reset the macro (stages and such) but keep the current config.
+        macro.reset(command, reset_config=False)
+
         # Run the auto loop until the command is cancelled.
-        macro.reset(command, count=count, preload_ahead_time=preload_ahead)
         if not await macro.run():
             result = False
             break

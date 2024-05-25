@@ -133,6 +133,7 @@ class Macro:
         command: HALCommandType,
         reset_stages: Optional[list[StageType]] = None,
         force: bool = False,
+        reset_config: bool = True,
         **opts,
     ):
         """Resets stage status.
@@ -193,7 +194,9 @@ class Macro:
         self.flat_stages = flatten(self.stages)
 
         # Reload the config and update it with custom options for this run.
-        self.config = defaultdict(lambda: None, self._base_config.copy())
+        if reset_config:
+            self.config = defaultdict(lambda: None, self._base_config.copy())
+
         self.config.update(
             {k: v for k, v in opts.items() if k not in self.config or v is not None}
         )
