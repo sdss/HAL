@@ -103,24 +103,21 @@ async def test_auto_pilot_expose_time(
     )
     conf_mock.design_mode = design_mode
 
-    mocker.patch.object(mock_auto_pilot_macro, "_wait_integration_done")
-    preload_mock = mocker.patch.object(
-        mock_auto_pilot_macro,
-        "_wait_and_preload_design",
-    )
+    mocker.patch.object(mock_auto_pilot_macro.system_state, "wait_integration_done")
+    preload_mock = mocker.patch.object(mock_auto_pilot_macro, "_schedule_preload")
 
     mock_auto_pilot_macro.command.actor.observatory = observatory
     await mock_auto_pilot_macro.expose()
 
     preload_mock.assert_called()
     preload_mock.assert_called_with(
-        delay=wait_time,
-        preload_ahead_time=config["macros"]["auto_pilot"]["preload_ahead_time"],
+        config["macros"]["auto_pilot"]["preload_ahead_time"]
     )
 
     reset_mock.assert_called_with(
         mocker.ANY,
         count_boss=1,
+        count_apogee=1,
         boss_exptime=exptime,
         apogee_exptime=exptime,
     )
