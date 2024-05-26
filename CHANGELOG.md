@@ -2,6 +2,10 @@
 
 ## Next version
 
+### 🚀 New
+
+* [#19](https://github.com/sdss/HAL/pull/19) Fully rewritten version of the auto-pilot. The behaviour is generally unchanged but this rewrite fixes several bugs and should allow the auto-pilot to be started and stopped at any point. The command has been changed to `hal auto-pilot` although `hal auto` is still being aliased.
+
 ### ✨ Improved
 
 * Fail `expose` and `goto-field` macros if another macro is running.
