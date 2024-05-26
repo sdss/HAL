@@ -160,10 +160,10 @@ macros:
     fallback:
       count: 1
       exptime:
-        default: 300
+        default: 900
         bright_design_mode:
           APO: 730
-          LCO: 300
+          LCO: 900
 
   auto_pilot:
     guider_time: 15
