@@ -221,7 +221,7 @@ class APOGEEHelper(SpectrographHelper):
         self,
         command: HALCommandType,
         exp_time: float,
-        exp_type: str = "dark",
+        exp_type: str = "object",
         dither_position: str | None = None,
     ):
         """Exposes APOGEE.
