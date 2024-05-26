@@ -79,6 +79,8 @@ class ExposeHelper:
         self._apogee_exp_start_time: float = 0
         self._boss_exp_start_time: float = 0
 
+        self.etr: float = 0.0
+
         self.interval: float = 10
         self._monitor_task: asyncio.Task | None = None
 
@@ -412,6 +414,8 @@ class ExposeHelper:
             state_boss["etr"] = int(round(etr))
 
             self.macro.command.debug(exposure_state_boss=list(state_boss.values()))
+
+        self.etr = max(state_apogee["etr"], state_boss["etr"])
 
 
 class ExposeMacro(Macro):

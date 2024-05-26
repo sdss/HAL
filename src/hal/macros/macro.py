@@ -262,6 +262,17 @@ class Macro:
         else:
             self._running_event.set()
 
+    def is_cancelling(self):
+        """Returns ``True`` if the macro is cancelling."""
+
+        if not self.running or (self.cancelled or self.failed):
+            return False
+
+        if self.has_status(self.flat_stages, StageStatus.CANCELLING):
+            return True
+
+        return False
+
     def set_stage_status(
         self,
         stages: StageType,

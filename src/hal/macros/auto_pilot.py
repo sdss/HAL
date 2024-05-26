@@ -16,6 +16,7 @@ from sdsstools.utils import cancel_task
 from hal import config
 from hal.exceptions import MacroError
 from hal.helpers import get_default_exposure_time
+from hal.macros.expose import ExposeMacro
 from hal.macros.macro import Macro
 
 
@@ -59,6 +60,23 @@ class SystemState:
             self.boss_time_remaining,
         )
 
+    async def wait_integration_done(self, wait_readout_done: bool = False):
+        """Blocks until the spectrographs are not exposing."""
+
+        while True:
+            apogee_exposing = self.macro.helpers.apogee.is_exposing()
+            boss_exposing = self.macro.helpers.boss.is_exposing()
+
+            if apogee_exposing or boss_exposing:
+                await asyncio.sleep(1)
+                continue
+
+            if wait_readout_done and self.macro.helpers.boss.readout_pending:
+                self.macro._auto_pilot_message("Waiting for BOSS to read out")
+                await self.macro.helpers.boss.readout(self.macro.command)
+
+            break
+
 
 class AutoPilotMacro(Macro):
     """Auto pilot macro."""
@@ -74,7 +92,7 @@ class AutoPilotMacro(Macro):
 
         self.system_state = SystemState(self)
 
-        self._preload_design_task: asyncio.Task | None = None
+        self._preload_task: asyncio.Task | None = None
 
     async def prepare(self):
         """Prepares the auto pilot."""
@@ -102,7 +120,7 @@ class AutoPilotMacro(Macro):
                 await self._preload_design()
 
             # Now wait until the exposure is done.
-            await self._wait_integration_done()
+            await self.system_state.wait_integration_done()
 
     async def load(self):
         """Loads a new design."""
@@ -111,6 +129,22 @@ class AutoPilotMacro(Macro):
 
         if self.helpers.jaeger.preloaded:
             self._auto_pilot_message("Loading preloaded configuration")
+
+            try:
+                await self.helpers.jaeger.from_preloaded(self.command)
+            except Exception as ee:
+                # This mostly can happen if jaeger is restarted after preloading a
+                # configuration that HAL had tracked but after the restart does not
+                # exist anymore.
+
+                self._auto_pilot_message(f"Preloaded configuration failed: {ee}.", "w")
+
+                self.helpers.jaeger.preloaded = None
+                if configuration:
+                    configuration.observed = True
+
+                await self.load()
+                return
 
         elif configuration and not configuration.observed:
             self._auto_pilot_message("Found unobserved configuration")
@@ -165,7 +199,7 @@ class AutoPilotMacro(Macro):
 
         # Wait until previous exposures are done and read.
         self._auto_pilot_message("Waiting for previous exposures to finish")
-        await self._wait_integration_done(wait_readout_done=True)
+        await self.system_state.wait_integration_done(wait_readout_done=True)
 
         # Make sure guiding is good enough to start exposing.
         if not self.helpers.cherno.is_guiding():
@@ -191,28 +225,25 @@ class AutoPilotMacro(Macro):
         readout = config["durations"]["boss"][self.actor.observatory]["readout"]
         total_time = (exptime + flushing + readout) * count - readout
 
-        preload_ahead_time = self.config["preload_ahead_time"]
-        wait_design_load = int(total_time - preload_ahead_time)
-        self._auto_pilot_message(
-            f"Scheduling next design preload in {wait_design_load} s.",
-            "d",
-        )
-
-        await self._cancel_preload_task()
-        self._preload_design_task = asyncio.create_task(
-            self._wait_and_preload_design(
-                delay=wait_design_load,
-                preload_ahead_time=preload_ahead_time,
-            )
-        )
-
-        self._auto_pilot_message("Exposing cameras.")
+        # Reset the exposure macro to update ETR but do not start the exposures yet.
         expose_macro.reset(
             self.command,
             count_boss=count,
+            count_apogee=count,
             boss_exptime=exptime,
             apogee_exptime=exptime,
         )
+
+        # Calculate the time to preload the next design and schedule it. This may
+        # change if the count changes and the ETR does too.
+        preload_ahead = self.config["preload_ahead_time"]
+        wait_design_load = int(total_time - preload_ahead)
+        self._auto_pilot_message(f"Scheduling preload in {wait_design_load} s")
+
+        await self._cancel_preload_task()
+        self._preload_task = asyncio.create_task(self._schedule_preload(preload_ahead))
+
+        self._auto_pilot_message("Exposing cameras")
         if not await expose_macro.run():
             raise MacroError("Expose failed during auto mode.")
 
@@ -227,11 +258,26 @@ class AutoPilotMacro(Macro):
 
         self.command.write(level, auto_pilot_message=message)
 
-    async def _wait_and_preload_design(self, delay: float, preload_ahead_time: float):
+    async def _schedule_preload(self, preload_ahead: float):
         """Preloads the next design after a delay."""
 
-        await asyncio.sleep(delay)
-        self._auto_pilot_message("Preloading design from the queue.")
+        expose_macro = self.helpers.macros["expose"]
+        assert isinstance(expose_macro, ExposeMacro)
+
+        while True:
+            await asyncio.sleep(1)
+
+            if not expose_macro.running:
+                continue
+
+            if expose_macro.expose_helper.etr <= preload_ahead:
+                break
+
+        if self.is_cancelling() or self.cancelled or self.failed:
+            self._auto_pilot_message("Auto-pilot was cancelled. Not preloading design.")
+            return
+
+        self._auto_pilot_message("Preloading design from the queue")
         await self._preload_design(now=True)
 
         # At this point we consider this configuration has been observed.
@@ -259,6 +305,7 @@ class AutoPilotMacro(Macro):
                 ahead_time = self.config["preload_ahead_time"]
 
             assert ahead_time is not None and ahead_time >= 0
+            ahead_time = round(ahead_time, 1)
 
             self._auto_pilot_message(f"Wating {ahead_time} s before preloading design")
             while True:
@@ -268,32 +315,20 @@ class AutoPilotMacro(Macro):
 
                 await asyncio.sleep(1)
 
+        # Assume that we are exposing BOSS and account for the readout
+        # time that is not included in exposure_time_remaining.
+        boss_readout = config["durations"]["boss"][self.observatory]["readout"]
+        extra_epoch_delay = self.system_state.exposure_time_remaining + boss_readout
         self._auto_pilot_message(f"Preloading with delay {extra_epoch_delay:.1f} s")
+
         await self.helpers.jaeger.load_from_queue(
             self.command,
             preload=True,
             extra_epoch_delay=extra_epoch_delay,
         )
 
-    async def _wait_integration_done(self, wait_readout_done: bool = False):
-        """Blocks until the spectrographs are not exposing."""
-
-        while True:
-            apogee_exposing = self.helpers.apogee.is_exposing()
-            boss_exposing = self.helpers.boss.is_exposing()
-
-            if apogee_exposing or boss_exposing:
-                await asyncio.sleep(1)
-                continue
-
-            if wait_readout_done and self.helpers.boss.readout_pending:
-                self._auto_pilot_message("Waiting for BOSS to read out.")
-                await self.helpers.boss.readout(self.command)
-
-            break
-
     async def _cancel_preload_task(self):
         """Cancels an existing preload task."""
 
-        await cancel_task(self._preload_design_task)
-        self._preload_design_task = None
+        await cancel_task(self._preload_task)
+        self._preload_task = None
