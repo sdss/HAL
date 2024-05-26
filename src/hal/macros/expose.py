@@ -79,6 +79,8 @@ class ExposeHelper:
         self._apogee_exp_start_time: float = 0
         self._boss_exp_start_time: float = 0
 
+        self.etr: float = 0.0
+
         self.interval: float = 10
         self._monitor_task: asyncio.Task | None = None
 
@@ -413,6 +415,8 @@ class ExposeHelper:
 
             self.macro.command.debug(exposure_state_boss=list(state_boss.values()))
 
+        self.etr = max(state_apogee["etr"], state_boss["etr"])
+
 
 class ExposeMacro(Macro):
     """Takes a science exposure with APOGEE and/or BOSS."""
@@ -508,6 +512,11 @@ class ExposeMacro(Macro):
 
         await asyncio.gather(*tasks)
 
+        # If we are about to expose that means the goto-field is done, so let's mark it.
+        # This is useful in cases where the goto failed and it was manually completed.
+        if self.helpers.jaeger.configuration:
+            self.helpers.jaeger.configuration.goto_complete = True
+
         # Tell the helper that we're about to start exposing.
         await self.expose_helper.start()
 
@@ -591,6 +600,9 @@ class ExposeMacro(Macro):
                 self.command.info("BOSS is reading.")
             else:
                 self.command.warning("BOSS exposure is running. Not cancelling it.")
+
+        if not self.failed and not self.cancelled and self.helpers.jaeger.configuration:
+            self.helpers.jaeger.configuration.observed = True
 
     async def _pause(self):
         """Pauses the execution of the macro."""

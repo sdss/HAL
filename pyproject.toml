@@ -30,11 +30,12 @@ hal = "hal.__main__:hal"
 [tool.poetry.dependencies]
 python = "^3.10,<4.0"
 sdsstools = "^1.0.0"
-sdss-clu = "^2.0.0"
+sdss-clu = "^2.2.7"
 click-default-group = "^1.2.2"
 numpy = "^1.22.1"
 sdssdb = ">=0.8.3"
 peewee = "^3.17.0"
+typing-extensions = "^4.11.0"
 
 [tool.poetry.group.dev.dependencies]
 ipython = ">=8.0.0"
@@ -59,12 +60,12 @@ ruff = ">=0.0.291"
 
 [tool.black]
 line-length = 88
-target-version = ['py311']
+target-version = ['py312']
 fast = true
 
 [tool.ruff]
 line-length = 88
-target-version = 'py311'
+target-version = 'py312'
 exclude = ["typings/"]
 
 [ruff.lint]
@@ -91,7 +92,7 @@ asyncio_mode = "auto"
 branch = true
 include = ["src/hal/*"]
 omit = [
-    "*/__init__.py",
+    "src/hal/__init__.py",
     "src/hal/__main__.py",
     "src/hal/exceptions.py",
     "src/hal/macros/test_macro.py",

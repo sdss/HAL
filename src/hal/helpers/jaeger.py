@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING
 
 from sdssdb.peewee.sdss5db import targetdb
 
+from hal import config
 from hal.helpers import HALHelper
 
 
@@ -36,6 +37,7 @@ class Configuration:
     field_id: int | None = None
     cloned: bool = False
     preloaded: bool = False
+    loaded: bool = False
     is_rm_field: bool = False
     new_field: bool = True
     observed: bool = False
@@ -48,6 +50,8 @@ class Configuration:
 
         if self.check_db():
             self.set_field_id()
+
+        assert self.loaded or self.preloaded
 
     def warn(self, message: str):
         """Warns users."""
@@ -98,6 +102,23 @@ class Configuration:
 
         return
 
+    def get_goto_field_stages(self):
+        """Returns the list of goto-field stages depending on the design mode."""
+
+        observatory = self.actor.observatory
+        goto_auto_mode_stages = config["macros"]["goto_field"]["auto_mode"]
+
+        if self.cloned is True:
+            stages = goto_auto_mode_stages["cloned_stages"][observatory]
+        elif self.new_field is False:
+            stages = goto_auto_mode_stages["repeat_field_stages"][observatory]
+        elif self.is_rm_field is True:
+            stages = goto_auto_mode_stages["rm_field_stages"][observatory]
+        else:
+            stages = goto_auto_mode_stages["new_field_stages"][observatory]
+
+        return stages
+
 
 class JaegerHelper(HALHelper):
     """Helper to interact with jaeger."""
@@ -123,6 +144,34 @@ class JaegerHelper(HALHelper):
 
         self.actor.write("w", error=message)
 
+    async def is_folded(self, command: HALCommandType):
+        """Checks whether the FPS is folded."""
+
+        cmd = await self._send_command(
+            command,
+            "jaeger",
+            "unwind --status",
+            raise_on_fail=True,
+        )
+
+        return cmd.replies.get("folded")[0]
+
+    async def unwind(self, command: HALCommandType):
+        """Unwinds the FPS."""
+
+        cmd = await self._send_command(
+            command,
+            "jaeger",
+            "unwind",
+            raise_on_fail=False,
+        )
+
+        if cmd.status.did_fail:
+            self.warn("Failed unwinding the FPS.")
+            return False
+
+        return True
+
     async def load_from_queue(
         self,
         command: HALCommandType,
@@ -132,6 +181,9 @@ class JaegerHelper(HALHelper):
         """(Pre-)Loads a design from the queue."""
 
         verb = "preload" if preload else "load"
+
+        if extra_epoch_delay < 0:
+            extra_epoch_delay = 0
 
         cmd = await self._send_command(
             command,
@@ -176,6 +228,7 @@ class JaegerHelper(HALHelper):
             new = self.preloaded
 
             new.preloaded = False
+            new.loaded = True
             new.configuration_id = configuration_id
             new.cloned = is_cloned
         else:
@@ -186,11 +239,10 @@ class JaegerHelper(HALHelper):
                 field_id=field_id,
                 cloned=is_cloned,
                 preloaded=False,
+                loaded=True,
             )
 
-        user_message = (
-            f"Found configuration with design_id={design_id}, field_id={field_id}."
-        )
+        user_message = f"New configuration: design_id={design_id}, field_id={field_id}."
 
         if current:
             if current.goto_complete and current.field_id == new.field_id:

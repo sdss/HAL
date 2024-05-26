@@ -121,7 +121,7 @@ class Macro:
 
     def __repr__(self):
         stages = flatten(self.stages)
-        return f"<{self.__class__.__name__} (name={self.name}, stages={stages})>"
+        return f"<{self.__class__.__name__} (name={self.name!r}, stages={stages})>"
 
     def _reset_internal(self, **opts):
         """Internal reset method that can be overridden by the subclasses."""
@@ -133,6 +133,7 @@ class Macro:
         command: HALCommandType,
         reset_stages: Optional[list[StageType]] = None,
         force: bool = False,
+        reset_config: bool = True,
         **opts,
     ):
         """Resets stage status.
@@ -193,7 +194,9 @@ class Macro:
         self.flat_stages = flatten(self.stages)
 
         # Reload the config and update it with custom options for this run.
-        self.config = defaultdict(lambda: None, self._base_config.copy())
+        if reset_config:
+            self.config = defaultdict(lambda: None, self._base_config.copy())
+
         self.config.update(
             {k: v for k, v in opts.items() if k not in self.config or v is not None}
         )
@@ -258,6 +261,17 @@ class Macro:
             self._running_event.clear()
         else:
             self._running_event.set()
+
+    def is_cancelling(self):
+        """Returns ``True`` if the macro is cancelling."""
+
+        if not self.running or (self.cancelled or self.failed):
+            return False
+
+        if self.has_status(self.flat_stages, StageStatus.CANCELLING):
+            return True
+
+        return False
 
     def set_stage_status(
         self,

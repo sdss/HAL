@@ -8,6 +8,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from typing import TYPE_CHECKING, cast
 
 from clu import Command, CommandStatus
@@ -58,6 +60,43 @@ class HALHelper:
                 raise HALError(f"Command '{target} {cmd_str}' failed.")
 
         return cast(Command, cmd)
+
+
+class SpectrographHelper(HALHelper):
+    """A helper class to control a spectrograph."""
+
+    def __init__(self, actor: HALActor):
+        super().__init__(actor)
+
+        self._exposure_time_remaining_timer: asyncio.Task | None = None
+        self._exposure_time_remaining: float = 0
+
+    def is_exposing(self) -> bool:
+        """Returns ``True`` if the spectrograph is exposing."""
+
+        raise NotImplementedError()
+
+    @property
+    def exposure_time_remaining(self) -> float:
+        """Returns the remaining exposure time in seconds."""
+
+        if not self.is_exposing() or self._exposure_time_remaining <= 0.0:
+            return 0.0
+
+        return self._exposure_time_remaining
+
+    async def _timer(self):
+        """Updates the exposure time remaining."""
+
+        try:
+            while self._exposure_time_remaining > 0.0:
+                await asyncio.sleep(0.1)
+                self._exposure_time_remaining -= 0.1
+        except asyncio.CancelledError:
+            pass
+        finally:
+            self._exposure_time_remaining_timer = None
+            self._exposure_time_remaining = 0.0
 
 
 def get_default_exposure_time(observatory: str, design_mode: str | None = None):

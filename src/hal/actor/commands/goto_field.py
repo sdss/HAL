@@ -12,8 +12,6 @@ from typing import TYPE_CHECKING
 
 import click
 
-from hal import config
-
 from . import fail_if_running_macro, hal_command_parser, stages
 
 
@@ -99,32 +97,15 @@ async def goto_field(
     if not fail_if_running_macro(command):
         return
 
-    observatory = command.actor.observatory
-    jaeger_helper = command.actor.helpers.jaeger
-
     if stages is not None and auto is True:
         return command.fail("--auto cannot be used with custom stages.")
     elif auto is True:
-        configuration = jaeger_helper.configuration
-
-        # The jaeger helper marks if a configuration is a new field or not but
-        # only if the previous configuration has been observed, which only works
-        # in full HAL auto mode. For goto-field auto mode, we can only check if the
-        # previous configuration has the same field_id, regardless of whether it
-        # was observed or not.
-        previous = jaeger_helper._previous[-1] if jaeger_helper._previous else None
-        auto_mode_stages = config["macros"]["goto_field"]["auto_mode"]
+        configuration = command.actor.helpers.jaeger.configuration
 
         if configuration is None:
             return command.fail("No configuration loaded. Auto mode cannot be used.")
-        elif configuration.cloned is True:
-            stages = auto_mode_stages["cloned_stages"][observatory]
-        elif previous and previous.field_id == configuration.field_id:
-            stages = auto_mode_stages["repeat_field_stages"][observatory]
-        elif configuration.is_rm_field is True:
-            stages = auto_mode_stages["rm_field_stages"][observatory]
-        else:
-            stages = auto_mode_stages["new_field_stages"][observatory]
+
+        stages = configuration.get_goto_field_stages()
 
     if stages is not None and len(stages) == 0:
         return command.finish("No stages to run.")

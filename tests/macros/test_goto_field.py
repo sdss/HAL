@@ -13,9 +13,9 @@ import asyncio
 import pytest
 from pytest_mock import MockerFixture
 
+from hal.actor.actor import HALActor
 from hal.exceptions import MacroError
-from src.hal.actor.actor import HALActor
-from src.hal.macros.goto_field import GotoFieldAPOMacro
+from hal.macros.goto_field import GotoFieldAPOMacro
 
 
 pytestmark = [pytest.mark.asyncio]

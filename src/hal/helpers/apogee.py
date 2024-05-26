@@ -8,14 +8,17 @@
 
 from __future__ import annotations
 
+import asyncio
 import enum
 
 from typing import TYPE_CHECKING
 
+from sdsstools.utils import cancel_task
+
 from hal import config
 from hal.exceptions import HALError
 
-from . import HALHelper
+from . import SpectrographHelper
 
 
 if TYPE_CHECKING:
@@ -25,7 +28,7 @@ if TYPE_CHECKING:
 __all__ = ["APOGEEHelper"]
 
 
-class APOGEEHelper(HALHelper):
+class APOGEEHelper(SpectrographHelper):
     """APOGEE instrument helper."""
 
     name = "apogee"
@@ -198,16 +201,21 @@ class APOGEEHelper(HALHelper):
     def is_exposing(self):
         """Returns `True` if APOGEE is exposing or stopping."""
 
+        state = self.get_exposure_state()
+
+        if state in ["exposing", "stopping"]:
+            return True
+        else:
+            return False
+
+    def get_exposure_state(self) -> str | None:
+
         exposure_state = self.actor.models["apogee"]["exposureState"]
 
         if exposure_state.value is None or None in exposure_state.value:
             raise ValueError("Unknown APOGEE exposure state.")
 
-        state = exposure_state.value[0].lower()
-        if state in ["exposing", "stopping"]:
-            return True
-        else:
-            return False
+        return exposure_state.value[0].lower()
 
     async def expose(
         self,
@@ -282,6 +290,9 @@ class APOGEEHelper(HALHelper):
             if dither_sequence not in ["AB", "BA", "AA", "BB"]:
                 raise HALError(f"Invalid dither sequence {dither_sequence}.")
 
+        self._exposure_time_remaining = exp_time * len(dither_sequence)
+        self._exposure_time_remaining_timer = asyncio.create_task(self._timer())
+
         for dither_position in dither_sequence:
             await self.expose(
                 command,
@@ -289,6 +300,8 @@ class APOGEEHelper(HALHelper):
                 exp_type=exp_type,
                 dither_position=dither_position,
             )
+
+        await cancel_task(self._exposure_time_remaining_timer)
 
 
 class APOGEEGangHelper:
