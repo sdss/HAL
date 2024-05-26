@@ -221,7 +221,7 @@ class APOGEEHelper(SpectrographHelper):
         self,
         command: HALCommandType,
         exp_time: float,
-        exp_type: str = "dark",
+        exp_type: str = "object",
         dither_position: str | None = None,
     ):
         """Exposes APOGEE.
@@ -302,6 +302,14 @@ class APOGEEHelper(SpectrographHelper):
             )
 
         await cancel_task(self._exposure_time_remaining_timer)
+
+    async def abort(self, command: HALCommandType):
+        """Aborts the ongoing exposure."""
+
+        if not self.is_exposing():
+            return True
+
+        await self._send_command(command, "apogee", "stop", time_limit=60)
 
 
 class APOGEEGangHelper:
