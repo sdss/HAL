@@ -102,10 +102,10 @@ async def auto_pilot(
 
     if stop is True:
         if now is True:
-            command.warning(auto_mode_message="Cancelling auto-pilot mode NOW.")
+            command.warning(auto_pilot_message="Stopping auto-pilot mode NOW.")
             macro.cancel(now=True)
         else:
-            command.warning(auto_mode_message="Cancelling auto-pilot after this stage.")
+            command.warning(auto_pilot_message="Stopping auto-pilot after this stage.")
             macro.cancel(now=False)
 
         return command.finish()

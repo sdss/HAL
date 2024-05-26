@@ -95,10 +95,7 @@ class AutoPilotMacro(Macro):
             if self.helpers.jaeger.preloaded:
                 # There is already a preloaded configuration. Just wait
                 # until the exposure is done.
-                self._auto_pilot_message(
-                    "Exposure in progress. Waiting for it to "
-                    "finish to load the design."
-                )
+                self._auto_pilot_message("Waiting for exposure before loading design")
 
             else:
                 # We need to preload a design.
@@ -113,19 +110,15 @@ class AutoPilotMacro(Macro):
         configuration = self.helpers.jaeger.configuration
 
         if self.helpers.jaeger.preloaded:
-            self._auto_pilot_message("Loading preloaded configuration.")
-            await self.helpers.jaeger.from_preloaded(self.command)
+            self._auto_pilot_message("Loading preloaded configuration")
 
         elif configuration and not configuration.observed:
-            self._auto_pilot_message("Found unobserved configuration.")
+            self._auto_pilot_message("Found unobserved configuration")
 
         else:
-            self._auto_pilot_message(
-                "No preloaded configuration found. "
-                "Loading new design from the queue."
-            )
+            self._auto_pilot_message("Loading new design from the queue")
             if not await self.helpers.jaeger.load_from_queue(self.command):
-                raise MacroError("Failed loading design.")
+                raise MacroError("Failed loading design")
 
         # Make sure everything all keywords have been emitted and database queries run.
         await asyncio.sleep(1)
@@ -135,7 +128,7 @@ class AutoPilotMacro(Macro):
 
         c_id = self.helpers.jaeger.configuration.configuration_id
         d_id = self.helpers.jaeger.configuration.design_id
-        self._auto_pilot_message(f"Processign configuration {c_id} ({d_id}).")
+        self._auto_pilot_message(f"Processign configuration {c_id} ({d_id})")
 
     async def goto_field(self):
         """Runs the go-to field procedure."""
@@ -145,16 +138,16 @@ class AutoPilotMacro(Macro):
             raise MacroError("No configuration loaded.")
 
         if configuration.goto_complete:
-            self._auto_pilot_message("Goto-field already complete.")
+            self._auto_pilot_message("Goto-field already complete")
             return
 
         stages = configuration.get_goto_field_stages()
 
         if len(stages) == 0:  # For cloned designs.
-            self._auto_pilot_message("Skipping goto-field.")
+            self._auto_pilot_message("Skipping goto-field")
             return
 
-        self._auto_pilot_message("Running goto-field.")
+        self._auto_pilot_message("Running goto-field")
         self.helpers.macros["goto_field"].reset(self.command, stages)
         if not await self.helpers.macros["goto_field"].run():
             raise MacroError("Goto-field failed during auto pilot mode.")
@@ -166,15 +159,12 @@ class AutoPilotMacro(Macro):
         if expose_macro.running:
             # This should not generally happen because in prepare we waited until any
             # previous exposure was done and reading.
-            self._auto_pilot_message(
-                "expose macro is running. Waiting for it to complete.",
-                "w",
-            )
+            self._auto_pilot_message("Waiting for expose macro to complete", "w")
             if not await expose_macro.wait_until_complete():
                 raise MacroError("Background expose failed. Cancelling auto mode.")
 
         # Wait until previous exposures are done and read.
-        self._auto_pilot_message("Waiting for previous exposures to finish.")
+        self._auto_pilot_message("Waiting for previous exposures to finish")
         await self._wait_integration_done(wait_readout_done=True)
 
         # Make sure guiding is good enough to start exposing.
@@ -183,9 +173,7 @@ class AutoPilotMacro(Macro):
 
         min_rms = self.config["min_rms"]
         if not self.helpers.cherno.guiding_at_rms(min_rms):
-            self._auto_pilot_message(
-                "RMS not reched yet. Waiting for guider to converge."
-            )
+            self._auto_pilot_message("Waiting for guider to converge")
             try:
                 await self.helpers.cherno.wait_for_rms(min_rms, max_wait=180)
             except asyncio.TimeoutError:
@@ -272,9 +260,7 @@ class AutoPilotMacro(Macro):
 
             assert ahead_time is not None and ahead_time >= 0
 
-            self._auto_pilot_message(
-                f"Wating {ahead_time} seconds before preloading the design."
-            )
+            self._auto_pilot_message(f"Wating {ahead_time} s before preloading design")
             while True:
                 self.system_state.update_time_remaining()
                 if self.system_state.exposure_time_remaining <= ahead_time:
@@ -282,11 +268,7 @@ class AutoPilotMacro(Macro):
 
                 await asyncio.sleep(1)
 
-        extra_epoch_delay = self.system_state.exposure_time_remaining
-        self._auto_pilot_message(
-            "Preloading design from the queue with "
-            f"extra_epoch_delay={extra_epoch_delay}."
-        )
+        self._auto_pilot_message(f"Preloading with delay {extra_epoch_delay:.1f} s")
         await self.helpers.jaeger.load_from_queue(
             self.command,
             preload=True,
