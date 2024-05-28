@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🔧 Fixed
+
+* Fix an issue with the new auto-pilot loading a new design during an exposure when a fully loaded one was available.
+
+
 ## 1.2.0 - May 26th, 2024
 
 ### 🚀 New
