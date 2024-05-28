@@ -5,6 +5,7 @@
 ### 🔧 Fixed
 
 * Fix an issue with the new auto-pilot loading a new design during an exposure when a fully loaded one was available.
+* Correctly set the observed configuration if the a new one has been loaded.
 
 
 ## 1.2.0 - May 26th, 2024

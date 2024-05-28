@@ -15,11 +15,17 @@ from contextlib import suppress
 from dataclasses import dataclass
 from time import time
 
+from typing import TYPE_CHECKING
+
 import numpy
 
 from hal import config
 from hal.exceptions import MacroError
 from hal.macros import Macro
+
+
+if TYPE_CHECKING:
+    from hal.helpers.jaeger import Configuration
 
 
 __all__ = ["ExposeMacro"]
@@ -430,6 +436,11 @@ class ExposeMacro(Macro):
     expose_helper: ExposeHelper
     _pause_event = asyncio.Event()
 
+    def __init__(self):
+        super().__init__()
+
+        self.configuration: Configuration | None = None
+
     def _reset_internal(self, **opts):
         """Reset the exposure status."""
 
@@ -601,8 +612,8 @@ class ExposeMacro(Macro):
             else:
                 self.command.warning("BOSS exposure is running. Not cancelling it.")
 
-        if not self.failed and not self.cancelled and self.helpers.jaeger.configuration:
-            self.helpers.jaeger.configuration.observed = True
+        if not self.failed and not self.cancelled and self.configuration:
+            self.configuration.observed = True
 
     async def _pause(self):
         """Pauses the execution of the macro."""
