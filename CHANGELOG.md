@@ -1,6 +1,6 @@
 # Changelog
 
-## Next version
+## 1.2.1 - May 28th, 2024
 
 ### 🔧 Fixed
 
