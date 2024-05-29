@@ -311,6 +311,8 @@ class APOGEEHelper(SpectrographHelper):
 
         await self._send_command(command, "apogee", "stop", time_limit=60)
 
+        return True
+
 
 class APOGEEGangHelper:
     """Helper for the APOGEE gang connector."""

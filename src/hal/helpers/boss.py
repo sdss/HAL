@@ -252,10 +252,14 @@ class BOSSHelper(SpectrographHelper):
     async def abort(self, command: HALCommandType):
         """Aborts the ongoing exposure."""
 
-        if not self.actor.observatory == "LCO":
-            raise ValueError("abort is not supported at APO.")
-
         if not self.is_exposing():
+            command.warning("No exposure to abort.")
             return True
 
-        await self._send_command(command, "apogee", "abort", time_limit=60)
+        if self.actor.observatory == "LCO":
+            await self._send_command(command, "yao", "abort --reset", time_limit=60)
+        else:
+            await self._send_command(command, "boss", "abort", time_limit=60)
+            await self._send_command(command, "boss", "clearExposure", time_limit=30)
+
+        return True

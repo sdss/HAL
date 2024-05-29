@@ -8,14 +8,16 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from typing import TYPE_CHECKING
 
 from . import hal_command_parser
 
 
 if TYPE_CHECKING:
-
-    from .. import HALCommandType
+    from hal.actor import HALCommandType
+    from hal.macros.expose import ExposeMacro
 
 
 __all__ = ["abort_exposures"]
@@ -25,12 +27,28 @@ __all__ = ["abort_exposures"]
 async def abort_exposures(command: HALCommandType):
     """Aborts ongoing exposures.."""
 
-    if command.actor.observatory == "APO":
-        return command.fail("abort-exposures is not supported for APO.")
+    expose_macro = command.actor.helpers.macros["expose"]
+    assert isinstance(expose_macro, ExposeMacro)
+
+    if expose_macro.running:
+        command.warning("Cancelling the expose macro.")
+        expose_macro.cancel(now=True)
+
+    command.warning("Aborting ongoing exposures.")
 
     tasks = [
         command.actor.helpers.apogee.abort(command),
         command.actor.helpers.boss.abort(command),
     ]
 
-    return command.finish()
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    for iresult, result in enumerate(results):
+        instrument = ["APOGEE", "BOSS"][iresult]
+        if isinstance(result, Exception):
+            return command.fail(f"Failed to abort {instrument} exposure: {result!s}")
+        elif result is not True:
+            return command.fail(f"Unkown error while aborting {instrument} exposure.")
+        else:
+            continue
+
+    return command.finish(text="Exposures have been aborted.")
