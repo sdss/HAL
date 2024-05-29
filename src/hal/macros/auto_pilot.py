@@ -107,10 +107,13 @@ class AutoPilotMacro(Macro):
         if self.system_state.boss_exposure_state is None:
             raise MacroError("Cannot determine BOSS exposure state.")
 
-        time_remaining = self.system_state.exposure_time_remaining
-        if time_remaining > 0:
+        # Is there a configuration loaded and has it been observed?
+        configuration = self.helpers.jaeger.configuration
+        observed = configuration and configuration.observed
+
+        if self.system_state.exposure_time_remaining > 0:
             # We are exposing.
-            if self.helpers.jaeger.preloaded:
+            if self.helpers.jaeger.preloaded or not observed:
                 # There is already a preloaded configuration. Just wait
                 # until the exposure is done.
                 self._auto_pilot_message("Waiting for exposure before loading design")
