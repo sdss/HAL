@@ -14,15 +14,31 @@ from typing import TYPE_CHECKING
 
 from clu.parsers.click import unique
 
+from hal.macros.expose import ExposeMacro
+
 from . import hal_command_parser
 
 
 if TYPE_CHECKING:
     from hal.actor import HALCommandType
-    from hal.macros.expose import ExposeMacro
 
 
 __all__ = ["abort_exposures"]
+
+
+async def wait_until_idle(command: HALCommandType):
+    """Waits until all cameras are idle."""
+
+    while True:
+        await asyncio.sleep(1)
+
+        if command.actor.helpers.apogee.is_exposing():
+            continue
+
+        if command.actor.helpers.boss.is_exposing(reading_ok=False):
+            continue
+
+        break
 
 
 @hal_command_parser.command(name="abort-exposures")
@@ -53,5 +69,8 @@ async def abort_exposures(command: HALCommandType):
             return command.fail(f"Unkown error while aborting {instrument} exposure.")
         else:
             continue
+
+    command.info("Waiting until cameras are idle.")
+    await wait_until_idle(command)
 
     return command.finish(text="Exposures have been aborted.")

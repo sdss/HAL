@@ -72,13 +72,15 @@ class BOSSHelper(SpectrographHelper):
 
             return exposure_state
 
-    def is_exposing(self):
+    def is_exposing(self, reading_ok: bool = True):
         """Returns `True` if the BOSS spectrograph is currently exposing."""
 
         state = self.get_exposure_state()
 
         if self.actor.observatory == "APO":
             if state in ["idle", "aborted"]:
+                return False
+            if reading_ok and state in ["reading", "prereading"]:
                 return False
         else:
             if "IDLE" in state.value and "READOUT_PENDING" not in state.value:
@@ -253,13 +255,13 @@ class BOSSHelper(SpectrographHelper):
         """Aborts the ongoing exposure."""
 
         if not self.is_exposing():
-            command.warning("No exposure to abort.")
+            command.warning("No BOSS exposure to abort.")
             return True
 
         if self.actor.observatory == "LCO":
             await self._send_command(command, "yao", "abort --reset", time_limit=60)
         else:
-            await self._send_command(command, "boss", "abort", time_limit=60)
+            await self._send_command(command, "boss", "exposure abort", time_limit=60)
             await self._send_command(command, "boss", "clearExposure", time_limit=30)
 
         return True

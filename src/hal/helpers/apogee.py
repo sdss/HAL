@@ -309,7 +309,7 @@ class APOGEEHelper(SpectrographHelper):
         if not self.is_exposing():
             return True
 
-        await self._send_command(command, "apogee", "stop", time_limit=60)
+        await self._send_command(command, "apogee", "expose stop", time_limit=60)
 
         return True
 
