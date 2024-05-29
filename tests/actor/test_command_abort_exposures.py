@@ -37,14 +37,30 @@ async def test_abort_exposures(
 
     monkeypatch.setattr(actor, "observatory", observatory)
 
-    mocker.patch.object(apogee, "is_exposing", side_effect=[True, False])
-    mocker.patch.object(boss, "is_exposing", side_effect=[True, False])
+    mocker.patch.object(apogee, "is_exposing", side_effect=[True, True, False, False])
+    mocker.patch.object(boss, "is_exposing", side_effect=[True, True, False])
 
-    cmd = actor.invoke_mock_command("abort-exposures")
+    cmd = await actor.invoke_mock_command("abort-exposures")
     await cmd
 
     assert cmd.status.did_succeed
     cancel_mock.assert_called_once()
+
+
+async def test_abort_exposures_no_exposure_to_abort(
+    actor: HALActor,
+    mocker: MockerFixture,
+):
+    apogee = actor.helpers.apogee
+    boss = actor.helpers.boss
+
+    mocker.patch.object(apogee, "is_exposing", side_effect=[False, False])
+    mocker.patch.object(boss, "is_exposing", side_effect=[False, False])
+
+    cmd = await actor.invoke_mock_command("abort-exposures")
+    await cmd
+
+    assert cmd.status.did_succeed
 
 
 async def test_abort_exposures_abort_fails(actor: HALActor, mocker: MockerFixture):
@@ -56,7 +72,7 @@ async def test_abort_exposures_abort_fails(actor: HALActor, mocker: MockerFixtur
 
     mocker.patch.object(apogee, "abort", side_effect=HALError("abort failed"))
 
-    cmd = actor.invoke_mock_command("abort-exposures")
+    cmd = await actor.invoke_mock_command("abort-exposures")
     await cmd
 
     assert cmd.status.did_fail
@@ -76,7 +92,7 @@ async def test_abort_exposures_abort_fails_unknown(
 
     mocker.patch.object(boss, "abort", return_value=False)
 
-    cmd = actor.invoke_mock_command("abort-exposures")
+    cmd = await actor.invoke_mock_command("abort-exposures")
     await cmd
 
     assert cmd.status.did_fail
