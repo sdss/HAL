@@ -30,7 +30,7 @@ async def wait_until_idle(command: HALCommandType):
     """Waits until all cameras are idle."""
 
     while True:
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.5)
 
         if command.actor.helpers.apogee.is_exposing():
             continue
@@ -66,7 +66,7 @@ async def abort_exposures(command: HALCommandType):
         if isinstance(result, Exception):
             return command.fail(f"Failed to abort {instrument} exposure: {result!s}")
         elif result is not True:
-            return command.fail(f"Unkown error while aborting {instrument} exposure.")
+            return command.fail(f"Unknown error while aborting {instrument} exposure.")
         else:
             continue
 
