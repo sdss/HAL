@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🚀 New
+
+* [#20](https://github.com/sdss/HAL/pull/20) New `abort-exposures` command will stop the `expose` macro, if running, and smoothly (hopfully) stop any ongoing APOGEE and BOSS exposures.
+
+
 ## 1.2.2 - May 28th, 2024
 
 ### 🔧 Fixed

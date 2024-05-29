@@ -106,6 +106,7 @@ def fail_if_running_macro(command: HALCommandType):
     return True
 
 
+from .abort_exposures import *
 from .auto_pilot import *
 from .bypass import *
 from .calibrations import *

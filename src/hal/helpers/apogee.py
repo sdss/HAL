@@ -303,6 +303,16 @@ class APOGEEHelper(SpectrographHelper):
 
         await cancel_task(self._exposure_time_remaining_timer)
 
+    async def abort(self, command: HALCommandType):
+        """Aborts the ongoing exposure."""
+
+        if not self.is_exposing():
+            return True
+
+        await self._send_command(command, "apogee", "expose stop", time_limit=60)
+
+        return True
+
 
 class APOGEEGangHelper:
     """Helper for the APOGEE gang connector."""
