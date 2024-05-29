@@ -12,6 +12,8 @@ import asyncio
 
 from typing import TYPE_CHECKING
 
+from clu.parsers.click import unique
+
 from . import hal_command_parser
 
 
@@ -24,6 +26,7 @@ __all__ = ["abort_exposures"]
 
 
 @hal_command_parser.command(name="abort-exposures")
+@unique()
 async def abort_exposures(command: HALCommandType):
     """Aborts ongoing exposures.."""
 
