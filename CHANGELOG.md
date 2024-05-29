@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.2 - May 28th, 2024
+
+### 🔧 Fixed
+
+* Remove leftover `break` that would cause the auto-pilot to exist after one iteration.
+
+
 ## 1.2.1 - May 28th, 2024
 
 ### 🔧 Fixed

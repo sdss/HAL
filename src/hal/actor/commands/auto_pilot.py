@@ -143,7 +143,7 @@ async def auto_pilot(
             break
 
         await asyncio.sleep(0.1)
-        break
+
         if macro.cancelled:
             # Cancelled macros return result=True
             break
