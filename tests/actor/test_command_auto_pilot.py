@@ -32,19 +32,15 @@ def _auto_pilot_run_once(macro: AutoPilotMacro):
 
 
 @pytest.fixture()
-def mock_auto_pilot(
-    actor: HALActor,
-    mocker: MockerFixture,
-    monkeypatch: pytest.MonkeyPatch,
-):
+def mock_auto_pilot(actor: HALActor, mocker: MockerFixture):
     macro = actor.helpers.macros["auto_pilot"]
     assert isinstance(macro, AutoPilotMacro)
 
     mocker.patch.object(actor.helpers.apogee, "get_exposure_state", return_value="idle")
     mocker.patch.object(actor.helpers.boss, "get_exposure_state", return_value="idle")
-    monkeypatch.setattr(macro.system_state, "exposure_time_remaining", 0.0)
+    mocker.patch.object(macro.system_state, "exposure_time_remaining", 0.0)
 
-    monkeypatch.setattr(
+    mocker.patch.object(
         actor.helpers.jaeger,
         "configuration",
         Configuration(
@@ -65,6 +61,10 @@ def mock_auto_pilot(
     mocker.patch.object(expose_macro, "run")
 
     mocker.patch.object(macro, "run", side_effect=_auto_pilot_run_once(macro))
+
+    yield
+
+    macro._preload_task = None
 
 
 async def test_command_auto_pilot(actor: HALActor, mock_auto_pilot):
