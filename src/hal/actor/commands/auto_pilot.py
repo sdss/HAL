@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 
 import click
 
+from hal.macros.auto_pilot import AutoPilotMacro
 from hal.macros.expose import ExposeMacro
 
 from . import hal_command_parser
@@ -65,6 +66,18 @@ __all__ = ["auto_pilot"]
     default=None,
     help="Preload the next design this many seconds before the exposure completes.",
 )
+@click.option(
+    "--add-hartmann",
+    is_flag=True,
+    default=False,
+    help="Take a Hartmann during the next goto-field (will not repeat Hartmanns).",
+)
+@click.option(
+    "--remove-hartmann",
+    is_flag=True,
+    default=False,
+    help="Removes a previously scheduled Hartmann.",
+)
 async def auto_pilot(
     command: HALCommandType,
     stop: bool = False,
@@ -74,6 +87,8 @@ async def auto_pilot(
     resume: bool = False,
     count: int = 1,
     preload_ahead: float | None = None,
+    add_hartmann: bool = False,
+    remove_hartmann: bool = False,
 ):
     """Starts the auto-pilot mode."""
 
@@ -83,11 +98,19 @@ async def auto_pilot(
     assert isinstance(expose_macro, ExposeMacro)
 
     macro = command.actor.helpers.macros["auto_pilot"]
+    assert isinstance(macro, AutoPilotMacro)
 
     if (stop or modify or pause or resume) and not macro.running:
         return command.fail(
             "I'm afraid I cannot do that Dave. The auto pilot mode is not running."
         )
+
+    if macro.running and (add_hartmann or remove_hartmann):
+        macro.hartmann = False if remove_hartmann else True
+        if macro.hartmann:
+            return command.finish("Scheduled a Hartmann for the next goto-field.")
+        else:
+            return command.finish("Removed any previously scheduled Hartmanns.")
 
     if pause and resume:
         return command.fail("--pause and --resume are incompatible Dave.")
@@ -131,6 +154,8 @@ async def auto_pilot(
         )
 
     macro.reset(command, count=count, preload_ahead_time=preload_ahead)
+    if add_hartmann:
+        macro.hartmann = True
 
     result: bool = True
     while True:

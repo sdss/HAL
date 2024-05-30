@@ -79,6 +79,7 @@
     },
     "expose_is_paused": { "type": "boolean" },
     "auto_pilot_message": { "type": "string" },
+    "auto_pilot_hartmann": { "type": "boolean" },
     "additionalProperties": false
   }
 }

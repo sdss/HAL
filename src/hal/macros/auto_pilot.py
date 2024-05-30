@@ -92,7 +92,23 @@ class AutoPilotMacro(Macro):
 
         self.system_state = SystemState(self)
 
+        self._hartmann: bool = False
         self._preload_task: asyncio.Task | None = None
+
+    @property
+    def hartmann(self):
+        """Returns whether a Hartmann is scheduled."""
+
+        return self._hartmann
+
+    @hartmann.setter
+    def hartmann(self, value: bool):
+        """Sets whether a Hartmann is to be scheduled."""
+
+        self._hartmann = value
+
+        if self.command:
+            self.command.debug(auto_pilot_hartmann=value)
 
     async def prepare(self):
         """Prepares the auto pilot."""
@@ -184,9 +200,18 @@ class AutoPilotMacro(Macro):
             self._auto_pilot_message("Skipping goto-field")
             return
 
+        if self.hartmann and "hartmann" not in stages:
+            stages.append("hartmann")
+
         self._auto_pilot_message("Running goto-field")
         self.helpers.macros["goto_field"].reset(self.command, stages)
-        if not await self.helpers.macros["goto_field"].run():
+
+        result = await self.helpers.macros["goto_field"].run()
+
+        if self.hartmann and "hartmann" in stages:
+            self.hartmann = False
+
+        if not result:
             raise MacroError("Goto-field failed during auto pilot mode.")
 
     async def expose(self):

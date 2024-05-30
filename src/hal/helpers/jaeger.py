@@ -117,7 +117,7 @@ class Configuration:
         else:
             stages = goto_auto_mode_stages["new_field_stages"][observatory]
 
-        return stages
+        return list(stages)
 
 
 class JaegerHelper(HALHelper):
