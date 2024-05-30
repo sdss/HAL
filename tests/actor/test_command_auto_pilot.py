@@ -71,8 +71,6 @@ def mock_auto_pilot(actor: HALActor, mocker: MockerFixture):
 
 async def test_command_auto_pilot(actor: HALActor, mock_auto_pilot):
     cmd = await actor.invoke_mock_command("auto-pilot")
-    await cmd
-
     assert cmd.status.did_succeed
 
 
@@ -84,8 +82,6 @@ async def test_command_auto_pilot_add_hartmann(
     mock_goto_reset = mocker.patch.object(actor.helpers.macros["goto_field"], "reset")
 
     cmd = await actor.invoke_mock_command("auto-pilot --add-hartmann")
-    await cmd
-
     assert cmd.status.did_succeed
 
     auto_pilot = actor.helpers.macros["auto_pilot"]
@@ -121,7 +117,7 @@ async def test_command_auto_pilot_add_hartmann_while_running(
 ):
     mock_goto_reset = mocker.patch.object(actor.helpers.macros["goto_field"], "reset")
 
-    cmd = await actor.invoke_mock_command("auto-pilot")
+    cmd = actor.invoke_mock_command("auto-pilot")
 
     await asyncio.sleep(0.01)
     await actor.invoke_mock_command("auto-pilot --add-hartmann")
@@ -156,9 +152,9 @@ async def test_command_auto_pilot_add_then_removehartmann_while_running(
 ):
     mock_goto_reset = mocker.patch.object(actor.helpers.macros["goto_field"], "reset")
 
-    cmd = await actor.invoke_mock_command("auto-pilot")
+    cmd = actor.invoke_mock_command("auto-pilot")
 
-    await asyncio.sleep(0.01)
+    await asyncio.sleep(0.5)
     await actor.invoke_mock_command("auto-pilot --add-hartmann")
     await actor.invoke_mock_command("auto-pilot --remove-hartmann")
 
