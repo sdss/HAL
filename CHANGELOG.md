@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* [#3](https://github.com/sdss/HAL/issues/3) Added `--add-hartmann` and `--remove-hartmann` flags to `auto-pilot`.
+
+
 ## 1.3.0 - May 29th, 2024
 
 ### 🚀 New
