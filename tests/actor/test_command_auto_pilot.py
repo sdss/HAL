@@ -72,3 +72,41 @@ async def test_command_auto_pilot(actor: HALActor, mock_auto_pilot):
     await cmd
 
     assert cmd.status.did_succeed
+
+
+async def test_command_auto_pilot_add_hartmann(
+    actor: HALActor,
+    mock_auto_pilot,
+    mocker: MockerFixture,
+):
+    mock_goto_reset = mocker.patch.object(actor.helpers.macros["goto_field"], "reset")
+
+    cmd = await actor.invoke_mock_command("auto-pilot --add-hartmann")
+    await cmd
+
+    assert cmd.status.did_succeed
+
+    auto_pilot = actor.helpers.macros["auto_pilot"]
+    assert isinstance(auto_pilot, AutoPilotMacro)
+
+    assert not auto_pilot.hartmann
+    mock_goto_reset.assert_called_with(
+        cmd,
+        [
+            "slew",
+            "reconfigure",
+            "fvc",
+            "reslew",
+            "lamps",
+            "boss_arcs",
+            "acquire",
+            "guide",
+            "hartmann",
+        ],
+    )
+
+    auto_pilot_hartmann = []
+    for reply in cmd.replies:
+        if "auto_pilot_hartmann" in reply.message:
+            auto_pilot_hartmann.append(reply.message["auto_pilot_hartmann"])
+    assert auto_pilot_hartmann == [True, False]
