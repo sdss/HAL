@@ -156,6 +156,8 @@ async def auto_pilot(
     macro.reset(command, count=count, preload_ahead_time=preload_ahead)
     if add_hartmann:
         macro.hartmann = True
+    else:
+        macro.hartmann = False
 
     result: bool = True
     while True:
