@@ -200,15 +200,15 @@ class AutoPilotMacro(Macro):
             self._auto_pilot_message("Skipping goto-field")
             return
 
-        if self.hartmann and "hartmann" not in stages:
-            stages.append("hartmann")
+        if self.hartmann and "boss_hartmann" not in stages:
+            stages.append("boss_hartmann")
 
         self._auto_pilot_message("Running goto-field")
         self.helpers.macros["goto_field"].reset(self.command, stages)
 
         result = await self.helpers.macros["goto_field"].run()
 
-        if self.hartmann and "hartmann" in stages:
+        if self.hartmann and "boss_hartmann" in stages:
             self.hartmann = False
 
         if not result:

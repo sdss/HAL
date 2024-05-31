@@ -99,7 +99,7 @@ async def test_command_auto_pilot_add_hartmann(
             "boss_arcs",
             "acquire",
             "guide",
-            "hartmann",
+            "boss_hartmann",
         ],
     )
 
@@ -140,7 +140,7 @@ async def test_command_auto_pilot_add_hartmann_while_running(
             "boss_arcs",
             "acquire",
             "guide",
-            "hartmann",
+            "boss_hartmann",
         ],
     )
 

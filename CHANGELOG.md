@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.2 - May 30th, 2024
+
+### 🔧 Fixed
+
+* `hal auto-pilot --add-hartmann` was adding a stage `hartmann` to the goto-field instead of `boss_hartmann`.
+
+
 ## 1.3.1 - May 30th, 2024
 
 ### ✨ Improved
