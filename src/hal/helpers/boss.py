@@ -260,6 +260,12 @@ class BOSSHelper(SpectrographHelper):
 
         if self.actor.observatory == "LCO":
             await self._send_command(command, "yao", "abort --reset", time_limit=60)
+            await self._send_command(
+                command,
+                "yao",
+                "mech close shutter",
+                time_limit=20,
+            )
         else:
             await self._send_command(command, "boss", "exposure abort", time_limit=60)
             await self._send_command(command, "boss", "clearExposure", time_limit=30)
