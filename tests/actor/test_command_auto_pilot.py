@@ -213,7 +213,7 @@ async def test_command_auto_pilot_goto_running_fails(
     wait_until_complete_mock = mocker.patch.object(
         goto,
         "wait_until_complete",
-        False,
+        return_value=False,
     )
 
     cmd = actor.invoke_mock_command("auto-pilot")
