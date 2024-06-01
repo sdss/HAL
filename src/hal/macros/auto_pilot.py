@@ -186,6 +186,12 @@ class AutoPilotMacro(Macro):
     async def goto_field(self):
         """Runs the go-to field procedure."""
 
+        goto_macro = self.helpers.macros["goto_field"]
+        if goto_macro.running:
+            self._auto_pilot_message("Waiting for goto-field macro to complete", "w")
+            if not await goto_macro.wait_until_complete():
+                raise MacroError("Background goto-field failed. Cancelling auto mode.")
+
         configuration = self.helpers.jaeger.configuration
         if configuration is None:
             raise MacroError("No configuration loaded.")
@@ -204,9 +210,9 @@ class AutoPilotMacro(Macro):
             stages.append("boss_hartmann")
 
         self._auto_pilot_message("Running goto-field")
-        self.helpers.macros["goto_field"].reset(self.command, stages)
+        goto_macro.reset(self.command, stages)
 
-        result = await self.helpers.macros["goto_field"].run()
+        result = await goto_macro.run()
 
         if self.hartmann and "boss_hartmann" in stages:
             self.hartmann = False

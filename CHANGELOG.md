@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* [#23](https://github.com/sdss/HAL/pull/23) When the auto-pilot is started an a goto-field is running, it will wait for it to finish.
+
+
 ## 1.3.2 - May 30th, 2024
 
 ### 🔧 Fixed
