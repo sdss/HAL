@@ -310,6 +310,7 @@ class APOGEEHelper(SpectrographHelper):
             return True
 
         await self._send_command(command, "apogee", "expose stop", time_limit=60)
+        await self.shutter(command, open=False, shutter="apogee")
 
         return True
 
