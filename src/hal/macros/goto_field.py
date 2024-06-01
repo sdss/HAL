@@ -277,6 +277,8 @@ class _GotoFieldBaseMacro(Macro):
     async def acquire(self):
         """Acquires the field."""
 
+        self._mark_design_as_goto_complete()
+
         if self.helpers.cherno.is_guiding():
             self.command.info("Already guiding.")
             return
@@ -320,6 +322,8 @@ class _GotoFieldBaseMacro(Macro):
     async def guide(self):
         """Starts the guide loop."""
 
+        self._mark_design_as_goto_complete()
+
         if self.helpers.cherno.is_guiding():
             self.command.info("Already guiding.")
             return
@@ -347,8 +351,7 @@ class _GotoFieldBaseMacro(Macro):
             await asyncio.sleep(3)
 
         # If enough stages have run, mark this configuration as goto_complete.
-        if self.helpers.jaeger.configuration is not None and self._is_goto_complete():
-            self.helpers.jaeger.configuration.goto_complete = True
+        self._mark_design_as_goto_complete()
 
         if self._lamps_task is not None and not self._lamps_task.done():
             self._lamps_task.cancel()
@@ -358,6 +361,15 @@ class _GotoFieldBaseMacro(Macro):
         # Read any pending BOSS exposure.
         if self.helpers.boss.readout_pending:
             await self.helpers.boss.readout(self.command)
+
+    def _mark_design_as_goto_complete(self):
+        """Marks the design as goto_complete."""
+
+        if self.helpers.jaeger.configuration is not None:
+            if self._is_goto_complete():
+                self.helpers.jaeger.configuration.goto_complete = True
+            else:
+                self.helpers.jaeger.configuration.goto_complete = False
 
     def _get_pointing(self):
         """Returns the configuration pointing."""
