@@ -14,7 +14,6 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from hal.exceptions import MacroError
 from hal.helpers.jaeger import Configuration
 from hal.macros.auto_pilot import AutoPilotMacro
 
@@ -214,7 +213,7 @@ async def test_command_auto_pilot_goto_running_fails(
     wait_until_complete_mock = mocker.patch.object(
         goto,
         "wait_until_complete",
-        side_effect=MacroError("goto_field failed"),
+        False,
     )
 
     cmd = actor.invoke_mock_command("auto-pilot")
