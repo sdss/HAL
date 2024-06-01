@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from hal.exceptions import MacroError
 from hal.helpers.jaeger import Configuration
 from hal.macros.auto_pilot import AutoPilotMacro
 
@@ -178,3 +179,47 @@ async def test_command_auto_pilot_add_then_removehartmann_while_running(
             "guide",
         ],
     )
+
+
+async def test_command_auto_pilot_goto_running(
+    actor: HALActor,
+    mock_auto_pilot,
+    mocker: MockerFixture,
+):
+    goto = actor.helpers.macros["goto_field"]
+    mocker.patch.object(goto, "_running", True)
+
+    wait_until_complete_mock = mocker.patch.object(
+        goto,
+        "wait_until_complete",
+        return_value=True,
+    )
+
+    cmd = actor.invoke_mock_command("auto-pilot")
+    await cmd
+
+    assert cmd.status.did_succeed
+
+    wait_until_complete_mock.assert_called()
+
+
+async def test_command_auto_pilot_goto_running_fails(
+    actor: HALActor,
+    mock_auto_pilot,
+    mocker: MockerFixture,
+):
+    goto = actor.helpers.macros["goto_field"]
+    mocker.patch.object(goto, "_running", True)
+
+    wait_until_complete_mock = mocker.patch.object(
+        goto,
+        "wait_until_complete",
+        side_effect=MacroError("goto_field failed"),
+    )
+
+    cmd = actor.invoke_mock_command("auto-pilot")
+    await cmd
+
+    assert cmd.status.did_fail
+
+    wait_until_complete_mock.assert_called()
