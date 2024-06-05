@@ -26,6 +26,8 @@ apogeecal SourceOff source=UNe
 650.0 apogee expose nreads=60 ; object=Dark
 10.0 apogeecal shutterOpen
 apogeefpi open
-apogee expose nreads=30; object=ArcLamp; comment="FPI"
+apogee expose nreads=30; object=ArcLamp; comment="FPI A"
+apogee dither namedpos=B
+apogee expose nreads=30; object=ArcLamp; comment="FPI B"
 apogeefpi close
 10.0 apogeecal shutterClose

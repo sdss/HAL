@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ✨ Improved
+
+* Added a second, dithered FPI exposure in morning and evening APOGEE cals, both APO and LCO.
+
+
 ## 1.3.3 - June 1, 2024
 
 ### ✨ Improved
