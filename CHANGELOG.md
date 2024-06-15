@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🔧 Fixed
+
+* [#24](https://github.com/sdss/HAL/pull/24) Allow the `expose` macro to run if `goto-field` is running but has already reached the acquire or guide stages.
+
+
 ## 1.3.4 - June 5, 2024
 
 ### ✨ Improved
