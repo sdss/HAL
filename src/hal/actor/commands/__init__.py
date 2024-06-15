@@ -100,7 +100,7 @@ def fail_if_running_macro(command: HALCommandType):
     macros = command.actor.helpers.macros
     running_macros = [macro for macro in macros if macros[macro].running]
     if any(running_macros):
-        command.fail("An expose macro is already running.")
+        command.fail("A macro is already running.")
         return False
 
     return True

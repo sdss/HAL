@@ -14,9 +14,9 @@ import click
 
 from hal import config
 from hal.helpers import get_default_exposure_time
-from hal.macros.macro import StageType, flatten
+from hal.macros.macro import StageStatus, StageType, flatten
 
-from . import fail_if_running_macro, hal_command_parser, stages
+from . import hal_command_parser, stages
 
 
 if TYPE_CHECKING:
@@ -26,6 +26,41 @@ if TYPE_CHECKING:
 
 
 __all__ = ["expose"]
+
+
+def check_if_can_run_macro(command: HALCommandType):
+    """Checks if the ``expose`` macro can run.
+
+    The expose macro can run if no other macro is running or if the
+    ``goto-field`` macro is running but has reached the ``acquire`` or
+    ``guide`` stages.
+
+    """
+
+    macros = command.actor.helpers.macros
+    running_macros = [macro for macro in macros if macros[macro].running]
+
+    if any(set(running_macros) - {"goto_field"}):
+        command.fail("A macro is already running.")
+        return False
+
+    if "goto_field" in running_macros:
+        goto_field = macros["goto_field"]
+        goto_stage_status = goto_field.stage_status
+        for stage in ["acquire", "guide"]:
+            if goto_stage_status[stage] in [StageStatus.ACTIVE, StageStatus.FINISHED]:
+                command.warning(
+                    "The goto-field macro is running but has "
+                    "reached the acquire or guide stage."
+                )
+                return True
+
+        command.fail(
+            "The goto-field macro is running but has not "
+            "reached the acquire or guide stage."
+        )
+
+    return True
 
 
 @hal_command_parser.command()
@@ -164,7 +199,7 @@ async def expose(
         if not macro.running:
             return command.fail("No expose macro currently running.")
     else:
-        if not fail_if_running_macro(command):
+        if not check_if_can_run_macro(command):
             return
 
     # Check incompatible options.
