@@ -209,7 +209,6 @@ class APOGEEHelper(SpectrographHelper):
             return False
 
     def get_exposure_state(self) -> str | None:
-
         exposure_state = self.actor.models["apogee"]["exposureState"]
 
         if exposure_state.value is None or None in exposure_state.value:
