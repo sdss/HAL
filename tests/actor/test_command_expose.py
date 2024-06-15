@@ -3,7 +3,7 @@
 #
 # @Author: José Sánchez-Gallego (gallegoj@uw.edu)
 # @Date: 2023-01-02
-# @Filename: test_expose.py
+# @Filename: test_command_expose.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 from __future__ import annotations
@@ -18,6 +18,7 @@ from pytest_mock import MockerFixture
 from hal.helpers.apogee import APOGEEHelper
 from hal.helpers.boss import BOSSHelper
 from hal.macros.expose import ExposeMacro
+from hal.macros.macro import StageStatus
 
 
 if TYPE_CHECKING:
@@ -57,7 +58,7 @@ def mock_run(actor: HALActor, mocker):
     yield
 
 
-async def test_expose_command(actor: HALActor, macro):
+async def test_command_expose(actor: HALActor, macro):
     cmd = actor.invoke_mock_command("expose")
     await cmd
 
@@ -71,14 +72,14 @@ async def test_expose_command(actor: HALActor, macro):
     assert len(macro.expose_helper.apogee_exps) == 2
 
 
-async def test_expose_command_count_2(actor: HALActor, macro):
+async def test_command_expose_count_2(actor: HALActor, macro):
     await actor.invoke_mock_command("expose -c 2")
 
     assert len(macro.expose_helper.boss_exps) == 2
     assert len(macro.expose_helper.apogee_exps) == 4
 
 
-async def test_expose_command_count_2_no_pairs(actor: HALActor, macro):
+async def test_command_expose_count_2_no_pairs(actor: HALActor, macro):
     await actor.invoke_mock_command("expose -c 2 --no-pairs")
 
     assert len(macro.expose_helper.boss_exps) == 2
@@ -90,7 +91,7 @@ async def test_expose_command_count_2_no_pairs(actor: HALActor, macro):
     assert macro.expose_helper.apogee_exps[1].exptime == 917
 
 
-async def test_expose_command_count_2_exptime(actor: HALActor, macro):
+async def test_command_expose_count_2_exptime(actor: HALActor, macro):
     await actor.invoke_mock_command("expose -c 2 -b 400")
 
     assert len(macro.expose_helper.boss_exps) == 2
@@ -101,7 +102,7 @@ async def test_expose_command_count_2_exptime(actor: HALActor, macro):
     assert macro.expose_helper.apogee_exps[2].exptime == 209
 
 
-async def test_expose_command_apogee_exptime(actor: HALActor, macro):
+async def test_command_expose_apogee_exptime(actor: HALActor, macro):
     await actor.invoke_mock_command("expose -a 1000")
 
     assert len(macro.expose_helper.boss_exps) == 1
@@ -114,7 +115,7 @@ async def test_expose_command_apogee_exptime(actor: HALActor, macro):
     assert macro.expose_helper.apogee_exps[1].exptime == 1000
 
 
-async def test_expose_command_count_apogee_boss(actor: HALActor, macro):
+async def test_command_expose_count_apogee_boss(actor: HALActor, macro):
     await actor.invoke_mock_command("expose --count-apogee 2 --count-boss 1")
 
     assert len(macro.expose_helper.boss_exps) == 1
@@ -126,7 +127,7 @@ async def test_expose_command_count_apogee_boss(actor: HALActor, macro):
     assert macro.expose_helper.apogee_exps[0].exptime == 900
 
 
-async def test_expose_command_fails_exposure_time(actor: HALActor, macro):
+async def test_command_expose_fails_exposure_time(actor: HALActor, macro):
     cmd = actor.invoke_mock_command("expose -t 900 -b 400")
     await cmd
 
@@ -134,7 +135,7 @@ async def test_expose_command_fails_exposure_time(actor: HALActor, macro):
     macro.run.assert_not_called()
 
 
-async def test_expose_command_fails_count(actor: HALActor, macro):
+async def test_command_expose_fails_count(actor: HALActor, macro):
     cmd = actor.invoke_mock_command("expose -c 2 --count-apogee 3")
     await cmd
 
@@ -142,7 +143,7 @@ async def test_expose_command_fails_count(actor: HALActor, macro):
     macro.run.assert_not_called()
 
 
-async def test_expose_command_fails_reads(actor: HALActor, macro):
+async def test_command_expose_fails_reads(actor: HALActor, macro):
     cmd = actor.invoke_mock_command("expose --reads 40 -a 500")
     await cmd
 
@@ -150,7 +151,7 @@ async def test_expose_command_fails_reads(actor: HALActor, macro):
     macro.run.assert_not_called()
 
 
-async def test_expose_command_no_boss(actor: HALActor, macro):
+async def test_command_expose_no_boss(actor: HALActor, macro):
     cmd = actor.invoke_mock_command("expose -B")
     await cmd
 
@@ -161,7 +162,7 @@ async def test_expose_command_no_boss(actor: HALActor, macro):
     assert macro.expose_helper.params.readout_matching is False
 
 
-async def test_expose_command_no_apogee(actor: HALActor, macro):
+async def test_command_expose_no_apogee(actor: HALActor, macro):
     cmd = actor.invoke_mock_command("expose -A")
     await cmd
 
@@ -172,7 +173,7 @@ async def test_expose_command_no_apogee(actor: HALActor, macro):
     assert macro.expose_helper.params.readout_matching is False
 
 
-async def test_expose_with_run(actor: HALActor, mock_run):
+async def test_command_expose_with_run(actor: HALActor, mock_run):
     helpers = actor.helpers
 
     expose_macro = helpers.macros["expose"]
@@ -188,7 +189,7 @@ async def test_expose_with_run(actor: HALActor, mock_run):
     assert helpers.apogee.expose.call_count == 4
 
 
-async def test_expose_modify(actor: HALActor, mock_run, mocker):
+async def test_command_expose_modify(actor: HALActor, mock_run, mocker):
     async def sleep(*args, **kwargs):
         await asyncio.sleep(0.2)
 
@@ -219,7 +220,11 @@ async def test_expose_modify(actor: HALActor, mock_run, mocker):
     assert len(expose_macro.expose_helper.apogee_exps) == 4
 
 
-async def test_expose_bright_design(actor: HALActor, mocker: MockerFixture, macro):
+async def test_command_expose_bright_design(
+    actor: HALActor,
+    mocker: MockerFixture,
+    macro,
+):
     actor.helpers.jaeger.configuration = mocker.MagicMock()
     actor.helpers.jaeger.configuration.design_mode = "bright_time"
 
@@ -227,3 +232,52 @@ async def test_expose_bright_design(actor: HALActor, mocker: MockerFixture, macr
 
     assert macro.expose_helper.boss_exps[0].exptime == 730
     assert macro.expose_helper.apogee_exps[0].exptime == 374.0
+
+
+async def test_command_expose_macro_is_running(
+    actor: HALActor,
+    mocker: MockerFixture,
+    macro,
+):
+    auto = actor.helpers.macros["auto_pilot"]
+
+    mocker.patch.object(auto, "_running", True)
+
+    cmd = await actor.invoke_mock_command("expose")
+    assert cmd.status.did_fail
+    assert "A macro is already running." in cmd.replies.get("error")
+
+
+async def test_command_expose_goto_field_is_running(
+    actor: HALActor,
+    mocker: MockerFixture,
+    macro,
+):
+    goto = actor.helpers.macros["goto_field"]
+
+    mocker.patch.object(goto, "_running", True)
+
+    cmd = await actor.invoke_mock_command("expose")
+    assert cmd.status.did_fail
+    assert (
+        "The goto-field macro is running but has not reached the acquire"
+        in cmd.replies.get("error")
+    )
+
+
+async def test_command_expose_goto_field_is_acquiring(
+    actor: HALActor,
+    mocker: MockerFixture,
+    macro,
+):
+    goto = actor.helpers.macros["goto_field"]
+
+    mocker.patch.object(goto, "_running", True)
+    goto.stage_status["acquire"] = StageStatus.ACTIVE
+
+    cmd = await actor.invoke_mock_command("expose")
+    assert cmd.status.did_succeed
+    assert (
+        "The goto-field macro is running but has reached the acquire"
+        in cmd.replies.get("text")
+    )
