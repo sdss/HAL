@@ -26,13 +26,6 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Clone actorkeys
-        uses: actions/checkout@v4
-        with:
-          repository: sdss/actorkeys
-          ref: sdss5
-          path: actorkeys
-
       - name: Install dependencies
         run: |
           pip install --upgrade wheel pip setuptools
