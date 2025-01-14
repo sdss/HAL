@@ -148,6 +148,7 @@ macros:
           - guide
 
   expose:
+    enabled_instruments: ['apogee', 'boss']
     boss_exptime: null
     apogee_exptime: null
     count_apogee: null

@@ -2,6 +2,10 @@
 
 ## Next version
 
+### ✨ Improved
+
+* Add `expose.enabled_instruments` option to the expose macro to allow for enabling/disabling instruments.
+
 ### ⚙️ Engineering
 
 * Use `uv` for project management and workflows.
