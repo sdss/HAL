@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### ⚙️ Engineering
+
+* Use `uv` for project management and workflows.
+
+
 ## 1.3.5 - June 15, 2024
 
 ### 🔧 Fixed
