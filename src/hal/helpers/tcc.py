@@ -355,7 +355,7 @@ class TCCHelper(HALHelper):
                 slew_cmd = self._send_command(
                     command,
                     "tcc",
-                    f"offset guide {az/3600.:g},{alt/3600.:g},{rot/3600.:g} /computed",
+                    f"offset guide {az / 3600.0:g},{alt / 3600.0:g},{rot / 3600.0:g} /computed",
                     time_limit=config["timeouts"]["slew"],
                     raise_on_fail=False,
                 )

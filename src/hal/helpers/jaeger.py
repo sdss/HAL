@@ -67,8 +67,7 @@ class Configuration:
 
             if not targetdb.database.connect():
                 self.warn(
-                    "Cannot connect to database. "
-                    "Field information may be incomplete.",
+                    "Cannot connect to database. Field information may be incomplete.",
                 )
                 return False
 

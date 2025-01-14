@@ -193,7 +193,7 @@ class LampsHelperAPO(HALHelper):
                     elif (n_iter % 5) == 0:
                         remaining = int(self.WARMUP[lamp] - elapsed)
                         command.debug(
-                            f"Warming up lamp {lamp}: " f"{remaining} s remaining."
+                            f"Warming up lamp {lamp}: {remaining} s remaining."
                         )
 
             await asyncio.sleep(1)

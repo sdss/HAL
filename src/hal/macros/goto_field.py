@@ -313,8 +313,7 @@ class _GotoFieldBaseMacro(Macro):
             # but continue.
             if self.helpers.cherno.guiding_at_rms(min_rms, allow_not_guiding=True):
                 self.command.warning(
-                    f"Target RMS not reached but RMS < {min_rms} arcsec. "
-                    "Will continue."
+                    f"Target RMS not reached but RMS < {min_rms} arcsec. Will continue."
                 )
             else:
                 raise
