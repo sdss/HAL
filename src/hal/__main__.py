@@ -17,7 +17,7 @@ from click_default_group import DefaultGroup
 from clu.tools import cli_coro
 from sdsstools.daemonizer import DaemonGroup
 
-from hal import __version__
+from hal import __version__, config
 from hal.actor import HALActor
 
 
@@ -67,10 +67,11 @@ def hal(
 async def actor(ctx: click.Context):
     """Runs the actor."""
 
-    default_config_file = os.path.join(os.path.dirname(__file__), "etc/hal.yml")
-    config_file: str = ctx.obj["config_file"] or default_config_file
-
-    hal_obj = HALActor.from_config(config_file)
+    if ctx.obj["config_file"] is not None:
+        config_file: str = ctx.obj["config_file"]
+        hal_obj = HALActor.from_config(config_file)
+    else:
+        hal_obj = HALActor.from_config(config)
 
     if ctx.obj["verbose"]:
         hal_obj.log.sh.setLevel(0)

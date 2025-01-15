@@ -44,6 +44,8 @@ lamp_warmup:
   HgCd: 108
   Ne: 20
 
+enabled_instruments: ['apogee', 'boss']
+
 macros:
   goto_field:
     fvc:
@@ -148,7 +150,6 @@ macros:
           - guide
 
   expose:
-    enabled_instruments: ['apogee', 'boss']
     boss_exptime: null
     apogee_exptime: null
     count_apogee: null

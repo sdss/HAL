@@ -269,7 +269,7 @@ async def expose(
 
     selected_stages = cast(list[StageType], stages or flatten(macro.__STAGES__.copy()))
 
-    enabled_instuments = macro.config["enabled_instruments"]
+    enabled_instuments = config["enabled_instruments"]
     apogee = apogee and "apogee" in enabled_instuments
     boss = boss and "boss" in enabled_instuments
 

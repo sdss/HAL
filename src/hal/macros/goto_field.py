@@ -76,13 +76,14 @@ class _GotoFieldBaseMacro(Macro):
                     await self.helpers.cherno.stop_guiding(self.command)
 
         # Ensure the APOGEE shutter is closed but don't wait for it.
-        asyncio.create_task(
-            self.helpers.apogee.shutter(
-                self.command,
-                open=False,
-                shutter="apogee",
+        if "apogee" in self.actor.config["enabled_instruments"]:
+            asyncio.create_task(
+                self.helpers.apogee.shutter(
+                    self.command,
+                    open=False,
+                    shutter="apogee",
+                )
             )
-        )
 
         # Reset cherno offsets.
         self.command.debug("Resetting cherno offsets.")
