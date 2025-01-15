@@ -4,7 +4,7 @@
 
 ### ✨ Improved
 
-* Add `expose.enabled_instruments` option to the expose macro to allow for enabling/disabling instruments.
+* Add `enabled_instruments` option to the expose macro to allow for enabling/disabling instruments.
 
 ### ⚙️ Engineering
 
