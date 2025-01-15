@@ -603,10 +603,10 @@ class ExposeMacro(Macro):
                 shutter="apogee",
             )
 
-        if self.helpers.apogee.is_exposing():
-            self.command.warning("APOGEE exposure is running. Not cancelling it.")
+            if self.helpers.apogee.is_exposing():
+                self.command.warning("APOGEE exposure is running. Not cancelling it.")
 
-        if self.helpers.boss.is_exposing():
+        if "expose_boss" in self.flat_stages and self.helpers.boss.is_exposing():
             if self.helpers.boss.is_reading():
                 self.command.info("BOSS is reading.")
             else:
