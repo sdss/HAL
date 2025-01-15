@@ -46,6 +46,9 @@ class HALActor(LegacyActor):
 
         HALActor._instance = self
 
+        instruments = self.helpers.macros["expose"].config["enabled_instruments"]
+        self.log.info(f"Enabled instruments: {instruments!r}")
+
     @staticmethod
     def get_instance():
         """Returns the current instance.
