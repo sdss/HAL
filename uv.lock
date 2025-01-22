@@ -1520,7 +1520,7 @@ wheels = [
 
 [[package]]
 name = "sdss-hal"
-version = "1.4.0"
+version = "1.4.1a0"
 source = { editable = "." }
 dependencies = [
     { name = "click-default-group" },
