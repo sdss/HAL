@@ -1,5 +1,12 @@
 # Changelog
 
+## Next version
+
+### 🔧 Fixed
+
+* Consider a field RM if it begins with `dark_monit` or `dark_rm` (as opposed to requiring an exact match).
+
+
 ## 1.4.0 - January 22, 2025
 
 ### ✨ Improved

@@ -85,6 +85,7 @@ class Configuration:
 
         # Determine if a field is RM/AQMES. Worst case, just assume it is not.
         self.is_rm_field = False
+        rm_modes = ["dark_rm", "dark_monit"]
 
         try:
             self.design_mode = (
@@ -94,7 +95,7 @@ class Configuration:
             )
             if self.design_mode is None:
                 self.warn(f"Cannot find design_mode_label for design {self.design_id}")
-            elif self.design_mode in ["dark_monit", "dark_rm"]:
+            elif any([self.design_mode.startswith(mode) for mode in rm_modes]):
                 self.is_rm_field = True
         except Exception as err:
             self.warn(f"Failed determining RM/AQMES: {err}")
