@@ -5,6 +5,7 @@
 ### ✨ Improved
 
 * Ensure that the APOGEE cold shutter cannot be commanded at LCO.
+* Turn APOGEE LEDs on/off during morning calibrations.
 
 ### 🔧 Fixed
 

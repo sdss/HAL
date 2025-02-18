@@ -28,9 +28,11 @@ apogeecal SourceOff source=UNe
 10.0 apogeecal shutterClose
 10.0 apogeecal allOff
 330.0 apogee expose nreads=30 ; object=Dark
+apogee shutter ledControl=15
 330.0 apogee expose nreads=30 ; object=InternalFlat
 330.0 apogee expose nreads=30 ; object=InternalFlat
 330.0 apogee expose nreads=30 ; object=InternalFlat
+apogee shutter ledControl=0
 330.0 apogee expose nreads=30 ; object=Dark
 10.0 apogeecal shutterOpen
 apogeefpi open
