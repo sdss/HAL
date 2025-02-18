@@ -2,6 +2,10 @@
 
 ## Next version
 
+### ✨ Improved
+
+* Ensure that the APOGEE cold shutter cannot be commanded at LCO.
+
 ### 🔧 Fixed
 
 * Consider a field RM if it begins with `dark_monit` or `dark_rm` (as opposed to requiring an exact match).

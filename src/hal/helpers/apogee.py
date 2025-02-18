@@ -75,6 +75,9 @@ class APOGEEHelper(SpectrographHelper):
                 return None
 
         if shutter == "apogee":
+            if self.actor.observatory != "APO":
+                return True
+
             shutter_command = await self._send_command(
                 command,
                 "apogee",
