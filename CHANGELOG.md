@@ -2,6 +2,10 @@
 
 ## Next release
 
+### 🔧 Fixed
+
+* Fixed actor commands documentation.
+
 ### ⚙️ Engineering
 
 * Update dependencies and workflows.
