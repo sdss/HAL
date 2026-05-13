@@ -1,5 +1,12 @@
 # Changelog
 
+## Next release
+
+### ⚙️ Engineering
+
+* Update dependencies and workflows.
+
+
 ## 1.4.1 - February 21, 2025
 
 ### ✨ Improved
