@@ -36,7 +36,7 @@ def mock_send_command(mocker):
 @pytest.fixture(autouse=True)
 def mock_overhead_table(mocker: MockerFixture):
     mocker.patch.object(overhead, "Overhead", autospec=True)
-    mocker.patch.object(overhead, "database", autospec=True)
+    mocker.patch.object(overhead, "database")
     mocker.patch.object(overhead.OverheadHelper, "get_next_macro_id", return_value=1)
 
 
@@ -45,7 +45,7 @@ async def actor():
     config = read_yaml_file(config_path)
 
     hal_actor = HALActor.from_config(config)
-    hal_actor = await setup_test_actor(hal_actor)  # type: ignore
+    hal_actor = await setup_test_actor(hal_actor)
 
     yield hal_actor
 
