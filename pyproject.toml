@@ -55,9 +55,10 @@ line-length = 88
 target-version = 'py313'
 exclude = ["typings/"]
 
-[ruff.lint]
+[tool.ruff.lint]
 select = ["E", "F", "I"]
-unfixable = ["F841"]
+ignore = ["EXE001"]
+unfixable = ["F841", "UP009"]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401", "F403", "E402"]

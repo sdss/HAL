@@ -35,7 +35,7 @@ __all__ = ["ExposeMacro"]
 class ExposeParameters:
     """Expose macro parameters."""
 
-    boss_exptime: float | None = config["macros"]["expose"]["fallback"]["exptime"]["default"]  # fmt: skip  # noqa
+    boss_exptime: float | None = config["macros.expose.fallback.exptime.default"]
     apogee_exptime: float | None = None
     count_apogee: int | None = 1
     count_boss: int | None = 1
@@ -387,12 +387,11 @@ class ExposeHelper:
                 n_completed += 1
 
             etr = state_apogee["total_time"]
-            etr -= sum([exps[ii].exptime for ii in range(0, n_completed)])
+            etr -= sum([exps[ii].exptime for ii in range(n_completed)])
             if self._apogee_exp_start_time > 0 and this_exp and not this_exp.done:
                 exp_elapsed = time() - self._apogee_exp_start_time
                 etr -= exp_elapsed
-                if etr < 0:
-                    etr = 0
+                etr = max(etr, 0)
             state_apogee["etr"] = int(round(etr))
 
             self.macro.command.debug(exposure_state_apogee=list(state_apogee.values()))
@@ -411,12 +410,11 @@ class ExposeHelper:
                 n_completed += 1
 
             etr = state_boss["total_time"]
-            etr -= sum([exps[ii].actual_exptime for ii in range(0, n_completed)])
+            etr -= sum([exps[ii].actual_exptime for ii in range(n_completed)])
             if self._boss_exp_start_time > 0 and this_exp and not this_exp.done:
                 exp_elapsed = time() - self._boss_exp_start_time
                 etr -= exp_elapsed
-                if etr < 0:
-                    etr = 0
+                etr = max(etr, 0)
             state_boss["etr"] = int(round(etr))
 
             self.macro.command.debug(exposure_state_boss=list(state_boss.values()))

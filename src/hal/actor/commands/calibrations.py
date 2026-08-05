@@ -23,8 +23,6 @@ if TYPE_CHECKING:
 def calibrations():
     """Performs camera and telescope calibrations."""
 
-    pass
-
 
 @calibrations.command(name="apogee-dome-flat")
 @stages("apogee_dome_flat")

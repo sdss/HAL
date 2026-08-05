@@ -288,15 +288,15 @@ async def expose(
         or "A"
     )
 
-    params = dict(
-        count_apogee=count_apogee,
-        count_boss=count_boss,
-        pairs=pairs,
-        dither=not disable_dithering,
-        boss_exptime=boss_exposure_time,
-        apogee_exptime=apogee_exposure_time,
-        readout_matching=not disable_readout_matching,
-    )
+    params = {
+        "count_apogee": count_apogee,
+        "count_boss": count_boss,
+        "pairs": pairs,
+        "dither": not disable_dithering,
+        "boss_exptime": boss_exposure_time,
+        "apogee_exptime": apogee_exposure_time,
+        "readout_matching": not disable_readout_matching,
+    }
 
     # Handle macro modification.
     if modify:
