@@ -2,6 +2,10 @@
 
 ## Next release
 
+### 🚀 New
+
+* Add `skyflats.inp` script for APO and LCO.
+
 ### 🔧 Fixed
 
 * Fixed actor commands documentation.

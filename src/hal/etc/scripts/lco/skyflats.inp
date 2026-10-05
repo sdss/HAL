@@ -1,0 +1,8 @@
+10.0 apogeecal allOff
+apogee dither namedpos=A
+15.0 apogee shutter open
+180 apogee expose nreads=15 object=Object comment="TwilightSkyFlat"
+apogee dither namedpos=B
+290 apogee expose nreads=25 object=Object comment="TwilightSkyFlat"
+15.0 apogee shutter close
+10.0 apogeecal allOff
