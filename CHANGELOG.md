@@ -1,6 +1,6 @@
 # Changelog
 
-## Next release
+## 1.4.2 - October 5, 2026
 
 ### 🚀 New
 
