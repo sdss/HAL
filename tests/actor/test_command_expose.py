@@ -35,7 +35,7 @@ def mock_expose_macro(mocker, actor: HALActor):
 
     yield
 
-    macro.run = orig_run
+    macro.run = orig_run  # ty: ignore[invalid-assignment]
 
 
 @pytest.fixture

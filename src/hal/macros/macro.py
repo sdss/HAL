@@ -306,7 +306,6 @@ class Macro:
         status_keyw = [self.name]
         for stage in self.stage_status:
             status_name = self.stage_status[stage].name
-            assert status_name
             status_keyw += [stage, status_name.lower()]
 
         out_command.write(level, stage_status=status_keyw)

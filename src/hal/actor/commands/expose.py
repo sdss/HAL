@@ -316,7 +316,7 @@ async def expose(
         initial_apogee_dither=initial_apogee_dither,
         with_fpi=with_fpi,
         force=False,
-        **params,
+        **params,  # ty: ignore[invalid-argument-type]
     )
 
     result = await macro.run()
