@@ -281,3 +281,19 @@ async def test_command_expose_goto_field_is_acquiring(
         "The goto-field macro is running but has reached the acquire"
         in cmd.replies.get("text")
     )
+
+
+async def test_command_expose_hge_design(
+    actor: HALActor,
+    mocker: MockerFixture,
+    macro,
+):
+    actor.helpers.jaeger.configuration = mocker.MagicMock()
+    actor.helpers.jaeger.configuration.design_mode = "bright_time"
+
+    await actor.invoke_mock_command(
+        "expose --reads 70 --count-boss 1 --count-apogee 1 --boss-exposure-time 900"
+    )
+
+    assert macro.expose_helper.boss_exps[0].exptime == 730
+    assert macro.expose_helper.apogee_exps[0].exptime == 374.0
