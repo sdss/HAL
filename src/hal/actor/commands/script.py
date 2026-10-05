@@ -26,8 +26,6 @@ __all__ = ["script"]
 def script():
     """Tools to list and run scripts."""
 
-    pass
-
 
 @script.command(name="list")
 async def list_(command: HALCommandType):

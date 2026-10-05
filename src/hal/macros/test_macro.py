@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import asyncio
 
+from typing import ClassVar
+
 from hal.macros import Macro
 
 
@@ -21,9 +23,9 @@ class TestMacro(Macro):
 
     name = "test"
 
-    __PRECONDITIONS__ = ["prepare"]
-    __STAGES__ = [("stage1", "stage2"), "stage3"]
-    __CLEANUP__ = ["cleanup"]
+    __PRECONDITIONS__: ClassVar[list[str]] = ["prepare"]
+    __STAGES__: ClassVar[list[str | tuple[str, ...]]] = [("stage1", "stage2"), "stage3"]
+    __CLEANUP__: ClassVar[list[str]] = ["cleanup"]
 
     async def prepare(self):
         """Prepares the macro."""

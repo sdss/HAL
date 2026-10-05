@@ -18,7 +18,7 @@ from hal import __version__
 from hal.actor.commands import hal_command_parser
 
 
-__all__ = ["HALActor", "ActorHelpers"]
+__all__ = ["ActorHelpers", "HALActor"]
 
 
 class HALActor(LegacyActor):

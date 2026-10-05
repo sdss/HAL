@@ -8,11 +8,10 @@
 
 from __future__ import annotations
 
-import sys
+import datetime
 import time
 import warnings
 from dataclasses import dataclass
-from datetime import datetime
 
 from typing import TYPE_CHECKING
 
@@ -77,8 +76,6 @@ class OverheadHelper:
         # Cannot run in executor or the database will not be connected.
         self.update_database()
 
-        return
-
     async def __aexit__(self, exc_type, exc_value, traceback):
         """Stops the timer and records the overhead."""
 
@@ -116,12 +113,7 @@ class OverheadHelper:
         if timestamp is None:
             return None
 
-        if sys.version_info >= (3, 11):
-            from datetime import UTC
-
-            return datetime.fromtimestamp(timestamp, tz=UTC)
-
-        return datetime.utcfromtimestamp(timestamp)
+        return datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)
 
     @staticmethod
     def get_next_macro_id():  # pragma: no cover

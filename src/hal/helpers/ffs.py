@@ -35,7 +35,7 @@ class FFSHelper(HALHelper):
         """Returns the FFS status flags."""
 
         values = self.actor.models["mcp"]["ffsStatus"].value
-        if len(values) == 0 or all([value is None for value in values]):
+        if len(values) == 0 or all(value is None for value in values):
             return [FFSStatus.UNKNWON] * 8
 
         return [FFSStatus(value) for value in values]
@@ -43,12 +43,12 @@ class FFSHelper(HALHelper):
     def all_closed(self):
         """Returns `True` if all the petals are closed."""
 
-        return all([x == FFSStatus.CLOSED for x in self.get_values()])
+        return all(x == FFSStatus.CLOSED for x in self.get_values())
 
     def all_open(self):
         """Returns `True` if all the petals are open."""
 
-        return all([x == FFSStatus.OPEN for x in self.get_values()])
+        return all(x == FFSStatus.OPEN for x in self.get_values())
 
     async def open(self, command: HALCommandType):
         """Open all the petals."""

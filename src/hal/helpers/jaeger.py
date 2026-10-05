@@ -95,7 +95,7 @@ class Configuration:
             )
             if self.design_mode is None:
                 self.warn(f"Cannot find design_mode_label for design {self.design_id}")
-            elif any([self.design_mode.startswith(mode) for mode in rm_modes]):
+            elif any(self.design_mode.startswith(mode) for mode in rm_modes):
                 self.is_rm_field = True
         except Exception as err:
             self.warn(f"Failed determining RM/AQMES: {err}")
@@ -182,8 +182,7 @@ class JaegerHelper(HALHelper):
 
         verb = "preload" if preload else "load"
 
-        if extra_epoch_delay < 0:
-            extra_epoch_delay = 0
+        extra_epoch_delay = max(extra_epoch_delay, 0)
 
         cmd = await self._send_command(
             command,

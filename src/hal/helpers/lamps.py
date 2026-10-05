@@ -11,7 +11,7 @@ from __future__ import annotations
 import asyncio
 import time
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from hal import config
 from hal.exceptions import HALError
@@ -29,7 +29,7 @@ __all__ = ["LampsHelperAPO", "LampsHelperLCO"]
 class LampsHelperAPO(HALHelper):
     """Control for lamps."""
 
-    LAMPS = ["ff", "HgCd", "Ne"]
+    LAMPS: ClassVar[list[str]] = ["ff", "HgCd", "Ne"]
     WARMUP = config["lamp_warmup"].copy()
 
     name = "lamps"
@@ -81,7 +81,7 @@ class LampsHelperAPO(HALHelper):
             else:
                 lamp_key = f"{lamp}Lamp"
                 lamp_state = self.actor.models["mcp"][lamp_key]
-                if any([lv is None for lv in lamp_state]):
+                if any(lv is None for lv in lamp_state):
                     raise HALError(f"Failed getting {lamp_key}.")
                 last_seen = lamp_state.last_seen
                 if sum(lamp_state.value) == 4:
@@ -146,9 +146,8 @@ class LampsHelperAPO(HALHelper):
                 else:
                     tasks.append(self._command_one(command, ll, state))
             else:
-                if turn_off_others is True:
-                    if status[ll][0] is not False or force is True:
-                        turn_off_tasks.append(self._command_one(command, ll, False))
+                if turn_off_others and (status[ll][0] is not False or force):
+                    turn_off_tasks.append(self._command_one(command, ll, False))
 
         if len(turn_off_tasks) > 0:
             await asyncio.gather(*turn_off_tasks)
@@ -203,7 +202,7 @@ class LampsHelperAPO(HALHelper):
 class LampsHelperLCO(HALHelper):
     """Control for lamps at LCO."""
 
-    LAMPS = ["TCS_FF", "HeAr", "Ne"]
+    LAMPS: ClassVar[list[str]] = ["TCS_FF", "HeAr", "Ne"]
 
     name = "lamps"
 
@@ -297,9 +296,8 @@ class LampsHelperLCO(HALHelper):
                     # Turn on/off this lamp.
                     tasks.append(self._command_one(command, ll, state))
             else:
-                if turn_off_others is True:
-                    if status[ll][0] is not False:
-                        turn_off_tasks.append(self._command_one(command, ll, False))
+                if turn_off_others is True and status[ll][0] is not False:
+                    turn_off_tasks.append(self._command_one(command, ll, False))
 
         try:
             if len(turn_off_tasks) > 0:

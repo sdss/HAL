@@ -13,13 +13,11 @@ class HALError(Exception):
     def __init__(self, message=None):
         message = "There has been an error" if not message else message
 
-        super(HALError, self).__init__(message)
+        super().__init__(message)
 
 
 class MacroError(HALError):
     """An error during a macro execution."""
-
-    pass
 
 
 class HALNotImplemented(HALError):
@@ -28,13 +26,11 @@ class HALNotImplemented(HALError):
     def __init__(self, message=None):
         message = "This feature is not implemented yet." if not message else message
 
-        super(HALNotImplemented, self).__init__(message)
+        super().__init__(message)
 
 
 class HALMissingDependency(HALError):
     """A custom exception for missing dependencies."""
-
-    pass
 
 
 class HALWarning(Warning):
@@ -44,10 +40,6 @@ class HALWarning(Warning):
 class HALUserWarning(UserWarning, HALWarning):
     """The primary warning class."""
 
-    pass
-
 
 class HALDeprecationWarning(HALUserWarning):
     """A warning for deprecated features."""
-
-    pass

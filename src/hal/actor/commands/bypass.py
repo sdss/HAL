@@ -28,8 +28,6 @@ __all__ = ["bypass"]
 def bypass():
     """Enable/disable bypasses."""
 
-    pass
-
 
 @bypass.command()
 @click.argument("BYPASSES", type=str, nargs=-1)

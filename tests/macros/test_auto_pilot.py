@@ -8,6 +8,8 @@
 
 from __future__ import annotations
 
+from unittest.mock import AsyncMock
+
 from typing import TYPE_CHECKING
 
 import pytest
@@ -39,7 +41,7 @@ def mock_auto_pilot_macro(mocker: MockerFixture, actor: HALActor):
 
     yield actor.helpers.macros["auto_pilot"]
 
-    macro.run = orig_run
+    macro.run = orig_run  # ty: ignore[invalid-assignment]
 
 
 def test_auto_pilot_macro(actor: HALActor):
@@ -59,13 +61,14 @@ async def test_auto_pilot_command(
 
     assert cmd.status.did_succeed
 
+    assert isinstance(mock_auto_pilot_macro.run, AsyncMock)
     mock_auto_pilot_macro.run.assert_called()
 
     calls = [
         mocker.call(cmd, count=1, preload_ahead_time=None),
         mocker.call(cmd, reset_config=False),
     ]
-    mock_auto_pilot_macro.reset.assert_has_calls(calls)  # type: ignore
+    mock_auto_pilot_macro.reset.assert_has_calls(calls)
 
     assert mock_auto_pilot_macro.config["count"] == 1
     assert mock_auto_pilot_macro.config["preload_ahead_time"] == 300
@@ -137,4 +140,4 @@ async def test_auto_pilot_macro_preload_ahead(
         mocker.call(cmd, count=1, preload_ahead_time=100),
         mocker.call(cmd, reset_config=False),
     ]
-    mock_auto_pilot_macro.reset.assert_has_calls(calls)  # type: ignore
+    mock_auto_pilot_macro.reset.assert_has_calls(calls)

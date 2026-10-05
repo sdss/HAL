@@ -100,7 +100,7 @@ class ChernoHelper(HALHelper):
             await asyncio.sleep(5)
             elapsed += 5
             if max_wait and elapsed > max_wait:
-                raise asyncio.TimeoutError()
+                raise TimeoutError()
 
     async def acquire(
         self,
@@ -140,7 +140,7 @@ class ChernoHelper(HALHelper):
 
         """
 
-        block = True if (target_rms and wait is None) or wait is True else False
+        block = bool((target_rms and wait is None) or wait is True)
 
         command_str = "acquire -c" if target_rms is None else f"acquire -r {target_rms}"
         command_str += f" -t {exposure_time}"
@@ -161,8 +161,6 @@ class ChernoHelper(HALHelper):
             await self._send_command(command, "cherno", command_str)
         else:
             asyncio.create_task(self._send_command(command, "cherno", command_str))
-
-        return
 
     async def guide(
         self,

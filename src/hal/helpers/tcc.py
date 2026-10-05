@@ -239,7 +239,7 @@ class TCCHelper(HALHelper):
         """Returns `True` if all the axes are at ``status``."""
 
         axes_status = self.actor.models["tcc"]["AxisCmdState"].value
-        return all([axis.lower() == status.lower() for axis in axes_status])
+        return all(axis.lower() == status.lower() for axis in axes_status)
 
     async def do_slew(
         self,

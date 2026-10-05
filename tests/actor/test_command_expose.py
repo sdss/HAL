@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import asyncio
+import unittest.mock
 
 from typing import TYPE_CHECKING
 
@@ -185,6 +186,9 @@ async def test_command_expose_with_run(actor: HALActor, mock_run):
     assert cmd.status.did_succeed
     assert expose_macro.expose_helper.running is False
 
+    assert isinstance(helpers.boss.expose, unittest.mock.AsyncMock)
+    assert isinstance(helpers.apogee.expose, unittest.mock.AsyncMock)
+
     assert helpers.boss.expose.call_count == 2
     assert helpers.apogee.expose.call_count == 4
 
@@ -291,9 +295,7 @@ async def test_command_expose_hge_design(
     actor.helpers.jaeger.configuration = mocker.MagicMock()
     actor.helpers.jaeger.configuration.design_mode = "bright_time"
 
-    await actor.invoke_mock_command(
-        "expose --reads 70 --count-boss 1 --count-apogee 1 --boss-exposure-time 900"
-    )
+    await actor.invoke_mock_command("expose --reads 70 --count-boss 1 --count-apogee 1")
 
-    assert macro.expose_helper.boss_exps[0].exptime == 730
-    assert macro.expose_helper.apogee_exps[0].exptime == 374.0
+    assert macro.expose_helper.boss_exps[0].exptime == 742
+    assert macro.expose_helper.apogee_exps[0].exptime == 742

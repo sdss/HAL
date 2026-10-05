@@ -12,9 +12,10 @@ import asyncio
 import enum
 import warnings
 from collections import defaultdict
+from collections.abc import Coroutine
 from contextlib import suppress
 
-from typing import TYPE_CHECKING, Any, ClassVar, Coroutine, Optional, Union
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from clu import Command, CommandStatus
 
@@ -30,7 +31,7 @@ if TYPE_CHECKING:
 __all__ = ["Macro"]
 
 
-StageType = Union[str, tuple[str, ...], list[str]]
+StageType = str | tuple[str, ...] | list[str]
 
 
 def record_overhead(macro: Macro):
@@ -77,9 +78,9 @@ class Macro:
 
     __RUNNING__: ClassVar[list[str]] = []
 
-    __STAGES__: list[StageType]
-    __PRECONDITIONS__: list[StageType] = []
-    __CLEANUP__: list[StageType] = []
+    __STAGES__: ClassVar[list[StageType]]
+    __PRECONDITIONS__: ClassVar[list[StageType]] = []
+    __CLEANUP__: ClassVar[list[StageType]] = []
 
     def __init__(self):
         if not hasattr(self, "__STAGES__"):
@@ -126,12 +127,10 @@ class Macro:
     def _reset_internal(self, **opts):
         """Internal reset method that can be overridden by the subclasses."""
 
-        pass
-
     def reset(
         self,
         command: HALCommandType,
-        reset_stages: Optional[list[StageType]] = None,
+        reset_stages: list[StageType] | None = None,
         force: bool = False,
         reset_config: bool = True,
         **opts,
@@ -162,12 +161,12 @@ class Macro:
         else:
             self.stages = []
 
-            if force is False and all([isinstance(x, str) for x in reset_stages]):
+            if force is False and all(isinstance(x, str) for x in reset_stages):
                 for stage in self.__STAGES__:
                     if isinstance(stage, str) and stage in reset_stages:
                         self.stages.append(stage)
                     elif isinstance(stage, (tuple, list)):
-                        if all([x in reset_stages for x in stage]):
+                        if all(x in reset_stages for x in stage):
                             self.stages.append(stage)
                         else:
                             for x in stage:
@@ -268,10 +267,7 @@ class Macro:
         if not self.running or (self.cancelled or self.failed):
             return False
 
-        if self.has_status(self.flat_stages, StageStatus.CANCELLING):
-            return True
-
-        return False
+        return bool(self.has_status(self.flat_stages, StageStatus.CANCELLING))
 
     def set_stage_status(
         self,
@@ -300,7 +296,7 @@ class Macro:
 
     def output_stage_status(
         self,
-        command: Optional[HALCommandType] = None,
+        command: HALCommandType | None = None,
         level: str = "d",
     ):
         """Outputs the stage status to the actor."""
@@ -317,7 +313,7 @@ class Macro:
 
     def list_stages(
         self,
-        command: Optional[HALCommandType] = None,
+        command: HALCommandType | None = None,
         level: str = "i",
         only_all: bool = False,
     ):
@@ -340,7 +336,7 @@ class Macro:
     async def fail_macro(
         self,
         error_or_message: Exception | str,
-        stage: Optional[StageType] = None,
+        stage: StageType | None = None,
     ):
         """Fails the macros and informs the actor."""
 
@@ -538,7 +534,7 @@ class Macro:
         if isinstance(stages, str):
             return self.stage_status[stages] == status
 
-        return any([self.stage_status[stage] == status for stage in stages])
+        return any(self.stage_status[stage] == status for stage in stages)
 
     def cancel(self, now: bool = True):
         """Cancels the execution ot the macro."""

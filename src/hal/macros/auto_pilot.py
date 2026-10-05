@@ -11,6 +11,8 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 
+from typing import TYPE_CHECKING, ClassVar
+
 from sdsstools.utils import cancel_task
 
 from hal import config
@@ -18,6 +20,10 @@ from hal.exceptions import MacroError
 from hal.helpers import get_default_exposure_time
 from hal.macros.expose import ExposeMacro
 from hal.macros.macro import Macro
+
+
+if TYPE_CHECKING:
+    from hal.macros.macro import StageType
 
 
 __all__ = ["AutoPilotMacro"]
@@ -83,9 +89,9 @@ class AutoPilotMacro(Macro):
 
     name = "auto_pilot"
 
-    __PRECONDITIONS__ = ["prepare"]
-    __STAGES__ = ["load", "goto_field", "expose"]
-    __CLEANUP__ = ["cleanup"]
+    __PRECONDITIONS__: ClassVar[list[StageType]] = ["prepare"]
+    __STAGES__: ClassVar[list[StageType]] = ["load", "goto_field", "expose"]
+    __CLEANUP__: ClassVar[list[StageType]] = ["cleanup"]
 
     def __init__(self):
         super().__init__()
@@ -244,7 +250,7 @@ class AutoPilotMacro(Macro):
             self._auto_pilot_message("Waiting for guider to converge")
             try:
                 await self.helpers.cherno.wait_for_rms(min_rms, max_wait=180)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 raise MacroError("Timed out waiting for guider to converge.")
 
         # Calculate expose time and schedule preloading a design.

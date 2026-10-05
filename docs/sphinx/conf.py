@@ -41,7 +41,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "HAL"
-copyright = "{0}, {1}".format("2021-", "José Sánchez-Gallego")
+copyright = "{}, {}".format("2021-", "José Sánchez-Gallego")
 author = "José Sánchez-Gallego"
 
 # The version info for the project you're documenting, acts as replacement for

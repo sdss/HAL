@@ -8,6 +8,8 @@
 
 import os
 
+from typing import ClassVar
+
 import pytest
 from pytest_mock import MockerFixture
 
@@ -63,8 +65,8 @@ def macro(actor: HALActor, command: Command[HALActor]):
     class MacroTest(Macro):
         name = "macro_test"
 
-        __STAGES__ = ["stage1", "stage2"]
-        __CLEANUP__ = ["cleanup"]
+        __STAGES__: ClassVar[list[str]] = ["stage1", "stage2"]
+        __CLEANUP__: ClassVar[list[str]] = ["cleanup"]
 
         async def stage1(self):
             pass

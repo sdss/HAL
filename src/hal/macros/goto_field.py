@@ -11,6 +11,8 @@ from __future__ import annotations
 import asyncio
 from time import time
 
+from typing import TYPE_CHECKING, ClassVar
+
 import numpy
 
 from hal import config
@@ -18,6 +20,9 @@ from hal.exceptions import HALError, MacroError
 from hal.helpers.lamps import LampsHelperAPO, LampsHelperLCO
 from hal.macros import Macro
 
+
+if TYPE_CHECKING:
+    from hal.macros.macro import StageType
 
 __all__ = ["GotoFieldAPOMacro"]
 
@@ -27,8 +32,8 @@ class _GotoFieldBaseMacro(Macro):
 
     name = "goto_field"
 
-    __PRECONDITIONS__ = ["prepare"]
-    __STAGES__ = [
+    __PRECONDITIONS__: ClassVar[list[StageType]] = ["prepare"]
+    __STAGES__: ClassVar[list[StageType]] = [
         ("slew", "reconfigure"),
         "fvc",
         ("reslew", "lamps"),
@@ -38,7 +43,7 @@ class _GotoFieldBaseMacro(Macro):
         "acquire",
         "guide",
     ]
-    __CLEANUP__ = ["cleanup"]
+    __CLEANUP__: ClassVar[list[StageType]] = ["cleanup"]
 
     _lamps_task: asyncio.Task | None = None
 
@@ -180,7 +185,7 @@ class _GotoFieldBaseMacro(Macro):
         """Ensures the correct lamps for calibrations are on."""
 
         cal_stages = ["boss_flat", "boss_hartmann", "boss_arcs"]
-        if all([stage not in self.flat_stages for stage in cal_stages]):
+        if all(stage not in self.flat_stages for stage in cal_stages):
             return
 
         # If we are going to take BOSS cals, start warming up lamps now (some may
@@ -421,12 +426,8 @@ class _GotoFieldBaseMacro(Macro):
     async def _close_ffs(self, wait: bool = True):
         """Closes the FFS."""
 
-        pass
-
     async def _guide_preconditions(self, stage: str):
         """Tasks to be run before acquisition/guiding can start."""
-
-        pass
 
     async def _all_lamps_off(self, wait: bool = True):
         """Turns all the lamps off after checking them."""
@@ -575,18 +576,16 @@ class GotoFieldAPOMacro(_GotoFieldBaseMacro):
                     # warmed up. For arcs we wait until they are.
                     if mode == "hartmann":
                         if lamp == "HgCd":
-                            wait = 10 if wait < 10 else wait
+                            wait = max(wait, 10)
                         else:
-                            wait = 5 if wait < 5 else wait
+                            wait = max(wait, 5)
                     else:
-                        if LampsHelperAPO.WARMUP[lamp] > wait:
-                            wait = LampsHelperAPO.WARMUP[lamp]
+                        wait = max(wait, LampsHelperAPO.WARMUP[lamp])
 
                 elif mode == "arcs" and lamp_status[lamp][3] is False:
                     elapsed = lamp_status[lamp][2]
                     wait_lamp = LampsHelperAPO.WARMUP[lamp] - elapsed
-                    if wait < wait_lamp:
-                        wait = wait_lamp
+                    wait = max(wait, wait_lamp)
 
             if wait > 0:
                 # TODO: maybe here we should confirm that the lamps are turning on.
@@ -659,7 +658,7 @@ class GotoFieldLCOMacro(_GotoFieldBaseMacro):  # pragma: no cover
 
         do_flat = "boss_flat" in self.flat_stages
         do_arcs = "boss_hartmann" in self.flat_stages or "boss_arcs" in self.flat_stages
-        do_screen = True if do_flat or do_arcs else False
+        do_screen = bool(do_flat or do_arcs)
 
         await self._slew_telescope(screen=do_screen)
 

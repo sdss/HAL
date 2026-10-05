@@ -206,10 +206,7 @@ class APOGEEHelper(SpectrographHelper):
 
         state = self.get_exposure_state()
 
-        if state in ["exposing", "stopping"]:
-            return True
-        else:
-            return False
+        return state in ["exposing", "stopping"]
 
     def get_exposure_state(self) -> str | None:
         exposure_state = self.actor.models["apogee"]["exposureState"]

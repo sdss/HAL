@@ -122,14 +122,14 @@ async def test_expose_helper_yield(expose_helper):
 
     boss_exps = []
     for exp in expose_helper.yield_boss():
-        boss_exps.append(exp)
+        boss_exps.append(exp)  # noqa: PERF402
 
     assert len(boss_exps) == 2
     assert boss_exps[-1] is None
 
     apogee_exps = []
     for exp in expose_helper.yield_apogee():
-        apogee_exps.append(exp)
+        apogee_exps.append(exp)  # noqa: PERF402
 
     assert len(apogee_exps) == 3
     assert apogee_exps[-1] is None

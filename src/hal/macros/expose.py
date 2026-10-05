@@ -15,7 +15,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 from time import time
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 import numpy
 
@@ -26,6 +26,7 @@ from hal.macros import Macro
 
 if TYPE_CHECKING:
     from hal.helpers.jaeger import Configuration
+    from hal.macros.macro import StageType
 
 
 __all__ = ["ExposeMacro"]
@@ -379,7 +380,7 @@ class ExposeHelper:
             else:
                 state_apogee["dither"] = exps[self.n_apogee - 1].dither_position
 
-            state_apogee["total_time"] = int(round(sum([exp.exptime for exp in exps])))
+            state_apogee["total_time"] = round(sum([exp.exptime for exp in exps]))
             state_apogee["timestamp"] = round(time(), 1)
 
             n_completed = 0 if self.n_apogee == 0 else self.n_apogee - 1
@@ -392,7 +393,7 @@ class ExposeHelper:
                 exp_elapsed = time() - self._apogee_exp_start_time
                 etr -= exp_elapsed
                 etr = max(etr, 0)
-            state_apogee["etr"] = int(round(etr))
+            state_apogee["etr"] = round(etr)
 
             self.macro.command.debug(exposure_state_apogee=list(state_apogee.values()))
 
@@ -401,7 +402,7 @@ class ExposeHelper:
             this_exp = exps[self.n_boss - 1] if self.n_boss > 0 else None
 
             total_time = sum([exp.actual_exptime for exp in exps])
-            state_boss["total_time"] = int(round(total_time))
+            state_boss["total_time"] = round(total_time)
 
             state_boss["timestamp"] = round(time(), 1)
 
@@ -415,7 +416,7 @@ class ExposeHelper:
                 exp_elapsed = time() - self._boss_exp_start_time
                 etr -= exp_elapsed
                 etr = max(etr, 0)
-            state_boss["etr"] = int(round(etr))
+            state_boss["etr"] = round(etr)
 
             self.macro.command.debug(exposure_state_boss=list(state_boss.values()))
 
@@ -427,9 +428,9 @@ class ExposeMacro(Macro):
 
     name = "expose"
 
-    __PRECONDITIONS__ = ["prepare"]
-    __STAGES__ = [("expose_boss", "expose_apogee")]
-    __CLEANUP__ = ["cleanup"]
+    __PRECONDITIONS__: ClassVar[list[StageType]] = ["prepare"]
+    __STAGES__: ClassVar[list[StageType]] = [("expose_boss", "expose_apogee")]
+    __CLEANUP__: ClassVar[list[StageType]] = ["cleanup"]
 
     expose_helper: ExposeHelper
     _pause_event = asyncio.Event()
@@ -463,9 +464,9 @@ class ExposeMacro(Macro):
         if do_boss and self.helpers.boss.is_exposing():
             raise MacroError("BOSS is already exposing.")
 
-        if do_apogee and self.command.actor.observatory != "LCO":
-            if not self.command.actor.helpers.apogee.gang_helper.at_cartridge():
-                raise MacroError("The APOGEE gang connector is not at the cart.")
+        at_cartridge = self.command.actor.helpers.apogee.gang_helper.at_cartridge()
+        if (do_apogee and self.command.actor.observatory != "LCO") and not at_cartridge:
+            raise MacroError("The APOGEE gang connector is not at the cart.")
 
         # Check that IEB FBI are off.
         try:

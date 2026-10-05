@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import asyncio
 
+from typing import ClassVar
+
 from clu.legacy.tron import TronKey
 
 from hal import config
@@ -25,9 +27,9 @@ class APOGEEDomeFlatMacro(Macro):
 
     name = "apogee_dome_flat"
 
-    __PRECONDITIONS__ = ["gang_at_cart"]
-    __STAGES__ = [("ffs", "open_shutter"), "expose"]
-    __CLEANUP__ = ["cleanup"]
+    __PRECONDITIONS__: ClassVar[list[str]] = ["gang_at_cart"]
+    __STAGES__: ClassVar[list[str | tuple]] = [("ffs", "open_shutter"), "expose"]
+    __CLEANUP__: ClassVar[list[str]] = ["cleanup"]
 
     __ffs_initial_state: str | None = None
 

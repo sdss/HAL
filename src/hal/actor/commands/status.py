@@ -39,7 +39,7 @@ async def status(command: HALCommandType, full: bool = False):
     command.info(running_macros=[macro for macro in macros if macros[macro].running])
 
     if full:
-        command.info(macros=sorted(list(macros)))
+        command.info(macros=sorted(macros))
         for macro_name in sorted(macros):
             macros[macro_name].list_stages(command, level="d")
             macros[macro_name].output_stage_status(command, level="d")

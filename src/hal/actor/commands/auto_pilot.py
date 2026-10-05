@@ -106,7 +106,7 @@ async def auto_pilot(
         )
 
     if macro.running and (add_hartmann or remove_hartmann):
-        macro.hartmann = False if remove_hartmann else True
+        macro.hartmann = not remove_hartmann
         if macro.hartmann:
             return command.finish("Scheduled a Hartmann for the next goto-field.")
         else:
